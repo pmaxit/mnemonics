@@ -1,0 +1,7 @@
+{
+  "sets": [
+    { "id": "sat", "name": "SAT", "description": "Words for SAT exam" },
+    { "id": "mylist", "name": "MyList", "description": "Your custom list" },
+    { "id": "gre", "name": "GRE", "description": "Words for GRE exam" }
+  ]
+} 

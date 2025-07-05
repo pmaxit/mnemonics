@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^14.0.0"
+  }
+}
