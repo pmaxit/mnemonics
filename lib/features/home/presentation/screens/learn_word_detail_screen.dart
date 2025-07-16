@@ -8,6 +8,7 @@ import '../../../home/domain/user_word_data.dart';
 import '../../../home/domain/spaced_repetition.dart';
 import '../../../home/infrastructure/review_activity_repository.dart';
 import '../../../home/domain/review_activity.dart';
+import '../../../../common/widgets/animated_wave_background.dart';
 
 class LearnWordDetailScreen extends ConsumerStatefulWidget {
   final List<VocabularyWord> words;
@@ -68,131 +69,140 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
         title: Text(widget.words[_currentIndex].word),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : PageView.builder(
-              controller: _pageController,
-              onPageChanged: _onPageChanged,
-              itemCount: widget.words.length,
-              itemBuilder: (context, index) {
-                final word = widget.words[index];
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.all(MnemonicsSpacing.l),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(word.word, style: MnemonicsTypography.headingLarge),
-                      const SizedBox(height: MnemonicsSpacing.m),
-                      Text('Meaning:', style: MnemonicsTypography.bodyLarge),
-                      Text(word.meaning, style: MnemonicsTypography.bodyRegular),
-                      const SizedBox(height: MnemonicsSpacing.m),
-                      Text('Meaning (Hindi):', style: MnemonicsTypography.bodyLarge),
-                      const Text('हिंदी अर्थ यहाँ आएगा', style: MnemonicsTypography.bodyRegular),
-                      const SizedBox(height: MnemonicsSpacing.m),
-                      Text('Use in English sentence:', style: MnemonicsTypography.bodyLarge),
-                      Text(word.example, style: MnemonicsTypography.bodyRegular),
-                      const SizedBox(height: MnemonicsSpacing.l),
-                      // Image
-                      if (word.image != null && word.image!.isNotEmpty)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                          child: Image.network(
-                            word.image!,
-                            height: 160,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              height: 160,
-                              color: MnemonicsColors.surface,
-                              child: const Center(child: Icon(Icons.broken_image, size: 48, color: MnemonicsColors.textSecondary)),
-                            ),
-                          ),
-                        )
-                      else
-                        Container(
-                          height: 160,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: MnemonicsColors.surface,
-                            borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                          ),
-                          child: const Center(
-                            child: Icon(Icons.image, size: 48, color: MnemonicsColors.textSecondary),
-                          ),
-                        ),
-                      const SizedBox(height: MnemonicsSpacing.m),
-                      if (word.synonyms.isNotEmpty) ...[
-                        Text('Synonyms:', style: MnemonicsTypography.bodyLarge),
-                        Wrap(
-                          spacing: 8,
-                          children: word.synonyms.map((s) => Chip(label: Text(s))).toList(),
-                        ),
-                        const SizedBox(height: MnemonicsSpacing.m),
-                      ],
-                      if (word.antonyms.isNotEmpty) ...[
-                        Text('Antonyms:', style: MnemonicsTypography.bodyLarge),
-                        Wrap(
-                          spacing: 8,
-                          children: word.antonyms.map((a) => Chip(label: Text(a))).toList(),
-                        ),
-                      ],
-                      const SizedBox(height: MnemonicsSpacing.l),
-                      Text('Your Notes:', style: MnemonicsTypography.bodyLarge),
-                      TextField(
-                        controller: _notesController,
-                        maxLines: 3,
-                        decoration: const InputDecoration(
-                          hintText: 'Add your notes or mnemonic...',
-                          border: OutlineInputBorder(),
-                        ),
-                        onChanged: (_) => _saveUserWordData(),
-                      ),
-                      const SizedBox(height: MnemonicsSpacing.m),
-                      Row(
+      body: Stack(
+        children: [
+          AnimatedWaveBackground(height: MediaQuery.of(context).size.height),
+          _loading
+              ? const Center(child: CircularProgressIndicator())
+              : PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: _onPageChanged,
+                  itemCount: widget.words.length,
+                  itemBuilder: (context, index) {
+                    final word = widget.words[index];
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.all(MnemonicsSpacing.l),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Checkbox(
-                            value: _isLearned,
-                            onChanged: (val) {
-                              setState(() {
-                                _isLearned = val ?? false;
-                              });
-                              _saveUserWordData();
-                            },
-                          ),
-                          const Text('Mark as Learned'),
-                        ],
-                      ),
-                      const SizedBox(height: MnemonicsSpacing.m),
-                      _buildSpacedRepetitionHint(),
-                      if (_isLearned)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () => _handleReview(ReviewRating.hard),
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                              child: const Text('Hard'),
+                          Text(word.word, style: MnemonicsTypography.headingLarge),
+                          const SizedBox(height: MnemonicsSpacing.m),
+                          Text('Meaning:', style: MnemonicsTypography.bodyLarge),
+                          Text(word.meaning, style: MnemonicsTypography.bodyRegular),
+                          const SizedBox(height: MnemonicsSpacing.m),
+                          Text('Meaning (Hindi):', style: MnemonicsTypography.bodyLarge),
+                          const Text('हिंदी अर्थ यहाँ आएगा', style: MnemonicsTypography.bodyRegular),
+                          const SizedBox(height: MnemonicsSpacing.m),
+                          Text('Use in English sentence:', style: MnemonicsTypography.bodyLarge),
+                          Text(word.example, style: MnemonicsTypography.bodyRegular),
+                          const SizedBox(height: MnemonicsSpacing.l),
+                          // Image
+                          if (word.image != null && word.image!.isNotEmpty)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                              child: Image.network(
+                                word.image!,
+                                height: 160,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Container(
+                                  height: 160,
+                                  color: MnemonicsColors.surface,
+                                  child: const Center(child: Icon(Icons.broken_image, size: 48, color: MnemonicsColors.textSecondary)),
+                                ),
+                              ),
+                            )
+                          else
+                            Container(
+                              height: 160,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: MnemonicsColors.surface,
+                                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                              ),
+                              child: const Center(
+                                child: Icon(Icons.image, size: 48, color: MnemonicsColors.textSecondary),
+                              ),
                             ),
-                            ElevatedButton(
-                              onPressed: () => _handleReview(ReviewRating.medium),
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent),
-                              child: const Text('Medium'),
+                          const SizedBox(height: MnemonicsSpacing.m),
+                          if (word.synonyms.isNotEmpty) ...[
+                            Text('Synonyms:', style: MnemonicsTypography.bodyLarge),
+                            Wrap(
+                              spacing: 8,
+                              children: word.synonyms.map((s) => Chip(label: Text(s))).toList(),
                             ),
-                            ElevatedButton(
-                              onPressed: () => _handleReview(ReviewRating.easy),
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                              child: const Text('Easy'),
+                            const SizedBox(height: MnemonicsSpacing.m),
+                          ],
+                          if (word.antonyms.isNotEmpty) ...[
+                            Text('Antonyms:', style: MnemonicsTypography.bodyLarge),
+                            Wrap(
+                              spacing: 8,
+                              children: word.antonyms.map((a) => Chip(label: Text(a))).toList(),
                             ),
                           ],
-                        ),
-                      // TODO: Add spaced repetition review actions
-                    ],
-                  ),
-                );
-              },
-            ),
+                          const SizedBox(height: MnemonicsSpacing.l),
+                          Text('Your Notes:', style: MnemonicsTypography.bodyLarge),
+                          TextField(
+                            controller: _notesController,
+                            maxLines: 3,
+                            decoration: const InputDecoration(
+                              hintText: 'Add your notes or mnemonic...',
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (_) => _saveUserWordData(),
+                          ),
+                          const SizedBox(height: MnemonicsSpacing.m),
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _isLearned,
+                                onChanged: (val) {
+                                  setState(() {
+                                    _isLearned = val ?? false;
+                                  });
+                                  _saveUserWordData();
+                                },
+                              ),
+                              const Text('Mark as Learned'),
+                            ],
+                          ),
+                          const SizedBox(height: MnemonicsSpacing.m),
+                          _buildSpacedRepetitionHint(),
+                          if (_isLearned)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () => _handleReview(ReviewRating.hard),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                                  child: const Text('Hard'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => _handleReview(ReviewRating.medium),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent),
+                                  child: const Text('Medium'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => _handleReview(ReviewRating.easy),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                                  child: const Text('Easy'),
+                                ),
+                              ],
+                            ),
+                          // TODO: Add spaced repetition review actions
+                        ],
+                      ),
+                    );
+                  },
+                ),
+        ],
+      ),
     );
   }
 

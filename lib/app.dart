@@ -6,6 +6,10 @@ import 'features/home/presentation/screens/learn_word_detail_screen.dart';
 import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/home/presentation/screens/main_scaffold.dart';
 import 'features/home/presentation/screens/home_screen.dart';
+import 'features/practice/presentation/screens/practice_screen.dart';
+import 'features/practice/presentation/screens/timer_screen.dart';
+import 'features/profile/presentation/screens/profile_screen.dart';
+import 'package:flutter/material.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -15,21 +19,38 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
       ),
-      ShellRoute(
-        builder: (context, state, child) => MainScaffold(child: child),
+      GoRoute(
+        path: '/word-list/:setId',
+        builder: (context, state) {
+          final setId = state.pathParameters['setId']!;
+          return LearnWordListScreen(setId: setId);
+        },
+      ),
+      GoRoute(
+        path: '/main',
+        builder: (context, state) => const SizedBox.shrink(), // dummy widget
         routes: [
-          GoRoute(
-            path: '/home',
-            builder: (context, state) => const HomeScreen(),
+          ShellRoute(
+            builder: (context, state, child) => MainScaffold(child: child),
+            routes: [
+              GoRoute(
+                path: 'home',
+                builder: (context, state) => const HomeScreen(),
+              ),
+              GoRoute(
+                path: 'practice',
+                builder: (context, state) => const PracticeScreen(),
+              ),
+              GoRoute(
+                path: 'timer',
+                builder: (context, state) => const TimerScreen(),
+              ),
+              GoRoute(
+                path: 'profile',
+                builder: (context, state) => const ProfileScreen(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/word-list/:setId',
-            builder: (context, state) {
-              final setId = state.pathParameters['setId']!;
-              return LearnWordListScreen(setId: setId);
-            },
-          ),
-          // Add other tab routes here if needed
         ],
       ),
       GoRoute(

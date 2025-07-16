@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../common/design/design_system.dart';
 import '../../../../common/widgets/buttons.dart';
+import '../../../../common/widgets/animated_wave_background.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -11,54 +12,85 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProviderStateMixin {
+  late final AnimationController _flyInController;
+  late final AnimationController _pulseController;
   late final Animation<double> _fadeInAnimation;
   late final Animation<Offset> _slideAnimation;
+  late final Animation<Offset> _buttonSlideAnimation;
+  late final Animation<double> _buttonPulseAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+    _flyInController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
+    );
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+      lowerBound: 0.0,
+      upperBound: 1.0,
     );
 
     _fadeInAnimation = CurvedAnimation(
-      parent: _controller,
+      parent: _flyInController,
       curve: Curves.easeOut,
     );
 
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
+      begin: const Offset(0, 0.3),
       end: Offset.zero,
     ).animate(CurvedAnimation(
-      parent: _controller,
+      parent: _flyInController,
       curve: Curves.easeOutCubic,
     ));
 
-    _controller.forward();
+    _buttonSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _flyInController,
+      curve: Curves.easeOutBack,
+    ));
+
+    _buttonPulseAnimation = Tween<double>(begin: 1.0, end: 1.12).animate(
+      CurvedAnimation(
+        parent: _pulseController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _flyInController.forward().then((_) {
+      _pulseController.repeat(reverse: true);
+    });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _flyInController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
   void _navigateToHome() {
-    _controller.reverse().then((_) {
-      context.go('/home');
+    _pulseController.stop();
+    _flyInController.reverse().then((_) {
+      context.go('/main/home');
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MnemonicsColors.background,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          _buildWaveBackground(),
+          // Use the animated background for consistency
+          const Positioned.fill(
+            child: AnimatedWaveBackground(height: double.infinity),
+          ),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(MnemonicsSpacing.xl),
@@ -72,19 +104,34 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
                       const Spacer(),
                       _buildLogo(),
                       const SizedBox(height: MnemonicsSpacing.xl),
-                      const Text(
-                        "Let's Break",
-                        style: MnemonicsTypography.headingLarge,
-                      ),
-                      Text(
-                        "THE BARRIERS OF LANGUAGE",
-                        style: MnemonicsTypography.headingLarge.copyWith(
-                          color: MnemonicsColors.primaryGreen,
-                        ),
+                      // Text fly-in
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Let's Break",
+                            style: MnemonicsTypography.headingLarge,
+                          ),
+                          Text(
+                            "THE BARRIERS OF LANGUAGE",
+                            style: MnemonicsTypography.headingLarge.copyWith(
+                              color: MnemonicsColors.primaryGreen,
+                            ),
+                          ),
+                        ],
                       ),
                       const Spacer(),
+                      // Button fly-in and pulse
                       Center(
-                        child: _buildCTAButton(),
+                        child: SlideTransition(
+                          position: _buttonSlideAnimation,
+                          child: ScaleTransition(
+                            scale: _buttonPulseAnimation,
+                            child: _Animated3DCTAButton(
+                              onPressed: _navigateToHome,
+                            ),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: MnemonicsSpacing.xl),
                     ],
@@ -149,88 +196,108 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
     );
   }
 
-  Widget _buildCTAButton() {
-    return Container(
-      width: 72,
-      height: 72,
-      decoration: const BoxDecoration(
-        color: MnemonicsColors.secondaryOrange,
-        shape: BoxShape.circle,
-      ),
-      child: MnemonicsIconButton(
-        icon: Icons.arrow_forward,
-        color: Colors.white,
-        onPressed: _navigateToHome,
-      ),
-    );
-  }
-
-  Widget _buildWaveBackground() {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: CustomPaint(
-        size: const Size(double.infinity, 300),
-        painter: WavePainter(),
-      ),
-    );
-  }
+  // Replace _buildCTAButton with the new animated 3D button widget
 }
 
-class WavePainter extends CustomPainter {
+class _Animated3DCTAButton extends StatefulWidget {
+  final VoidCallback onPressed;
+  const _Animated3DCTAButton({required this.onPressed});
+
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = MnemonicsColors.primaryGreen.withOpacity(0.1)
-      ..style = PaintingStyle.fill;
+  State<_Animated3DCTAButton> createState() => _Animated3DCTAButtonState();
+}
 
-    final path = Path();
-    path.moveTo(0, size.height * 0.8);
-    path.quadraticBezierTo(
-      size.width * 0.25,
-      size.height * 0.7,
-      size.width * 0.5,
-      size.height * 0.8,
-    );
-    path.quadraticBezierTo(
-      size.width * 0.75,
-      size.height * 0.9,
-      size.width,
-      size.height * 0.8,
-    );
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
-    path.close();
+class _Animated3DCTAButtonState extends State<_Animated3DCTAButton> with SingleTickerProviderStateMixin {
+  double _scale = 1.0;
 
-    canvas.drawPath(path, paint);
+  void _onTapDown(TapDownDetails details) {
+    setState(() {
+      _scale = 0.92;
+    });
+  }
 
-    // Second wave
-    final paint2 = Paint()
-      ..color = MnemonicsColors.primaryGreen.withOpacity(0.05)
-      ..style = PaintingStyle.fill;
+  void _onTapUp(TapUpDetails details) {
+    setState(() {
+      _scale = 1.0;
+    });
+    widget.onPressed();
+  }
 
-    final path2 = Path();
-    path2.moveTo(0, size.height * 0.9);
-    path2.quadraticBezierTo(
-      size.width * 0.25,
-      size.height * 0.8,
-      size.width * 0.5,
-      size.height * 0.9,
-    );
-    path2.quadraticBezierTo(
-      size.width * 0.75,
-      size.height,
-      size.width,
-      size.height * 0.9,
-    );
-    path2.lineTo(size.width, size.height);
-    path2.lineTo(0, size.height);
-    path2.close();
-
-    canvas.drawPath(path2, paint2);
+  void _onTapCancel() {
+    setState(() {
+      _scale = 1.0;
+    });
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: AnimatedScale(
+        scale: _scale,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFFFFB75E), // light orange
+                Color(0xFFF57C00), // deeper orange
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.orange.withOpacity(0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: Colors.white.withOpacity(0.7),
+                blurRadius: 8,
+                offset: const Offset(-2, -2),
+                spreadRadius: -4,
+              ),
+            ],
+            shape: BoxShape.circle,
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Gloss highlight
+              Positioned(
+                top: 12,
+                left: 18,
+                right: 18,
+                child: Container(
+                  height: 16,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.55),
+                        Colors.white.withOpacity(0.0),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward,
+                color: Colors.white,
+                size: 36,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 } 

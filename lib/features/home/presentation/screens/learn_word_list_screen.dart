@@ -6,6 +6,8 @@ import '../../../../common/widgets/course_card.dart';
 import '../../domain/vocabulary_word.dart';
 import 'package:go_router/go_router.dart';
 import 'learn_word_detail_screen.dart';
+import '../../infrastructure/word_set_repository.dart';
+import '../../../../common/widgets/animated_wave_background.dart';
 
 class LearnWordListScreen extends ConsumerStatefulWidget {
   final String setId;
@@ -35,91 +37,110 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen> {
     final categories = vocabList.map((w) => w.category).toSet().toList();
     final accentColors = [MnemonicsColors.primaryGreen, MnemonicsColors.secondaryOrange, MnemonicsColors.progressPink];
 
+    final wordSetsAsync = ref.watch(wordSetListProvider);
+    String? setName;
+    wordSetsAsync.whenData((sets) {
+      setName = sets.firstWhere((s) => s.id == widget.setId, orElse: () => WordSet(id: '', name: '', description: '')).name;
+    });
+
+    final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Word List'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        title: wordSetsAsync.when(
+          loading: () => const Text(''),
+          error: (e, _) => const Text(''),
+          data: (sets) {
+            final set = sets.firstWhere((s) => s.id == widget.setId, orElse: () => WordSet(id: '', name: '', description: ''));
+            return Text(set.name.isNotEmpty ? set.name : 'Word List');
+          },
         ),
       ),
-      body: Container(
-        color: MnemonicsColors.surface,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(MnemonicsSpacing.l),
-              child: TextField(
-                decoration: const InputDecoration(
-                  hintText: 'Search words, meanings, or mnemonics',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(),
+      body: Stack(
+        children: [
+          AnimatedWaveBackground(height: screenHeight),
+          Container(
+            color: Colors.transparent,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(MnemonicsSpacing.l),
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      hintText: 'Search words, meanings, or mnemonics',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) => setState(() => _search = value),
+                  ),
                 ),
-                onChanged: (value) => setState(() => _search = value),
-              ),
-            ),
-            Expanded(
-              child: vocabAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Error: $e')),
-                data: (_) => filtered.isEmpty
-                    ? const Center(child: Text('No words found.'))
-                    : ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: MnemonicsSpacing.l, vertical: MnemonicsSpacing.m),
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: MnemonicsSpacing.m),
-                        itemBuilder: (context, i) {
-                          final word = filtered[i];
-                          final accent = accentColors[i % accentColors.length];
-                          return Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                            ),
-                            elevation: 2,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                              onTap: () {
-                                context.go('/flashcards', extra: {
-                                  'words': filtered,
-                                  'initialIndex': i,
-                                });
-                              },
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 8,
-                                    height: 64,
-                                    decoration: BoxDecoration(
-                                      color: accent,
-                                      borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(MnemonicsSpacing.radiusL),
-                                        bottomLeft: Radius.circular(MnemonicsSpacing.radiusL),
+                Expanded(
+                  child: vocabAsync.when(
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (e, _) => Center(child: Text('Error: $e')),
+                    data: (_) => filtered.isEmpty
+                        ? const Center(child: Text('No words found.'))
+                        : ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: MnemonicsSpacing.l, vertical: MnemonicsSpacing.m),
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: MnemonicsSpacing.m),
+                            itemBuilder: (context, i) {
+                              final word = filtered[i];
+                              final accent = accentColors[i % accentColors.length];
+                              return Card(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                                ),
+                                elevation: 2,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                                  onTap: () {
+                                    context.push('/flashcards', extra: {
+                                      'words': filtered,
+                                      'initialIndex': i,
+                                    });
+                                  },
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 64,
+                                        decoration: BoxDecoration(
+                                          color: accent,
+                                          borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(MnemonicsSpacing.radiusL),
+                                            bottomLeft: Radius.circular(MnemonicsSpacing.radiusL),
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(MnemonicsSpacing.m),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(word.word, style: MnemonicsTypography.headingMedium),
-                                          const SizedBox(height: MnemonicsSpacing.xs),
-                                          Text(word.meaning, style: MnemonicsTypography.bodyRegular.copyWith(color: MnemonicsColors.textSecondary)),
-                                        ],
+                                      Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(MnemonicsSpacing.m),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(word.word, style: MnemonicsTypography.headingMedium),
+                                              const SizedBox(height: MnemonicsSpacing.xs),
+                                              Text(word.meaning, style: MnemonicsTypography.bodyRegular.copyWith(color: MnemonicsColors.textSecondary)),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-              ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

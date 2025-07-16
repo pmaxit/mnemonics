@@ -9,6 +9,7 @@ import 'dart:math';
 import 'learn_word_list_screen.dart';
 import '../../../home/providers.dart';
 import '../../infrastructure/word_set_repository.dart';
+import '../../../../common/widgets/animated_wave_background.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -41,82 +42,87 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wordSetsAsync = ref.watch(wordSetListProvider);
-    return Container(
-      color: MnemonicsColors.surface,
-      child: wordSetsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (sets) {
-          return GridView.builder(
-            padding: const EdgeInsets.all(MnemonicsSpacing.xl),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: MnemonicsSpacing.xl,
-              crossAxisSpacing: MnemonicsSpacing.xl,
-              childAspectRatio: 1.1,
-            ),
-            itemCount: sets.length,
-            itemBuilder: (context, i) {
-              final set = sets[i];
-              final accent = accentColors[i % accentColors.length];
-              final icon = setIcons[i % setIcons.length];
-              return Container(
-                decoration: BoxDecoration(
-                  color: MnemonicsColors.background,
-                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-                  boxShadow: MnemonicsColors.cardShadow,
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
+    final screenHeight = MediaQuery.of(context).size.height;
+    return Stack(
+      children: [
+        // Full-screen animated background
+        AnimatedWaveBackground(height: screenHeight),
+        // Main content (no background color)
+        wordSetsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Error: $e')),
+          data: (sets) {
+            return GridView.builder(
+              padding: const EdgeInsets.all(MnemonicsSpacing.xl),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: MnemonicsSpacing.xl,
+                crossAxisSpacing: MnemonicsSpacing.xl,
+                childAspectRatio: 1.1,
+              ),
+              itemCount: sets.length,
+              itemBuilder: (context, i) {
+                final set = sets[i];
+                final accent = accentColors[i % accentColors.length];
+                final icon = setIcons[i % setIcons.length];
+                return Container(
+                  decoration: BoxDecoration(
+                    color: MnemonicsColors.background,
                     borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-                    onTap: () {
-                      GoRouter.of(context).push('/word-list/${set.id}');
-                    },
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: double.infinity,
-                          decoration: BoxDecoration(
-                            color: accent,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(MnemonicsSpacing.radiusXL),
-                              bottomLeft: Radius.circular(MnemonicsSpacing.radiusXL),
+                    boxShadow: MnemonicsColors.cardShadow,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                      onTap: () {
+                        GoRouter.of(context).push('/word-list/${set.id}');
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: double.infinity,
+                            decoration: BoxDecoration(
+                              color: accent,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(MnemonicsSpacing.radiusXL),
+                                bottomLeft: Radius.circular(MnemonicsSpacing.radiusXL),
+                              ),
                             ),
                           ),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(MnemonicsSpacing.l),
-                            child: Stack(
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(set.name, style: MnemonicsTypography.headingMedium),
-                                    Text(set.description, style: MnemonicsTypography.bodyRegular),
-                                  ],
-                                ),
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: Icon(icon, color: accent, size: 28),
-                                ),
-                              ],
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(MnemonicsSpacing.l),
+                              child: Stack(
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(set.name, style: MnemonicsTypography.headingMedium),
+                                      Text(set.description, style: MnemonicsTypography.bodyRegular),
+                                    ],
+                                  ),
+                                  Positioned(
+                                    top: 0,
+                                    right: 0,
+                                    child: Icon(icon, color: accent, size: 28),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-          );
-        },
-      ),
+                );
+              },
+            );
+          },
+        ),
+      ],
     );
   }
 
