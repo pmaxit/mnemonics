@@ -414,12 +414,14 @@ class AnimatedBreakdownSection extends StatefulWidget {
   final String title;
   final Map<String, int> data;
   final int animationDelay;
+  final Function(String)? onCategoryTap;
 
   const AnimatedBreakdownSection({
     super.key,
     required this.title,
     required this.data,
     this.animationDelay = 0,
+    this.onCategoryTap,
   });
 
   @override
@@ -427,10 +429,14 @@ class AnimatedBreakdownSection extends StatefulWidget {
 }
 
 class _AnimatedBreakdownSectionState extends State<AnimatedBreakdownSection>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late AnimationController _controller;
   late Animation<double> _headerAnimation;
   late List<Animation<double>> _itemAnimations;
+  bool _hasAnimated = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -470,11 +476,14 @@ class _AnimatedBreakdownSectionState extends State<AnimatedBreakdownSection>
       },
     );
 
-    Future.delayed(Duration(milliseconds: widget.animationDelay), () {
-      if (mounted) {
-        _controller.forward();
-      }
-    });
+    if (!_hasAnimated) {
+      Future.delayed(Duration(milliseconds: widget.animationDelay), () {
+        if (mounted && !_hasAnimated) {
+          _hasAnimated = true;
+          _controller.forward();
+        }
+      });
+    }
   }
 
   @override
@@ -485,6 +494,7 @@ class _AnimatedBreakdownSectionState extends State<AnimatedBreakdownSection>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -553,6 +563,9 @@ class _AnimatedBreakdownSectionState extends State<AnimatedBreakdownSection>
                       value: entry.value,
                       accentColor: _getColorForCategory(entry.key),
                       animationDelay: 0, // Already handled by parent
+                      onTap: widget.onCategoryTap != null 
+                          ? () => widget.onCategoryTap!(entry.key)
+                          : null,
                     ),
                   );
                 },

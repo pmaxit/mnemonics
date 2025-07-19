@@ -29,7 +29,7 @@ class AnimatedStatCard extends StatefulWidget {
 }
 
 class _AnimatedStatCardState extends State<AnimatedStatCard>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late AnimationController _entryController;
   late AnimationController _hoverController;
   late AnimationController _achievementController;
@@ -41,6 +41,9 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
 
   bool _isHovered = false;
   bool _hasAnimated = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -100,12 +103,15 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
       curve: AnimatedProgressUtils.celebrationEasing,
     ));
 
-    // Start entry animation with delay
-    Future.delayed(Duration(milliseconds: widget.animationDelay), () {
-      if (mounted) {
-        _entryController.forward();
-      }
-    });
+    // Start entry animation with delay - only once
+    if (!_hasAnimated) {
+      Future.delayed(Duration(milliseconds: widget.animationDelay), () {
+        if (mounted && !_hasAnimated) {
+          _hasAnimated = true;
+          _entryController.forward();
+        }
+      });
+    }
   }
 
   @override
@@ -142,6 +148,7 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     return AnimatedBuilder(
       animation: Listenable.merge([
         _entryAnimation,
@@ -287,9 +294,12 @@ class StreakCard extends StatefulWidget {
 }
 
 class _StreakCardState extends State<StreakCard>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late AnimationController _fireController;
   late Animation<double> _fireAnimation;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -333,6 +343,7 @@ class _StreakCardState extends State<StreakCard>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     return AnimatedStatCard(
       label: '🔥 Day Streak',
       value: widget.streakCount,
@@ -365,9 +376,12 @@ class ProgressPercentageCard extends StatefulWidget {
 }
 
 class _ProgressPercentageCardState extends State<ProgressPercentageCard>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late AnimationController _progressController;
   late Animation<double> _progressAnimation;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -401,6 +415,7 @@ class _ProgressPercentageCardState extends State<ProgressPercentageCard>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     return AnimatedStatCard(
       label: widget.label,
       value: widget.percentage.round(),

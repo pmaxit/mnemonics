@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../common/design/design_system.dart';
 import '../../../../common/design/theme_provider.dart';
 import '../../providers/statistics_provider.dart';
@@ -21,6 +22,7 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
     with TickerProviderStateMixin {
   late AnimationController _pageController;
   late Animation<double> _pageAnimation;
+  bool _hasAnimated = false;
 
   @override
   void initState() {
@@ -39,12 +41,15 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
       curve: AnimatedProgressUtils.entryEasing,
     ));
     
-    // Start page animation
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) {
-        _pageController.forward();
-      }
-    });
+    // Start page animation only once
+    if (!_hasAnimated) {
+      _hasAnimated = true;
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          _pageController.forward();
+        }
+      });
+    }
   }
 
   @override
@@ -72,12 +77,7 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
       return const Center(child: Text('No statistics data available.'));
     }
 
-    return AnimatedBuilder(
-      animation: _pageAnimation,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _pageAnimation.value,
-          child: SingleChildScrollView(
+    return SingleChildScrollView(
             padding: const EdgeInsets.only(
               left: MnemonicsSpacing.l,
               right: MnemonicsSpacing.l,
@@ -99,23 +99,27 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
                   children: [
                     Expanded(
                       child: AnimatedStatCard(
+                        key: const ValueKey('total_learned'),
                         label: 'Total Learned',
                         value: statistics.totalLearned,
                         icon: Icons.school,
                         accentColor: MnemonicsColors.primaryGreen,
                         isAchievement: true,
-                        animationDelay: 200,
+                        animationDelay: 0,
+                        onTap: () => context.push('/practice/total-words'),
                       ),
                     ),
                     const SizedBox(width: MnemonicsSpacing.m),
                     Expanded(
                       child: AnimatedStatCard(
+                        key: const ValueKey('learned_today'),
                         label: 'Learned Today',
                         value: statistics.learnedToday,
                         icon: Icons.today,
                         accentColor: MnemonicsColors.secondaryOrange,
                         isAchievement: statistics.learnedToday > 0,
-                        animationDelay: 400,
+                        animationDelay: 0,
+                        onTap: () => context.push('/practice/words-today'),
                       ),
                     ),
                   ],
@@ -125,18 +129,26 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
                 Row(
                   children: [
                     Expanded(
-                      child: StreakCard(
-                        streakCount: statistics.streak,
-                        animationDelay: 600,
+                      child: GestureDetector(
+                        onTap: () => context.push('/practice/streak'),
+                        child: StreakCard(
+                          key: const ValueKey('streak_card'),
+                          streakCount: statistics.streak,
+                          animationDelay: 0,
+                        ),
                       ),
                     ),
                     const SizedBox(width: MnemonicsSpacing.m),
                     Expanded(
-                      child: ProgressPercentageCard(
-                        label: 'Accuracy',
-                        percentage: statistics.averageAccuracy * 100,
-                        accentColor: _getAccuracyColor(statistics.averageAccuracy),
-                        animationDelay: 800,
+                      child: GestureDetector(
+                        onTap: () => context.push('/practice/accuracy'),
+                        child: ProgressPercentageCard(
+                          key: const ValueKey('accuracy_card'),
+                          label: 'Accuracy',
+                          percentage: statistics.averageAccuracy * 100,
+                          accentColor: _getAccuracyColor(statistics.averageAccuracy),
+                          animationDelay: 0,
+                        ),
                       ),
                     ),
                   ],
@@ -146,87 +158,90 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
                 // Animated progress chart
                 AnimatedProgressChart(
                   weeklyProgress: statistics.weeklyProgress,
-                  animationDelay: 1000,
+                  animationDelay: 0,
                 ),
                 const SizedBox(height: MnemonicsSpacing.xl),
                 
                 // Learning stages breakdown
-                AnimatedProgressUtils.buildStaggeredAnimation(
-                  animation: _pageAnimation,
-                  index: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Learning Stages',
-                        style: MnemonicsTypography.bodyLarge.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 20,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Learning Stages',
+                      style: MnemonicsTypography.bodyLarge.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 20,
+                      ),
+                    ),
+                    const SizedBox(height: MnemonicsSpacing.m),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AnimatedStatCard(
+                            key: const ValueKey('new_words'),
+                            label: 'New',
+                            value: statistics.newCount,
+                            icon: Icons.fiber_new,
+                            accentColor: Colors.blue,
+                            animationDelay: 0,
+                            onTap: () => context.push('/practice/learning-stages/new'),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: MnemonicsSpacing.m),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: AnimatedStatCard(
-                              label: 'New',
-                              value: statistics.newCount,
-                              icon: Icons.fiber_new,
-                              accentColor: Colors.blue,
-                              animationDelay: 1200,
-                            ),
+                        const SizedBox(width: MnemonicsSpacing.s),
+                        Expanded(
+                          child: AnimatedStatCard(
+                            key: const ValueKey('learning_words'),
+                            label: 'Learning',
+                            value: statistics.inProgressCount,
+                            icon: Icons.psychology,
+                            accentColor: Colors.orange,
+                            animationDelay: 0,
+                            onTap: () => context.push('/practice/learning-stages/learning'),
                           ),
-                          const SizedBox(width: MnemonicsSpacing.s),
-                          Expanded(
-                            child: AnimatedStatCard(
-                              label: 'Learning',
-                              value: statistics.inProgressCount,
-                              icon: Icons.psychology,
-                              accentColor: Colors.orange,
-                              animationDelay: 1400,
-                            ),
+                        ),
+                        const SizedBox(width: MnemonicsSpacing.s),
+                        Expanded(
+                          child: AnimatedStatCard(
+                            key: const ValueKey('mastered_words'),
+                            label: 'Mastered',
+                            value: statistics.masteredCount,
+                            icon: Icons.star,
+                            accentColor: Colors.amber,
+                            isAchievement: true,
+                            animationDelay: 0,
+                            onTap: () => context.push('/practice/learning-stages/mastered'),
                           ),
-                          const SizedBox(width: MnemonicsSpacing.s),
-                          Expanded(
-                            child: AnimatedStatCard(
-                              label: 'Mastered',
-                              value: statistics.masteredCount,
-                              icon: Icons.star,
-                              accentColor: Colors.amber,
-                              isAchievement: true,
-                              animationDelay: 1600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
                 const SizedBox(height: MnemonicsSpacing.xl),
                 
                 // Category breakdown
                 AnimatedBreakdownSection(
+                  key: const ValueKey('category_breakdown'),
                   title: 'Progress by Category',
                   data: statistics.categoryBreakdown,
-                  animationDelay: 1800,
+                  animationDelay: 0,
+                  onCategoryTap: (category) => context.push('/practice/breakdown/category/$category'),
                 ),
                 const SizedBox(height: MnemonicsSpacing.xl),
                 
                 // Difficulty breakdown
                 AnimatedBreakdownSection(
+                  key: const ValueKey('difficulty_breakdown'),
                   title: 'Progress by Difficulty',
                   data: statistics.difficultyBreakdown,
-                  animationDelay: 2000,
+                  animationDelay: 0,
+                  onCategoryTap: (difficulty) => context.push('/practice/breakdown/difficulty/$difficulty'),
                 ),
                 
                 // Bottom spacing
                 const SizedBox(height: MnemonicsSpacing.xl),
               ],
             ),
-          ),
-        );
-      },
-    );
+          );
   }
 
   Color _getAccuracyColor(double accuracy) {
@@ -238,149 +253,102 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
   Widget _buildMotivationalTagline(StatisticsData statistics) {
     final tagline = _getMotivationalMessage(statistics);
     
-    return AnimatedBuilder(
-      animation: _pageAnimation,
-      builder: (context, child) {
-        return AnimatedProgressUtils.buildStaggeredAnimation(
-          animation: _pageAnimation,
-          index: 1,
-          totalItems: 6,
-          child: TweenAnimationBuilder<double>(
-            duration: const Duration(milliseconds: 2000),
-            tween: Tween<double>(begin: 0.0, end: 1.0),
-            builder: (context, animationValue, child) {
-              return Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(MnemonicsSpacing.l),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      _getTaglineColor(statistics).withOpacity(0.1 * animationValue),
-                      _getTaglineColor(statistics).withOpacity(0.05 * animationValue),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                  border: Border.all(
-                    color: _getTaglineColor(statistics).withOpacity(0.3 * animationValue),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _getTaglineColor(statistics).withOpacity(0.1 * animationValue),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    // Animated icon
-                    TweenAnimationBuilder<double>(
-                      duration: const Duration(milliseconds: 1500),
-                      tween: Tween<double>(begin: 0.0, end: 1.0),
-                      builder: (context, iconAnimation, child) {
-                        return Transform.scale(
-                          scale: 0.8 + (0.4 * iconAnimation),
-                          child: Transform.rotate(
-                            angle: iconAnimation * 0.5,
-                            child: Container(
-                              padding: const EdgeInsets.all(MnemonicsSpacing.s),
-                              decoration: BoxDecoration(
-                                color: _getTaglineColor(statistics).withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                              ),
-                              child: Icon(
-                                _getTaglineIcon(statistics),
-                                color: _getTaglineColor(statistics),
-                                size: 24,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(width: MnemonicsSpacing.m),
-                    
-                    // Animated text with typewriter effect
-                    Expanded(
-                      child: AnimatedBuilder(
-                        animation: _pageAnimation,
-                        builder: (context, child) {
-                          // Typewriter effect
-                          final visibleCharacters = (tagline.length * animationValue).floor();
-                          final displayText = tagline.substring(0, visibleCharacters);
-                          
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                displayText,
-                                style: MnemonicsTypography.bodyLarge.copyWith(
-                                  color: _getTaglineColor(statistics),
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.4,
-                                ),
-                              ),
-                              const SizedBox(height: MnemonicsSpacing.xs),
-                              
-                              // Animated progress indicator
-                              TweenAnimationBuilder<double>(
-                                duration: const Duration(milliseconds: 1200),
-                                tween: Tween<double>(begin: 0.0, end: _getMotivationProgress(statistics).clamp(0.0, 1.0)),
-                                builder: (context, progress, child) {
-                                  return Container(
-                                    height: 4,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(2),
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          _getTaglineColor(statistics).withOpacity(0.3),
-                                          _getTaglineColor(statistics),
-                                        ],
-                                        stops: [0.0, progress],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                    
-                    // Pulsing achievement badge
-                    if (statistics.totalLearned > 0)
-                      AnimatedProgressUtils.buildPulsingWidget(
-                        animation: _pageAnimation,
-                        glowColor: _getTaglineColor(statistics),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: MnemonicsSpacing.s,
-                            vertical: MnemonicsSpacing.xs,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getTaglineColor(statistics),
-                            borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
-                          ),
-                          child: Text(
-                            '${statistics.totalLearned}',
-                            style: MnemonicsTypography.bodyRegular.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            },
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(MnemonicsSpacing.l),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            _getTaglineColor(statistics).withOpacity(0.1),
+            _getTaglineColor(statistics).withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+        border: Border.all(
+          color: _getTaglineColor(statistics).withOpacity(0.3),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _getTaglineColor(statistics).withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
-        );
-      },
+        ],
+      ),
+      child: Row(
+        children: [
+          // Icon
+          Container(
+            padding: const EdgeInsets.all(MnemonicsSpacing.s),
+            decoration: BoxDecoration(
+              color: _getTaglineColor(statistics).withOpacity(0.2),
+              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+            ),
+            child: Icon(
+              _getTaglineIcon(statistics),
+              color: _getTaglineColor(statistics),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: MnemonicsSpacing.m),
+          
+          // Text
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tagline,
+                  style: MnemonicsTypography.bodyLarge.copyWith(
+                    color: _getTaglineColor(statistics),
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: MnemonicsSpacing.xs),
+                
+                // Progress indicator
+                Container(
+                  height: 4,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(2),
+                    gradient: LinearGradient(
+                      colors: [
+                        _getTaglineColor(statistics).withOpacity(0.3),
+                        _getTaglineColor(statistics),
+                      ],
+                      stops: [0.0, _getMotivationProgress(statistics).clamp(0.0, 1.0)],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Achievement badge
+          if (statistics.totalLearned > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: MnemonicsSpacing.s,
+                vertical: MnemonicsSpacing.xs,
+              ),
+              decoration: BoxDecoration(
+                color: _getTaglineColor(statistics),
+                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+              ),
+              child: Text(
+                '${statistics.totalLearned}',
+                style: MnemonicsTypography.bodyRegular.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -449,143 +417,119 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
   Widget _buildAnimatedHeader(bool isDarkMode) {
     final userInfoAsync = ref.watch(currentUserProvider);
     
-    return AnimatedBuilder(
-      animation: _pageAnimation,
-      builder: (context, child) {
-        return AnimatedProgressUtils.buildStaggeredAnimation(
-          animation: _pageAnimation,
-          index: 0,
-          child: Transform.translate(
-            offset: Offset(0, -30 * (1 - _pageAnimation.value)),
-            child: FadeTransition(
-              opacity: _pageAnimation,
-              child: Container(
-                padding: const EdgeInsets.all(MnemonicsSpacing.l),
-                decoration: BoxDecoration(
-                  color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
-                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-                  boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
-                  border: isDarkMode
-                      ? Border.all(
-                          color: MnemonicsColors.darkBorder.withOpacity(0.3),
-                          width: 1,
-                        )
-                      : null,
+    return Container(
+      padding: const EdgeInsets.all(MnemonicsSpacing.l),
+      decoration: BoxDecoration(
+        color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+        boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+        border: isDarkMode
+            ? Border.all(
+                color: MnemonicsColors.darkBorder.withOpacity(0.3),
+                width: 1,
+              )
+            : null,
+      ),
+      child: Row(
+        children: [
+          // Avatar section
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  MnemonicsColors.primaryGreen,
+                  MnemonicsColors.primaryGreen.withOpacity(0.7),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: MnemonicsColors.primaryGreen.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
-                child: Row(
-                  children: [
-                    // Animated avatar section
-                    TweenAnimationBuilder<double>(
-                      duration: const Duration(milliseconds: 800),
-                      tween: Tween<double>(begin: 0.0, end: 1.0),
-                      builder: (context, animation, child) {
-                        return Transform.rotate(
-                          angle: animation * 0.1,
-                          child: Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  MnemonicsColors.primaryGreen,
-                                  MnemonicsColors.primaryGreen.withOpacity(0.7),
-                                ],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: MnemonicsColors.primaryGreen.withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: userInfoAsync.when(
-                                data: (userInfo) => Text(
-                                  userInfo.initials,
-                                  style: MnemonicsTypography.headingMedium.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                loading: () => const Icon(
-                                  Icons.person,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                                error: (error, stack) => const Icon(
-                                  Icons.person,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(width: MnemonicsSpacing.m),
-                    // Content section
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          userInfoAsync.when(
-                            data: (userInfo) => Text(
-                              'Your Progress',
-                              style: MnemonicsTypography.headingMedium.copyWith(
-                                color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            loading: () => Text(
-                              'Your Progress',
-                              style: MnemonicsTypography.headingMedium.copyWith(
-                                color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            error: (error, stack) => Text(
-                              'Your Progress',
-                              style: MnemonicsTypography.headingMedium.copyWith(
-                                color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: MnemonicsSpacing.xs),
-                          Text(
-                            'Track your learning journey',
-                            style: MnemonicsTypography.bodyRegular.copyWith(
-                              color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Statistics indicator
-                    Container(
-                      padding: const EdgeInsets.all(MnemonicsSpacing.s),
-                      decoration: BoxDecoration(
-                        color: MnemonicsColors.secondaryOrange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
-                      ),
-                      child: const Icon(
-                        Icons.analytics,
-                        color: MnemonicsColors.secondaryOrange,
-                        size: 20,
-                      ),
-                    ),
-                  ],
+              ],
+            ),
+            child: Center(
+              child: userInfoAsync.when(
+                data: (userInfo) => Text(
+                  userInfo.initials,
+                  style: MnemonicsTypography.headingMedium.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                loading: () => const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 24,
+                ),
+                error: (error, stack) => const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 24,
                 ),
               ),
             ),
           ),
-        );
-      },
+          const SizedBox(width: MnemonicsSpacing.m),
+          // Content section
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                userInfoAsync.when(
+                  data: (userInfo) => Text(
+                    'Your Progress',
+                    style: MnemonicsTypography.headingMedium.copyWith(
+                      color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  loading: () => Text(
+                    'Your Progress',
+                    style: MnemonicsTypography.headingMedium.copyWith(
+                      color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  error: (error, stack) => Text(
+                    'Your Progress',
+                    style: MnemonicsTypography.headingMedium.copyWith(
+                      color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: MnemonicsSpacing.xs),
+                Text(
+                  'Track your learning journey',
+                  style: MnemonicsTypography.bodyRegular.copyWith(
+                    color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Statistics indicator
+          Container(
+            padding: const EdgeInsets.all(MnemonicsSpacing.s),
+            decoration: BoxDecoration(
+              color: MnemonicsColors.secondaryOrange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+            ),
+            child: const Icon(
+              Icons.analytics,
+              color: MnemonicsColors.secondaryOrange,
+              size: 20,
+            ),
+          ),
+        ],
+      ),
     );
   }
 } 
