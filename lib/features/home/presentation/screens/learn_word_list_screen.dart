@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers.dart';
 import '../../../../common/design/design_system.dart';
+import '../../../../common/design/theme_provider.dart';
 import '../../../../common/widgets/course_card.dart';
 import '../../domain/vocabulary_word.dart';
 import 'package:go_router/go_router.dart';
@@ -17,13 +19,74 @@ class LearnWordListScreen extends ConsumerStatefulWidget {
   ConsumerState<LearnWordListScreen> createState() => _LearnWordListScreenState();
 }
 
-class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen> {
+class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
+    with TickerProviderStateMixin {
   String _search = '';
   String? _difficulty;
   String? _category;
+  
+  late AnimationController _headerAnimationController;
+  late AnimationController _listAnimationController;
+  late Animation<double> _headerFadeAnimation;
+  late Animation<double> _headerSlideAnimation;
+  late Animation<double> _searchFadeAnimation;
+  
+  @override
+  void initState() {
+    super.initState();
+    _headerAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _listAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    
+    _headerFadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _headerAnimationController,
+      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+    ));
+    
+    _headerSlideAnimation = Tween<double>(
+      begin: -30.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _headerAnimationController,
+      curve: const Interval(0.2, 1.0, curve: Curves.elasticOut),
+    ));
+    
+    _searchFadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _headerAnimationController,
+      curve: const Interval(0.4, 1.0, curve: Curves.easeOut),
+    ));
+    
+    _headerAnimationController.forward();
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (mounted) {
+        _listAnimationController.forward();
+      }
+    });
+  }
+  
+  @override
+  void dispose() {
+    _headerAnimationController.dispose();
+    _listAnimationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = ref.watch(themeNotifierProvider);
+    final isDarkMode = themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
     final vocabAsync = ref.watch(vocabularyListProvider);
     final vocabList = vocabAsync.asData?.value ?? [];
     final filtered = vocabList.where((word) {
@@ -66,72 +129,102 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen> {
             color: Colors.transparent,
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(MnemonicsSpacing.l),
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      hintText: 'Search words, meanings, or mnemonics',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (value) => setState(() => _search = value),
-                  ),
+                // Animated Header
+                _buildAnimatedHeader(setName ?? 'Word List', isDarkMode),
+                
+                // Animated Search Bar
+                AnimatedBuilder(
+                  animation: _headerAnimationController,
+                  builder: (context, child) {
+                    return FadeTransition(
+                      opacity: _searchFadeAnimation,
+                      child: Transform.translate(
+                        offset: Offset(0, _headerSlideAnimation.value),
+                        child: Container(
+                          margin: const EdgeInsets.all(MnemonicsSpacing.m),
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Search words, meanings, or mnemonics',
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                              ),
+                              filled: true,
+                              fillColor: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                                borderSide: BorderSide(
+                                  color: isDarkMode 
+                                      ? MnemonicsColors.darkBorder.withOpacity(0.3)
+                                      : MnemonicsColors.surface,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                                borderSide: BorderSide(
+                                  color: MnemonicsColors.primaryGreen,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                            onChanged: (value) => setState(() => _search = value),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 Expanded(
                   child: vocabAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (e, _) => Center(child: Text('Error: $e')),
                     data: (_) => filtered.isEmpty
-                        ? const Center(child: Text('No words found.'))
-                        : ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: MnemonicsSpacing.l, vertical: MnemonicsSpacing.m),
-                            itemCount: filtered.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: MnemonicsSpacing.m),
-                            itemBuilder: (context, i) {
-                              final word = filtered[i];
-                              final accent = accentColors[i % accentColors.length];
-                              return Card(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                                ),
-                                elevation: 2,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                                  onTap: () {
-                                    context.push('/flashcards', extra: {
-                                      'words': filtered,
-                                      'initialIndex': i,
-                                    });
-                                  },
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 8,
-                                        height: 64,
-                                        decoration: BoxDecoration(
-                                          color: accent,
-                                          borderRadius: const BorderRadius.only(
-                                            topLeft: Radius.circular(MnemonicsSpacing.radiusL),
-                                            bottomLeft: Radius.circular(MnemonicsSpacing.radiusL),
+                        ? _buildEmptyState(isDarkMode)
+                        : AnimatedBuilder(
+                            animation: _listAnimationController,
+                            builder: (context, child) {
+                              return ListView.separated(
+                                padding: const EdgeInsets.symmetric(horizontal: MnemonicsSpacing.l, vertical: MnemonicsSpacing.m),
+                                itemCount: filtered.length,
+                                separatorBuilder: (_, __) => const SizedBox(height: MnemonicsSpacing.m),
+                                itemBuilder: (context, i) {
+                                  final word = filtered[i];
+                                  final accent = accentColors[i % accentColors.length];
+                                  
+                                  // Staggered animation for each card
+                                  final animationDelay = (i * 0.1).clamp(0.0, 1.0);
+                                  final cardAnimation = Tween<double>(
+                                    begin: 0.0,
+                                    end: 1.0,
+                                  ).animate(CurvedAnimation(
+                                    parent: _listAnimationController,
+                                    curve: Interval(
+                                      animationDelay,
+                                      (0.4 + animationDelay).clamp(0.0, 1.0),
+                                      curve: Curves.elasticOut,
+                                    ),
+                                  ));
+                                  
+                                  return AnimatedBuilder(
+                                    animation: cardAnimation,
+                                    builder: (context, child) {
+                                      return Transform.translate(
+                                        offset: Offset(0, 30 * (1 - cardAnimation.value)),
+                                        child: Opacity(
+                                          opacity: cardAnimation.value.clamp(0.0, 1.0),
+                                          child: Transform.scale(
+                                            scale: (0.9 + (0.1 * cardAnimation.value)).clamp(0.1, 2.0),
+                                            child: _buildWordCard(word, accent, i, filtered, isDarkMode),
                                           ),
                                         ),
-                                      ),
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(MnemonicsSpacing.m),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(word.word, style: MnemonicsTypography.headingMedium),
-                                              const SizedBox(height: MnemonicsSpacing.xs),
-                                              Text(word.meaning, style: MnemonicsTypography.bodyRegular.copyWith(color: MnemonicsColors.textSecondary)),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                      );
+                                    },
+                                  );
+                                },
                               );
                             },
                           ),
@@ -143,5 +236,275 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildAnimatedHeader(String title, bool isDarkMode) {
+    return AnimatedBuilder(
+      animation: _headerAnimationController,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, _headerSlideAnimation.value),
+          child: FadeTransition(
+            opacity: _headerFadeAnimation,
+            child: Container(
+              margin: const EdgeInsets.all(MnemonicsSpacing.m),
+              padding: const EdgeInsets.all(MnemonicsSpacing.l),
+              decoration: BoxDecoration(
+                color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+                border: isDarkMode
+                    ? Border.all(
+                        color: MnemonicsColors.darkBorder.withOpacity(0.3),
+                        width: 1,
+                      )
+                    : null,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(MnemonicsSpacing.s),
+                    decoration: BoxDecoration(
+                      color: MnemonicsColors.primaryGreen.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                    ),
+                    child: Icon(
+                      Icons.library_books,
+                      color: MnemonicsColors.primaryGreen,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: MnemonicsSpacing.m),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: MnemonicsTypography.headingMedium.copyWith(
+                            color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Tap any word to start learning',
+                          style: MnemonicsTypography.bodyRegular.copyWith(
+                            color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(MnemonicsSpacing.s),
+                    decoration: BoxDecoration(
+                      color: MnemonicsColors.secondaryOrange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+                    ),
+                    child: Icon(
+                      Icons.psychology,
+                      color: MnemonicsColors.secondaryOrange,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState(bool isDarkMode) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 1000),
+            tween: Tween<double>(begin: 0.0, end: 1.0),
+            builder: (context, animation, child) {
+              return Transform.scale(
+                scale: animation,
+                child: Container(
+                  padding: const EdgeInsets.all(MnemonicsSpacing.l),
+                  decoration: BoxDecoration(
+                    color: MnemonicsColors.primaryGreen.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                  ),
+                  child: Icon(
+                    Icons.search_off,
+                    size: 64,
+                    color: MnemonicsColors.primaryGreen,
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: MnemonicsSpacing.m),
+          Text(
+            'No words found',
+            style: MnemonicsTypography.headingMedium.copyWith(
+              color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: MnemonicsSpacing.s),
+          Text(
+            'Try adjusting your search terms',
+            style: MnemonicsTypography.bodyRegular.copyWith(
+              color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWordCard(VocabularyWord word, Color accent, int index, List<VocabularyWord> filtered, bool isDarkMode) {
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 300 + (index * 50)),
+      tween: Tween<double>(begin: 0.0, end: 1.0),
+      builder: (context, scaleAnimation, child) {
+        return Container(
+          decoration: BoxDecoration(
+            color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+            borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+            boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+            border: isDarkMode
+                ? Border.all(
+                    color: MnemonicsColors.darkBorder.withOpacity(0.3),
+                    width: 1,
+                  )
+                : null,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.push('/flashcards', extra: {
+                  'words': filtered,
+                  'initialIndex': index,
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.all(MnemonicsSpacing.m),
+                child: Row(
+                  children: [
+                    // Animated icon
+                    TweenAnimationBuilder<double>(
+                      duration: const Duration(milliseconds: 800),
+                      tween: Tween<double>(begin: 0.0, end: 1.0),
+                      builder: (context, iconAnimation, child) {
+                        return Transform.rotate(
+                          angle: iconAnimation * 0.05,
+                          child: Container(
+                            padding: const EdgeInsets.all(MnemonicsSpacing.s),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  accent,
+                                  accent.withOpacity(0.7),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: accent.withOpacity(0.3),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.psychology,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: MnemonicsSpacing.m),
+                    // Content
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            word.word,
+                            style: MnemonicsTypography.headingMedium.copyWith(
+                              color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: MnemonicsSpacing.xs),
+                          Text(
+                            word.meaning,
+                            style: MnemonicsTypography.bodyRegular.copyWith(
+                              color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: MnemonicsSpacing.s),
+                          // Difficulty indicator
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: MnemonicsSpacing.s,
+                              vertical: MnemonicsSpacing.xs,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _getDifficultyColor(word.difficulty).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+                            ),
+                            child: Text(
+                              word.difficulty.toUpperCase(),
+                              style: MnemonicsTypography.bodyRegular.copyWith(
+                                color: _getDifficultyColor(word.difficulty),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Arrow indicator
+                    Container(
+                      padding: const EdgeInsets.all(MnemonicsSpacing.xs),
+                      decoration: BoxDecoration(
+                        color: accent.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
+                      ),
+                      child: Icon(
+                        Icons.arrow_forward_ios,
+                        color: accent,
+                        size: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Color _getDifficultyColor(String difficulty) {
+    switch (difficulty.toLowerCase()) {
+      case 'easy':
+        return Colors.green;
+      case 'medium':
+        return MnemonicsColors.secondaryOrange;
+      case 'hard':
+        return Colors.red;
+      default:
+        return MnemonicsColors.primaryGreen;
+    }
   }
 } 

@@ -21,13 +21,19 @@ class UserWordDataAdapter extends TypeAdapter<UserWordData> {
       notes: fields[1] as String,
       isLearned: fields[2] as bool,
       nextReview: fields[3] as DateTime?,
+      reviewCount: fields[4] as int,
+      lastReviewedAt: fields[5] as DateTime?,
+      firstLearnedAt: fields[6] as DateTime?,
+      correctAnswers: fields[7] as int,
+      totalAnswers: fields[8] as int,
+      learningStage: fields[9] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserWordData obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.word)
       ..writeByte(1)
@@ -35,7 +41,19 @@ class UserWordDataAdapter extends TypeAdapter<UserWordData> {
       ..writeByte(2)
       ..write(obj.isLearned)
       ..writeByte(3)
-      ..write(obj.nextReview);
+      ..write(obj.nextReview)
+      ..writeByte(4)
+      ..write(obj.reviewCount)
+      ..writeByte(5)
+      ..write(obj.lastReviewedAt)
+      ..writeByte(6)
+      ..write(obj.firstLearnedAt)
+      ..writeByte(7)
+      ..write(obj.correctAnswers)
+      ..writeByte(8)
+      ..write(obj.totalAnswers)
+      ..writeByte(9)
+      ..write(obj.learningStage);
   }
 
   @override

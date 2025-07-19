@@ -4,8 +4,8 @@ import '../../../../common/widgets/bottom_nav.dart';
 import '../../providers.dart';
 import 'home_screen.dart';
 import '../../../practice/presentation/screens/practice_screen.dart';
-import '../../../profile/presentation/screens/profile_screen.dart';
-import '../../../practice/presentation/screens/timer_screen.dart';
+import '../../../profile/presentation/screens/enhanced_profile_screen.dart';
+import '../../../practice/presentation/screens/learning_session_screen.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
 
@@ -45,6 +45,10 @@ class MainScaffold extends StatelessWidget {
           appBar: AppBar(
             title: Text(isWordListScreen ? 'Word List' : 'Mnemonics'),
             automaticallyImplyLeading: false,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            backgroundColor: Colors.transparent,
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
             leading: isTopLevelTab
                 ? null
                 : IconButton(

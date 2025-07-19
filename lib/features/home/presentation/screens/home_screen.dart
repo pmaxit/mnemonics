@@ -1,18 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/design/design_system.dart';
-import '../../../../common/widgets/bottom_nav.dart';
+import '../../../../common/design/theme_provider.dart';
 import '../../../../common/widgets/course_card.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers.dart';
 import 'dart:math';
-import 'learn_word_list_screen.dart';
-import '../../../home/providers.dart';
-import '../../infrastructure/word_set_repository.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
+import '../../../profile/providers/user_info_provider.dart';
+import '../../../profile/domain/user_info.dart';
+import 'package:intl/intl.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with TickerProviderStateMixin {
+
+  late AnimationController _headerAnimationController;
+  late AnimationController _cardAnimationController;
+  late Animation<double> _headerFadeAnimation;
+  late Animation<double> _headerSlideAnimation;
+  late List<Animation<double>> _cardAnimations;
 
   static const List<String> _tabRoutes = ['/learn', '/progress', '/profile'];
   static const List<String> _quotes = [
@@ -22,6 +36,63 @@ class HomeScreen extends ConsumerWidget {
     'Learning never exhausts the mind.',
     'Push yourself, because no one else is going to do it for you.'
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _headerAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    _cardAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
+    _headerFadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _headerAnimationController,
+      curve: const Interval(0.0, 0.8, curve: Curves.easeOut),
+    ));
+
+    _headerSlideAnimation = Tween<double>(
+      begin: -50.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _headerAnimationController,
+      curve: const Interval(0.2, 1.0, curve: Curves.elasticOut),
+    ));
+
+    _cardAnimations = List.generate(3, (index) {
+      return Tween<double>(
+        begin: 0.0,
+        end: 1.0,
+      ).animate(CurvedAnimation(
+        parent: _cardAnimationController,
+        curve: Interval(
+          0.2 * index,
+          0.4 + (0.2 * index),
+          curve: Curves.elasticOut,
+        ),
+      ));
+    });
+
+    _headerAnimationController.forward();
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        _cardAnimationController.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _headerAnimationController.dispose();
+    _cardAnimationController.dispose();
+    super.dispose();
+  }
 
   static const List<IconData> setIcons = [
     Icons.book,
@@ -39,88 +110,379 @@ class HomeScreen extends ConsumerWidget {
     return _quotes[random.nextInt(_quotes.length)];
   }
 
+  Widget _buildAnimatedHeader(bool isDarkMode) {
+    final userInfoAsync = ref.watch(currentUserProvider);
+    final now = DateTime.now();
+    final hour = now.hour;
+    String greeting;
+    
+    if (hour < 12) {
+      greeting = 'Good Morning';
+    } else if (hour < 17) {
+      greeting = 'Good Afternoon';
+    } else {
+      greeting = 'Good Evening';
+    }
+
+    return AnimatedBuilder(
+      animation: _headerAnimationController,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, _headerSlideAnimation.value),
+          child: FadeTransition(
+            opacity: _headerFadeAnimation,
+            child: Container(
+              margin: const EdgeInsets.all(MnemonicsSpacing.m),
+              padding: const EdgeInsets.all(MnemonicsSpacing.l),
+              decoration: BoxDecoration(
+                color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+                border: isDarkMode
+                    ? Border.all(
+                        color: MnemonicsColors.darkBorder.withOpacity(0.3),
+                        width: 1,
+                      )
+                    : null,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(MnemonicsSpacing.s),
+                        decoration: BoxDecoration(
+                          color: MnemonicsColors.primaryGreen.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                        ),
+                        child: Icon(
+                          Icons.school,
+                          color: MnemonicsColors.primaryGreen,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: MnemonicsSpacing.m),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Vocabulary Learning',
+                              style: MnemonicsTypography.headingMedium.copyWith(
+                                color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Master words through mnemonics',
+                              style: MnemonicsTypography.bodyRegular.copyWith(
+                                color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: MnemonicsSpacing.m),
+                  userInfoAsync.when(
+                    data: (userInfo) => TweenAnimationBuilder<double>(
+                      duration: const Duration(milliseconds: 1200),
+                      tween: Tween<double>(begin: 0.0, end: 1.0),
+                      builder: (context, animation, child) {
+                        return Transform.scale(
+                          scale: (0.95 + (0.05 * animation)).clamp(0.1, 2.0),
+                          child: Container(
+                            padding: const EdgeInsets.all(MnemonicsSpacing.m),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  MnemonicsColors.primaryGreen.withOpacity(0.8),
+                                  MnemonicsColors.secondaryOrange.withOpacity(0.8),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: MnemonicsColors.primaryGreen.withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '$greeting, ${userInfo.displayName.split(' ').first}!',
+                                        style: MnemonicsTypography.headingMedium.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: MnemonicsSpacing.xs),
+                                      Text(
+                                        'Ready to expand your vocabulary?',
+                                        style: MnemonicsTypography.bodyRegular.copyWith(
+                                          color: Colors.white.withOpacity(0.9),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.all(MnemonicsSpacing.s),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+                                  ),
+                                  child: const Icon(
+                                    Icons.auto_awesome,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    loading: () => const SizedBox.shrink(),
+                    error: (error, stack) => const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAnimatedCard({
+    required dynamic set,
+    required Color accent,
+    required IconData icon,
+    required bool isDarkMode,
+    required int index,
+  }) {
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 800 + (index * 100)),
+      tween: Tween<double>(begin: 0.0, end: 1.0),
+      builder: (context, scaleAnimation, child) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: MnemonicsSpacing.m),
+          child: Transform.scale(
+            scale: scaleAnimation.clamp(0.1, 2.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+                border: isDarkMode
+                    ? Border.all(
+                        color: MnemonicsColors.darkBorder.withOpacity(0.3),
+                        width: 1,
+                      )
+                    : null,
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                  onTap: () {
+                    // Add haptic feedback
+                    HapticFeedback.lightImpact();
+                    GoRouter.of(context).push('/word-list/${set.id}');
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(MnemonicsSpacing.l),
+                    child: Row(
+                      children: [
+                        // Animated icon container
+                        TweenAnimationBuilder<double>(
+                          duration: const Duration(milliseconds: 1000),
+                          tween: Tween<double>(begin: 0.0, end: 1.0),
+                          builder: (context, iconAnimation, child) {
+                            return Transform.rotate(
+                              angle: iconAnimation * 0.1,
+                              child: Container(
+                                padding: const EdgeInsets.all(MnemonicsSpacing.m),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      accent,
+                                      accent.withOpacity(0.7),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: accent.withOpacity(0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  icon,
+                                  color: Colors.white,
+                                  size: 32,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: MnemonicsSpacing.l),
+                        // Content
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                set.name,
+                                style: MnemonicsTypography.headingMedium.copyWith(
+                                  color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: MnemonicsSpacing.xs),
+                              Text(
+                                set.description,
+                                style: MnemonicsTypography.bodyRegular.copyWith(
+                                  color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: MnemonicsSpacing.s),
+                              // Progress indicator
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: MnemonicsSpacing.s,
+                                  vertical: MnemonicsSpacing.xs,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: accent.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.play_arrow,
+                                      color: accent,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: MnemonicsSpacing.xs),
+                                    Text(
+                                      'Start Learning',
+                                      style: MnemonicsTypography.bodyRegular.copyWith(
+                                        color: accent,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Arrow indicator
+                        Container(
+                          padding: const EdgeInsets.all(MnemonicsSpacing.xs),
+                          decoration: BoxDecoration(
+                            color: accent.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
+                          ),
+                          child: Icon(
+                            Icons.arrow_forward_ios,
+                            color: accent,
+                            size: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final wordSetsAsync = ref.watch(wordSetListProvider);
     final screenHeight = MediaQuery.of(context).size.height;
+    final themeMode = ref.watch(themeNotifierProvider);
+    final isDarkMode = themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
+    
     return Stack(
       children: [
         // Full-screen animated background
         AnimatedWaveBackground(height: screenHeight),
-        // Main content (no background color)
-        wordSetsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
-          data: (sets) {
-            return GridView.builder(
-              padding: const EdgeInsets.all(MnemonicsSpacing.xl),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: MnemonicsSpacing.xl,
-                crossAxisSpacing: MnemonicsSpacing.xl,
-                childAspectRatio: 1.1,
+        // Main content
+        Column(
+          children: [
+            // Animated Header
+            _buildAnimatedHeader(isDarkMode),
+            // Card Content
+            Expanded(
+              child: wordSetsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('Error: $e')),
+                data: (sets) {
+                  return ListView(
+                    padding: const EdgeInsets.all(MnemonicsSpacing.m),
+                    children: [
+                      const SizedBox(height: MnemonicsSpacing.s),
+                      ...sets.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final set = entry.value;
+                        final accent = accentColors[index % accentColors.length];
+                        final icon = setIcons[index % setIcons.length];
+                        
+                        return AnimatedBuilder(
+                          animation: _cardAnimations[index % _cardAnimations.length],
+                          builder: (context, child) {
+                            final animation = _cardAnimations[index % _cardAnimations.length];
+                            return Transform.translate(
+                              offset: Offset(0, 50 * (1 - animation.value)),
+                              child: Opacity(
+                                opacity: animation.value.clamp(0.0, 1.0),
+                                child: Transform.scale(
+                                  scale: (0.8 + (0.2 * animation.value)).clamp(0.1, 2.0),
+                                  child: _buildAnimatedCard(
+                                    set: set,
+                                    accent: accent,
+                                    icon: icon,
+                                    isDarkMode: isDarkMode,
+                                    index: index,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }),
+                    ],
+                  );
+                },
               ),
-              itemCount: sets.length,
-              itemBuilder: (context, i) {
-                final set = sets[i];
-                final accent = accentColors[i % accentColors.length];
-                final icon = setIcons[i % setIcons.length];
-                return Container(
-                  decoration: BoxDecoration(
-                    color: MnemonicsColors.background,
-                    borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-                    boxShadow: MnemonicsColors.cardShadow,
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-                      onTap: () {
-                        GoRouter.of(context).push('/word-list/${set.id}');
-                      },
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: double.infinity,
-                            decoration: BoxDecoration(
-                              color: accent,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(MnemonicsSpacing.radiusXL),
-                                bottomLeft: Radius.circular(MnemonicsSpacing.radiusXL),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(MnemonicsSpacing.l),
-                              child: Stack(
-                                children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(set.name, style: MnemonicsTypography.headingMedium),
-                                      Text(set.description, style: MnemonicsTypography.bodyRegular),
-                                    ],
-                                  ),
-                                  Positioned(
-                                    top: 0,
-                                    right: 0,
-                                    child: Icon(icon, color: accent, size: 28),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            );
-          },
+            ),
+          ],
         ),
       ],
     );

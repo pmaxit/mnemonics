@@ -9,6 +9,11 @@ class ReviewActivityRepository {
     await box.add(activity);
   }
 
+  Future<void> saveActivity(ReviewActivity activity) async {
+    final box = await Hive.openBox<ReviewActivity>(boxName);
+    await box.add(activity);
+  }
+
   Future<List<ReviewActivity>> getAllActivities() async {
     final box = await Hive.openBox<ReviewActivity>(boxName);
     return box.values.toList();

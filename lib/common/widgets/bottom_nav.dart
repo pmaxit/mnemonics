@@ -64,9 +64,9 @@ class CustomBottomNavBar extends StatelessWidget {
                 inactiveColor: inactiveColor,
               ),
               _NavBarItem(
-                icon: Icons.timer_outlined,
-                activeIcon: Icons.timer,
-                label: 'Timer',
+                icon: Icons.school_outlined,
+                activeIcon: Icons.school,
+                label: 'Learn',
                 tab: AppTab.timer,
                 isActive: currentTab == AppTab.timer,
                 onTap: () => onTabSelected(AppTab.timer),

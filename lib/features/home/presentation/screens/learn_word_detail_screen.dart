@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../domain/vocabulary_word.dart';
 import '../../../../common/design/design_system.dart';
+import '../../../../common/design/theme_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../home/providers.dart';
 import '../../../home/infrastructure/user_word_data_repository.dart';
 import '../../../home/domain/user_word_data.dart';
 import '../../../home/domain/spaced_repetition.dart';
-import '../../../home/infrastructure/review_activity_repository.dart';
-import '../../../home/domain/review_activity.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
+import '../../../practice/domain/user_progress_service.dart';
 
 class LearnWordDetailScreen extends ConsumerStatefulWidget {
   final List<VocabularyWord> words;
@@ -19,7 +19,8 @@ class LearnWordDetailScreen extends ConsumerStatefulWidget {
   ConsumerState<LearnWordDetailScreen> createState() => _LearnWordDetailScreenState();
 }
 
-class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen> {
+class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
+    with TickerProviderStateMixin {
   late PageController _pageController;
   int _currentIndex = 0;
   TextEditingController? _notesController;
@@ -28,13 +29,59 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen> {
 
   UserWordData? _userWordData;
   bool _loading = true;
+  DateTime? _viewStartTime;
+  bool _wordViewed = false;
+  
+  late AnimationController _pageAnimationController;
+  late AnimationController _contentAnimationController;
+  late Animation<double> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: _currentIndex);
+    _viewStartTime = DateTime.now();
+    
+    // Initialize animations
+    _pageAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    
+    _contentAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    
+    _slideAnimation = Tween<double>(
+      begin: 30.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _pageAnimationController,
+      curve: Curves.easeOutBack,
+    ));
+    
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _pageAnimationController,
+      curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
+    ));
+    
+    _scaleAnimation = Tween<double>(
+      begin: 0.9,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _contentAnimationController,
+      curve: Curves.elasticOut,
+    ));
+    
     _loadUserWordData();
+    _trackWordView();
   }
 
   Future<void> _loadUserWordData() async {
@@ -53,16 +100,39 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen> {
 
   @override
   void dispose() {
+    _pageAnimationController.dispose();
+    _contentAnimationController.dispose();
     _pageController.dispose();
     _notesController?.dispose();
     super.dispose();
-  }
+  } 
 
   void _onPageChanged(int index) async {
+    // Track time spent on previous word
+    if (_viewStartTime != null) {
+      await _trackWordViewTime();
+    }
+    
+    // Reset animations for new page
+    _pageAnimationController.reset();
+    _contentAnimationController.reset();
+    
     setState(() {
       _currentIndex = index;
+      _wordViewed = false;
+      _viewStartTime = DateTime.now();
     });
+    
     await _loadUserWordData();
+    await _trackWordView();
+    
+    // Start animations for new page
+    _pageAnimationController.forward();
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        _contentAnimationController.forward();
+      }
+    });
   }
 
   @override
@@ -173,28 +243,51 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen> {
                             ],
                           ),
                           const SizedBox(height: MnemonicsSpacing.m),
+                          _buildProgressInfo(),
+                          const SizedBox(height: MnemonicsSpacing.m),
                           _buildSpacedRepetitionHint(),
-                          if (_isLearned)
+                          if (_isLearned) ...[
+                            const SizedBox(height: MnemonicsSpacing.m),
+                            Text('How did you find this word?', style: MnemonicsTypography.bodyLarge),
+                            const SizedBox(height: MnemonicsSpacing.s),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                ElevatedButton(
-                                  onPressed: () => _handleReview(ReviewRating.hard),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                                  child: const Text('Hard'),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () => _handleReview(ReviewRating.hard),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.redAccent,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                    child: const Text('Hard'),
+                                  ),
                                 ),
-                                ElevatedButton(
-                                  onPressed: () => _handleReview(ReviewRating.medium),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent),
-                                  child: const Text('Medium'),
+                                const SizedBox(width: MnemonicsSpacing.s),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () => _handleReview(ReviewRating.medium),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.orangeAccent,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                    child: const Text('Medium'),
+                                  ),
                                 ),
-                                ElevatedButton(
-                                  onPressed: () => _handleReview(ReviewRating.easy),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                  child: const Text('Easy'),
+                                const SizedBox(width: MnemonicsSpacing.s),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () => _handleReview(ReviewRating.easy),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                    child: const Text('Easy'),
+                                  ),
                                 ),
                               ],
                             ),
+                          ],
                           // TODO: Add spaced repetition review actions
                         ],
                       ),
@@ -204,6 +297,85 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildProgressInfo() {
+    final word = widget.words[_currentIndex];
+    
+    return Container(
+      padding: const EdgeInsets.all(MnemonicsSpacing.m),
+      decoration: BoxDecoration(
+        color: MnemonicsColors.surface,
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+        border: Border.all(color: MnemonicsColors.primaryGreen.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Word Information',
+            style: MnemonicsTypography.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: MnemonicsSpacing.s),
+          Row(
+            children: [
+              _buildInfoChip('Category', word.category, MnemonicsColors.primaryGreen),
+              const SizedBox(width: MnemonicsSpacing.s),
+              _buildInfoChip('Difficulty', word.difficulty, _getDifficultyColor(word.difficulty)),
+            ],
+          ),
+          if (_userWordData != null) ...[
+            const SizedBox(height: MnemonicsSpacing.s),
+            Row(
+              children: [
+                _buildInfoChip('Reviews', '${_userWordData!.reviewCount}', MnemonicsColors.secondaryOrange),
+                const SizedBox(width: MnemonicsSpacing.s),
+                _buildInfoChip('Accuracy', '${(_userWordData!.accuracyRate * 100).toStringAsFixed(0)}%', 
+                    _getAccuracyColor(_userWordData!.accuracyRate)),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoChip(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: MnemonicsSpacing.s, vertical: MnemonicsSpacing.xs),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(
+        '$label: $value',
+        style: MnemonicsTypography.bodyRegular.copyWith(
+          fontSize: 12,
+          color: color.withOpacity(0.8),
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  Color _getDifficultyColor(String difficulty) {
+    switch (difficulty.toLowerCase()) {
+      case 'easy':
+        return Colors.green;
+      case 'medium':
+        return Colors.orange;
+      case 'hard':
+        return Colors.red;
+      default:
+        return MnemonicsColors.textSecondary;
+    }
+  }
+
+  Color _getAccuracyColor(double accuracy) {
+    if (accuracy >= 0.8) return Colors.green;
+    if (accuracy >= 0.6) return Colors.orange;
+    return Colors.red;
   }
 
   Widget _buildSpacedRepetitionHint() {
@@ -244,14 +416,15 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen> {
       _nextReview = next;
     });
     await _saveUserWordData();
-    // Log activity
-    final repo = ref.read(reviewActivityRepositoryProvider);
+    
+    // Use enhanced progress service
+    final progressService = ref.read(userProgressServiceProvider);
     final word = widget.words[_currentIndex].word;
-    await repo.addActivity(ReviewActivity(
-      word: word,
-      reviewedAt: now,
-      rating: rating.toString().split('.').last,
-    ));
+    
+    // Convert rating to string for review activity
+    final ratingStr = rating.toString().split('.').last;
+    await progressService.recordReviewActivity(word, ratingStr);
+    
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Next review: ${_formatNextReview(next)}')),
@@ -273,15 +446,223 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen> {
     }
   }
 
+  Future<void> _trackWordView() async {
+    if (_wordViewed) return;
+    
+    final progressService = ref.read(userProgressServiceProvider);
+    final word = widget.words[_currentIndex].word;
+    
+    // Track that the user viewed this word
+    await progressService.recordWordLearned(word, isCorrect: true);
+    
+    _wordViewed = true;
+  }
+
+  Future<void> _trackWordViewTime() async {
+    if (_viewStartTime == null) return;
+    
+    final viewDuration = DateTime.now().difference(_viewStartTime!);
+    if (viewDuration.inSeconds >= 5) { // Only track if viewed for at least 5 seconds
+      final progressService = ref.read(userProgressServiceProvider);
+      final word = widget.words[_currentIndex].word;
+      
+      // Record extended viewing as additional engagement
+      await progressService.recordWordLearned(word, isCorrect: true);
+    }
+  }
+
   Future<void> _saveUserWordData() async {
     final repo = ref.read(userWordDataRepositoryProvider);
     final word = widget.words[_currentIndex];
-    final data = UserWordData(
+    final now = DateTime.now();
+    
+    var data = _userWordData ?? UserWordData(
       word: word.word,
       notes: _notesController?.text ?? '',
       isLearned: _isLearned,
       nextReview: _nextReview,
     );
+    
+    data.notes = _notesController?.text ?? '';
+    data.isLearned = _isLearned;
+    data.nextReview = _nextReview;
+    data.lastReviewedAt = now;
+    
+    if (data.firstLearnedAt == null) {
+      data.firstLearnedAt = now;
+    }
+    
     await repo.saveOrUpdateUserWordData(data);
+    
+    // Update progress service
+    final progressService = ref.read(userProgressServiceProvider);
+    if (_isLearned) {
+      await progressService.markWordAsLearned(word.word);
+    }
+  }
+
+  Widget _buildAnimatedWordHeader(VocabularyWord word, bool isDarkMode) {
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 600),
+      tween: Tween<double>(begin: 0.0, end: 1.0),
+      builder: (context, animation, child) {
+        return Transform.scale(
+          scale: 0.9 + (0.1 * animation),
+          child: Container(
+            padding: const EdgeInsets.all(MnemonicsSpacing.l),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  MnemonicsColors.primaryGreen.withOpacity(0.8),
+                  MnemonicsColors.secondaryOrange.withOpacity(0.8),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+              boxShadow: [
+                BoxShadow(
+                  color: MnemonicsColors.primaryGreen.withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        word.word,
+                        style: MnemonicsTypography.headingLarge.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(MnemonicsSpacing.s),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+                      ),
+                      child: Icon(
+                        Icons.psychology,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: MnemonicsSpacing.s),
+                Row(
+                  children: [
+                    _buildHeaderChip(word.category, Colors.white.withOpacity(0.9)),
+                    const SizedBox(width: MnemonicsSpacing.s),
+                    _buildHeaderChip(word.difficulty, Colors.white.withOpacity(0.9)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeaderChip(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: MnemonicsSpacing.s,
+        vertical: MnemonicsSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+      ),
+      child: Text(
+        text.toUpperCase(),
+        style: MnemonicsTypography.bodyRegular.copyWith(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnimatedSection(
+    String title,
+    String content,
+    IconData icon,
+    Color color,
+    bool isDarkMode,
+    double delay,
+  ) {
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 600 + (delay * 200).round()),
+      tween: Tween<double>(begin: 0.0, end: 1.0),
+      builder: (context, animation, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - animation)),
+          child: Opacity(
+            opacity: animation,
+            child: Container(
+              padding: const EdgeInsets.all(MnemonicsSpacing.m),
+              decoration: BoxDecoration(
+                color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+                border: isDarkMode
+                    ? Border.all(
+                        color: MnemonicsColors.darkBorder.withOpacity(0.3),
+                        width: 1,
+                      )
+                    : null,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(MnemonicsSpacing.xs),
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
+                        ),
+                        child: Icon(
+                          icon,
+                          color: color,
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: MnemonicsSpacing.s),
+                      Text(
+                        title,
+                        style: MnemonicsTypography.bodyLarge.copyWith(
+                          color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: MnemonicsSpacing.s),
+                  Text(
+                    content,
+                    style: MnemonicsTypography.bodyRegular.copyWith(
+                      color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 } 

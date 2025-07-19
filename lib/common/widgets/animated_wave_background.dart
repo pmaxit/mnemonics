@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../design/design_system.dart';
 
 class AnimatedWaveBackground extends StatefulWidget {
   final double height;

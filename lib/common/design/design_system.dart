@@ -11,6 +11,13 @@ class MnemonicsDesign {
   static const Color textPrimary = Color(0xFF2D3436);
   static const Color textSecondary = Color(0xFF636E72);
   
+  // Dark theme colors
+  static const Color darkBackground = Color(0xFF1A1A1A);
+  static const Color darkSurface = Color(0xFF2D2D2D);
+  static const Color darkTextPrimary = Color(0xFFE0E0E0);
+  static const Color darkTextSecondary = Color(0xFFA0A0A0);
+  static const Color darkBorder = Color(0xFF404040);
+  
   // Progress Colors
   static const Color progressGreen = Color(0xFF4CAF8F);
   static const Color progressPink = Color(0xFFF8BBD0);
@@ -141,11 +148,27 @@ class MnemonicsColors {
 
   // Shadow Colors
   static const Color shadowColor = Color(0x1A000000); // 10% black
+  
+  // Dark theme colors
+  static const Color darkBackground = Color(0xFF1A1A1A);
+  static const Color darkSurface = Color(0xFF2D2D2D);
+  static const Color darkTextPrimary = Color(0xFFE0E0E0);
+  static const Color darkTextSecondary = Color(0xFFA0A0A0);
+  static const Color darkBorder = Color(0xFF404040);
 
   // Elevation Overlays
   static const List<BoxShadow> cardShadow = [
     BoxShadow(
       color: shadowColor,
+      offset: Offset(0, 4),
+      blurRadius: 8,
+    ),
+  ];
+  
+  // Dark theme shadows
+  static const List<BoxShadow> darkCardShadow = [
+    BoxShadow(
+      color: Color(0x40000000),
       offset: Offset(0, 4),
       blurRadius: 8,
     ),

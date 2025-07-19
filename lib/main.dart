@@ -5,7 +5,7 @@ import 'common/design/theme_provider.dart';
 import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/home/presentation/screens/home_screen.dart';
 import 'features/practice/presentation/screens/practice_screen.dart';
-import 'features/profile/presentation/screens/profile_screen.dart';
+import 'features/profile/presentation/screens/enhanced_profile_screen.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'features/home/domain/user_word_data.dart';

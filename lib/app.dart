@@ -7,8 +7,8 @@ import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/home/presentation/screens/main_scaffold.dart';
 import 'features/home/presentation/screens/home_screen.dart';
 import 'features/practice/presentation/screens/practice_screen.dart';
-import 'features/practice/presentation/screens/timer_screen.dart';
-import 'features/profile/presentation/screens/profile_screen.dart';
+import 'features/practice/presentation/screens/learning_session_screen.dart';
+import 'features/profile/presentation/screens/enhanced_profile_screen.dart';
 import 'package:flutter/material.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -43,11 +43,11 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: 'timer',
-                builder: (context, state) => const TimerScreen(),
+                builder: (context, state) => const LearningSessionScreen(),
               ),
               GoRoute(
                 path: 'profile',
-                builder: (context, state) => const ProfileScreen(),
+                builder: (context, state) => const EnhancedProfileScreen(),
               ),
             ],
           ),

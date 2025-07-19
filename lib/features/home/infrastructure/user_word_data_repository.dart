@@ -23,6 +23,11 @@ class UserWordDataRepository {
     await box.put(data.word, data);
   }
 
+  Future<void> saveUserWordData(UserWordData data) async {
+    final box = await _openBox();
+    await box.put(data.word, data);
+  }
+
   Future<void> deleteUserWordData(String word) async {
     final box = await _openBox();
     await box.delete(word);
@@ -31,5 +36,10 @@ class UserWordDataRepository {
   Future<List<UserWordData>> getAllUserWordData() async {
     final box = await _openBox();
     return box.values.toList();
+  }
+
+  Future<void> clearAllData() async {
+    final box = await _openBox();
+    await box.clear();
   }
 } 
