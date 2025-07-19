@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'common/design/theme_provider.dart';
-import 'features/splash/presentation/screens/splash_screen.dart';
-import 'features/home/presentation/screens/home_screen.dart';
-import 'features/practice/presentation/screens/practice_screen.dart';
-import 'features/profile/presentation/screens/enhanced_profile_screen.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'features/home/domain/user_word_data.dart';
-import 'features/home/presentation/screens/main_scaffold.dart';
 import 'features/home/domain/user_settings.dart';
 import 'features/home/domain/review_activity.dart';
 import 'app.dart';

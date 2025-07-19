@@ -141,7 +141,7 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
         children: [
           // Word
           Text(
-            widget.word.word,
+            _sanitizeText(widget.word.word),
             style: MnemonicsTypography.headingLarge.copyWith(
               fontWeight: FontWeight.bold,
               color: MnemonicsColors.textPrimary,
@@ -162,7 +162,7 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
               borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
             ),
             child: Text(
-              widget.word.category,
+              _sanitizeText(widget.word.category),
               style: MnemonicsTypography.bodyRegular.copyWith(
                 color: MnemonicsColors.primaryGreen,
                 fontWeight: FontWeight.w600,
@@ -201,7 +201,7 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
             // Word (smaller on back)
             Center(
               child: Text(
-                widget.word.word,
+                _sanitizeText(widget.word.word),
                 style: MnemonicsTypography.headingMedium.copyWith(
                   fontWeight: FontWeight.bold,
                   color: MnemonicsColors.textPrimary,
@@ -212,26 +212,26 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
             const SizedBox(height: MnemonicsSpacing.l),
             
             // Meaning
-            _buildSection('Meaning', widget.word.meaning),
+            _buildSection('Meaning', _sanitizeText(widget.word.meaning)),
             
             const SizedBox(height: MnemonicsSpacing.m),
             
             // Mnemonic
-            _buildSection('Mnemonic', widget.word.mnemonic),
+            _buildSection('Mnemonic', _sanitizeText(widget.word.mnemonic)),
             
             const SizedBox(height: MnemonicsSpacing.m),
             
             // Example
-            _buildSection('Example', widget.word.example),
+            _buildSection('Example', _sanitizeText(widget.word.example)),
             
             if (widget.word.synonyms.isNotEmpty) ...[
               const SizedBox(height: MnemonicsSpacing.m),
-              _buildListSection('Synonyms', widget.word.synonyms),
+              _buildListSection('Synonyms', widget.word.synonyms.map(_sanitizeText).toList()),
             ],
             
             if (widget.word.antonyms.isNotEmpty) ...[
               const SizedBox(height: MnemonicsSpacing.m),
-              _buildListSection('Antonyms', widget.word.antonyms),
+              _buildListSection('Antonyms', widget.word.antonyms.map(_sanitizeText).toList()),
             ],
           ],
         ),
@@ -415,5 +415,44 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
         ],
       ),
     );
+  }
+
+  String _sanitizeText(String text) {
+    if (text.isEmpty) return text;
+    
+    // Remove any invalid Unicode characters
+    final buffer = StringBuffer();
+    for (int i = 0; i < text.length; i++) {
+      final codeUnit = text.codeUnitAt(i);
+      
+      // Check for valid UTF-16 code units
+      if (codeUnit >= 0x20 && codeUnit <= 0xD7FF) {
+        // Basic Latin, Latin-1 Supplement, and other BMP characters
+        buffer.writeCharCode(codeUnit);
+      } else if (codeUnit >= 0xE000 && codeUnit <= 0xFFFD) {
+        // Private use area and other valid BMP characters
+        buffer.writeCharCode(codeUnit);
+      } else if (codeUnit >= 0xD800 && codeUnit <= 0xDBFF && i + 1 < text.length) {
+        // High surrogate - check if followed by low surrogate
+        final nextCodeUnit = text.codeUnitAt(i + 1);
+        if (nextCodeUnit >= 0xDC00 && nextCodeUnit <= 0xDFFF) {
+          // Valid surrogate pair
+          buffer.writeCharCode(codeUnit);
+          buffer.writeCharCode(nextCodeUnit);
+          i++; // Skip the low surrogate in next iteration
+        } else {
+          // Invalid surrogate pair - replace with replacement character
+          buffer.write('�');
+        }
+      } else if (codeUnit >= 0x09 && codeUnit <= 0x0D) {
+        // Tab, newline, carriage return - keep these
+        buffer.writeCharCode(codeUnit);
+      } else {
+        // Replace invalid characters with replacement character
+        buffer.write('�');
+      }
+    }
+    
+    return buffer.toString();
   }
 }

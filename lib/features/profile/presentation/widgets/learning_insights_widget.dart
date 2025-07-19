@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../common/design/design_system.dart';
 import '../../domain/profile_statistics.dart';
+import '../screens/detailed_word_statistics_screen.dart';
+import '../screens/category_detail_screen.dart';
 
 class LearningInsightsWidget extends StatelessWidget {
   final ProfileStatistics profileStats;
@@ -56,12 +58,12 @@ class LearningInsightsWidget extends StatelessWidget {
           const SizedBox(height: MnemonicsSpacing.m),
           
           // Category Performance
-          _buildCategoryInsights(textColor, secondaryTextColor),
+          _buildCategoryInsights(context, textColor, secondaryTextColor),
           
           const SizedBox(height: MnemonicsSpacing.m),
           
           // Difficulty Analysis
-          _buildDifficultyInsights(textColor, secondaryTextColor),
+          _buildDifficultyInsights(context, textColor, secondaryTextColor),
           
           const SizedBox(height: MnemonicsSpacing.m),
           
@@ -72,7 +74,7 @@ class LearningInsightsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryInsights(Color textColor, Color secondaryTextColor) {
+  Widget _buildCategoryInsights(BuildContext context, Color textColor, Color secondaryTextColor) {
     if (profileStats.categoryStats.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(MnemonicsSpacing.m),
@@ -108,13 +110,14 @@ class LearningInsightsWidget extends StatelessWidget {
         ),
         const SizedBox(height: MnemonicsSpacing.s),
         ...topCategories.take(3).map((category) => 
-          _buildCategoryProgressBar(category, textColor, secondaryTextColor)
+          _buildCategoryProgressBar(context, category, textColor, secondaryTextColor)
         ),
       ],
     );
   }
 
   Widget _buildCategoryProgressBar(
+    BuildContext context,
     CategoryStats category,
     Color textColor,
     Color secondaryTextColor,
@@ -124,54 +127,73 @@ class LearningInsightsWidget extends StatelessWidget {
         : 0.0;
     final progressClamped = progress.clamp(0.0, 1.0);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: MnemonicsSpacing.s),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  _formatCategoryName(category.categoryName),
-                  style: MnemonicsTypography.bodyRegular.copyWith(
-                    color: textColor,
-                    fontWeight: FontWeight.w500,
+    return InkWell(
+      onTap: () => _navigateToCategory(context, category.categoryName),
+      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: MnemonicsSpacing.s),
+        padding: const EdgeInsets.all(MnemonicsSpacing.s),
+        decoration: BoxDecoration(
+          color: _getCategoryColor(category.categoryName).withOpacity(0.05),
+          borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+          border: Border.all(
+            color: _getCategoryColor(category.categoryName).withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _formatCategoryName(category.categoryName),
+                    style: MnemonicsTypography.bodyRegular.copyWith(
+                      color: textColor,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
-              Text(
-                '${category.wordsLearned}/${category.totalWords}',
-                style: MnemonicsTypography.bodyRegular.copyWith(
-                  color: secondaryTextColor,
-                  fontSize: 12,
+                Text(
+                  '${category.wordsLearned}/${category.totalWords}',
+                  style: MnemonicsTypography.bodyRegular.copyWith(
+                    color: secondaryTextColor,
+                    fontSize: 12,
+                  ),
                 ),
-              ),
-              const SizedBox(width: MnemonicsSpacing.s),
-              Text(
-                '${(category.averageAccuracy * 100).toStringAsFixed(0)}%',
-                style: MnemonicsTypography.bodyRegular.copyWith(
-                  color: _getAccuracyColor(category.averageAccuracy),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                const SizedBox(width: MnemonicsSpacing.s),
+                Text(
+                  '${(category.averageAccuracy * 100).toStringAsFixed(0)}%',
+                  style: MnemonicsTypography.bodyRegular.copyWith(
+                    color: _getAccuracyColor(category.averageAccuracy),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: MnemonicsSpacing.xs),
-          LinearProgressIndicator(
-            value: progressClamped,
-            backgroundColor: Colors.grey.withOpacity(0.2),
-            valueColor: AlwaysStoppedAnimation<Color>(
-              _getCategoryColor(category.categoryName),
+                const SizedBox(width: MnemonicsSpacing.xs),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: _getCategoryColor(category.categoryName).withOpacity(0.5),
+                  size: 12,
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: MnemonicsSpacing.xs),
+            LinearProgressIndicator(
+              value: progressClamped,
+              backgroundColor: Colors.grey.withOpacity(0.2),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                _getCategoryColor(category.categoryName),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildDifficultyInsights(Color textColor, Color secondaryTextColor) {
+  Widget _buildDifficultyInsights(BuildContext context, Color textColor, Color secondaryTextColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -187,6 +209,7 @@ class LearningInsightsWidget extends StatelessWidget {
           children: profileStats.difficultyStats.map((difficulty) => 
             Expanded(
               child: _buildDifficultyCard(
+                context,
                 difficulty,
                 textColor,
                 secondaryTextColor,
@@ -199,6 +222,7 @@ class LearningInsightsWidget extends StatelessWidget {
   }
 
   Widget _buildDifficultyCard(
+    BuildContext context,
     DifficultyStats difficulty,
     Color textColor,
     Color secondaryTextColor,
@@ -208,51 +232,65 @@ class LearningInsightsWidget extends StatelessWidget {
         ? difficulty.wordsLearned / difficulty.totalWords 
         : 0.0;
 
-    return Container(
-      margin: const EdgeInsets.only(right: MnemonicsSpacing.s),
-      padding: const EdgeInsets.all(MnemonicsSpacing.s),
-      decoration: BoxDecoration(
-        color: difficultyColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-        border: Border.all(
-          color: difficultyColor.withOpacity(0.3),
-          width: 1,
+    return InkWell(
+      onTap: () => _navigateToDifficulty(context, difficulty.difficulty),
+      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+      child: Container(
+        margin: const EdgeInsets.only(right: MnemonicsSpacing.s),
+        padding: const EdgeInsets.all(MnemonicsSpacing.s),
+        decoration: BoxDecoration(
+          color: difficultyColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+          border: Border.all(
+            color: difficultyColor.withOpacity(0.3),
+            width: 1,
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          Text(
-            _formatDifficultyName(difficulty.difficulty),
-            style: MnemonicsTypography.bodyRegular.copyWith(
-              color: textColor,
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _formatDifficultyName(difficulty.difficulty),
+                  style: MnemonicsTypography.bodyRegular.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: difficultyColor.withOpacity(0.5),
+                  size: 10,
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: MnemonicsSpacing.xs),
-          Text(
-            '${difficulty.wordsLearned}/${difficulty.totalWords}',
-            style: MnemonicsTypography.bodyRegular.copyWith(
-              color: secondaryTextColor,
-              fontSize: 11,
+            const SizedBox(height: MnemonicsSpacing.xs),
+            Text(
+              '${difficulty.wordsLearned}/${difficulty.totalWords}',
+              style: MnemonicsTypography.bodyRegular.copyWith(
+                color: secondaryTextColor,
+                fontSize: 11,
+              ),
             ),
-          ),
-          const SizedBox(height: MnemonicsSpacing.xs),
-          LinearProgressIndicator(
-            value: progress.clamp(0.0, 1.0),
-            backgroundColor: Colors.grey.withOpacity(0.2),
-            valueColor: AlwaysStoppedAnimation<Color>(difficultyColor),
-          ),
-          const SizedBox(height: MnemonicsSpacing.xs),
-          Text(
-            '${(difficulty.averageAccuracy * 100).toStringAsFixed(0)}%',
-            style: MnemonicsTypography.bodyRegular.copyWith(
-              color: difficultyColor,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+            const SizedBox(height: MnemonicsSpacing.xs),
+            LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              backgroundColor: Colors.grey.withOpacity(0.2),
+              valueColor: AlwaysStoppedAnimation<Color>(difficultyColor),
             ),
-          ),
-        ],
+            const SizedBox(height: MnemonicsSpacing.xs),
+            Text(
+              '${(difficulty.averageAccuracy * 100).toStringAsFixed(0)}%',
+              style: MnemonicsTypography.bodyRegular.copyWith(
+                color: difficultyColor,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -397,6 +435,37 @@ class LearningInsightsWidget extends StatelessWidget {
     if (accuracy >= 0.8) return MnemonicsColors.primaryGreen;
     if (accuracy >= 0.7) return MnemonicsColors.secondaryOrange;
     return Colors.red;
+  }
+
+  void _navigateToCategory(BuildContext context, String category) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CategoryDetailScreen(category: category),
+      ),
+    );
+  }
+
+  void _navigateToDifficulty(BuildContext context, String difficulty) {
+    WordStatType statType;
+    switch (difficulty.toLowerCase()) {
+      case 'easy':
+        statType = WordStatType.easy;
+        break;
+      case 'medium':
+        statType = WordStatType.medium;
+        break;
+      case 'hard':
+        statType = WordStatType.hard;
+        break;
+      default:
+        statType = WordStatType.allWords;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DetailedWordStatisticsScreen(statType: statType),
+      ),
+    );
   }
 }
 
