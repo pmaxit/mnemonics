@@ -19,7 +19,7 @@ class ReviewActivityAdapter extends TypeAdapter<ReviewActivity> {
     return ReviewActivity(
       word: fields[0] as String,
       reviewedAt: fields[1] as DateTime,
-      rating: fields[2] as String,
+      rating: fields[2] as ReviewDifficultyRating,
     );
   }
 

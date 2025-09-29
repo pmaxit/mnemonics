@@ -4,6 +4,7 @@ import '../../home/domain/review_activity.dart';
 import '../../home/infrastructure/user_word_data_repository.dart';
 import '../../home/infrastructure/review_activity_repository.dart';
 import '../../home/providers.dart';
+import '../../profile/domain/user_statistics.dart';
 
 final userProgressServiceProvider = Provider<UserProgressService>((ref) {
   return UserProgressService(
@@ -32,7 +33,7 @@ class UserProgressService {
       userData = UserWordData(
         word: word,
         firstLearnedAt: now,
-        learningStage: 'learning',
+        learningStage: LearningStage.learning,
         reviewCount: 1,
         lastReviewedAt: now,
         correctAnswers: isCorrect ? 1 : 0,
@@ -60,7 +61,7 @@ class UserProgressService {
     ref.invalidate(reviewActivityListProvider);
   }
 
-  Future<void> recordReviewActivity(String word, String rating) async {
+  Future<void> recordReviewActivity(String word, ReviewDifficultyRating rating) async {
     final activity = ReviewActivity(
       word: word,
       reviewedAt: DateTime.now(),
@@ -69,7 +70,7 @@ class UserProgressService {
     
     await reviewActivityRepository.saveActivity(activity);
     
-    final isCorrect = rating == 'correct' || rating == 'easy';
+    final isCorrect = rating == ReviewDifficultyRating.easy;
     await recordWordLearned(word, isCorrect: isCorrect);
     
     // Invalidate providers for real-time updates
@@ -86,7 +87,7 @@ class UserProgressService {
         word: word,
         isLearned: true,
         firstLearnedAt: now,
-        learningStage: 'mastered',
+        learningStage: LearningStage.mastered,
         reviewCount: 1,
         lastReviewedAt: now,
         correctAnswers: 1,
@@ -94,7 +95,7 @@ class UserProgressService {
       );
     } else {
       userData.isLearned = true;
-      userData.learningStage = 'mastered';
+      userData.learningStage = LearningStage.mastered;
       if (userData.firstLearnedAt == null) {
         userData.firstLearnedAt = now;
       }
@@ -111,7 +112,7 @@ class UserProgressService {
     var userData = await userWordDataRepository.getUserWordData(word);
     if (userData != null) {
       userData.isLearned = false;
-      userData.learningStage = 'new';
+      userData.learningStage = LearningStage.newWord;
       userData.reviewCount = 0;
       userData.correctAnswers = 0;
       userData.totalAnswers = 0;
@@ -129,12 +130,12 @@ class UserProgressService {
 
   void _updateLearningStage(UserWordData userData) {
     if (userData.accuracyRate >= 0.8 && userData.reviewCount >= 3) {
-      userData.learningStage = 'mastered';
+      userData.learningStage = LearningStage.mastered;
       userData.isLearned = true;
     } else if (userData.reviewCount > 0) {
-      userData.learningStage = 'learning';
+      userData.learningStage = LearningStage.learning;
     } else {
-      userData.learningStage = 'new';
+      userData.learningStage = LearningStage.newWord;
     }
   }
 }

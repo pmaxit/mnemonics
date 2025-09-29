@@ -38,7 +38,7 @@ final darkThemeProvider = AutoDisposeProvider<ThemeData>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DarkThemeRef = AutoDisposeProviderRef<ThemeData>;
-String _$themeNotifierHash() => r'6fa32911d3220aba98aaebde1ea9c2fa9eda3dc0';
+String _$themeNotifierHash() => r'883391504b1204ae992eb5c37f41e2d07e82833c';
 
 /// See also [ThemeNotifier].
 @ProviderFor(ThemeNotifier)

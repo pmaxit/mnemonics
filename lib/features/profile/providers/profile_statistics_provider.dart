@@ -5,6 +5,8 @@ import '../../home/domain/vocabulary_word.dart';
 import '../../home/domain/review_activity.dart';
 import '../domain/profile_statistics.dart';
 import '../domain/user_info.dart';
+import '../domain/user_statistics.dart' as stats;
+
 import 'user_info_provider.dart';
 
 final profileStatisticsProvider = FutureProvider<ProfileStatistics>((ref) async {
@@ -52,6 +54,7 @@ ProfileStatistics _calculateProfileStatistics(
   // Basic Statistics
   final totalWordsLearned = userData.where((d) => d.isLearned).length;
   final wordsLearnedToday = userData.where((d) => 
+    d.isLearned &&
     d.firstLearnedAt != null && 
     _isSameDay(d.firstLearnedAt!, today)
   ).length;
@@ -74,6 +77,7 @@ ProfileStatistics _calculateProfileStatistics(
   final weekEnd = weekStart.add(const Duration(days: 6));
   
   final wordsThisWeek = userData.where((d) => 
+    d.isLearned &&
     d.firstLearnedAt != null && 
     d.firstLearnedAt!.isAfter(weekStart) && 
     d.firstLearnedAt!.isBefore(weekEnd.add(const Duration(days: 1)))
@@ -87,6 +91,7 @@ ProfileStatistics _calculateProfileStatistics(
   // Calculate learning velocity (words per week over last 4 weeks)
   final fourWeeksAgo = today.subtract(const Duration(days: 28));
   final recentWords = userData.where((d) => 
+    d.isLearned &&
     d.firstLearnedAt != null && 
     d.firstLearnedAt!.isAfter(fourWeeksAgo)
   ).length;
@@ -104,7 +109,7 @@ ProfileStatistics _calculateProfileStatistics(
         example: '',
         synonyms: [],
         antonyms: [],
-        difficulty: 'medium',
+        difficulty: stats.WordDifficulty.intermediate,
         category: 'general',
       ),
     );
@@ -136,7 +141,7 @@ ProfileStatistics _calculateProfileStatistics(
           example: '',
           synonyms: [],
           antonyms: [],
-          difficulty: 'medium',
+          difficulty: stats.WordDifficulty.intermediate,
           category: 'general',
         ),
       );
@@ -167,7 +172,7 @@ ProfileStatistics _calculateProfileStatistics(
           example: '',
           synonyms: [],
           antonyms: [],
-          difficulty: 'medium',
+          difficulty: stats.WordDifficulty.intermediate,
           category: 'general',
         ),
       );
@@ -184,7 +189,7 @@ ProfileStatistics _calculateProfileStatistics(
           example: '',
           synonyms: [],
           antonyms: [],
-          difficulty: 'medium',
+          difficulty: stats.WordDifficulty.intermediate,
           category: 'general',
         ),
       );
@@ -232,9 +237,9 @@ int _calculateCurrentStreak(List<UserWordData> userData, List<ReviewActivity> re
   // Get all unique days with learning activity
   final activeDays = <DateTime>{};
   
-  // Add days from user word data
+  // Add days from user word data (only for actually learned words)
   for (final data in userData) {
-    if (data.firstLearnedAt != null) {
+    if (data.isLearned && data.firstLearnedAt != null) {
       final day = DateTime(
         data.firstLearnedAt!.year,
         data.firstLearnedAt!.month,
@@ -290,7 +295,7 @@ int _calculateLongestStreak(List<UserWordData> userData, List<ReviewActivity> re
   final activeDays = <DateTime>{};
   
   for (final data in userData) {
-    if (data.firstLearnedAt != null) {
+    if (data.isLearned && data.firstLearnedAt != null) {
       final day = DateTime(
         data.firstLearnedAt!.year,
         data.firstLearnedAt!.month,
@@ -341,7 +346,7 @@ DateTime? _calculateJoinDate(List<UserWordData> userData) {
   if (userData.isEmpty) return null;
   
   final firstLearned = userData
-      .where((d) => d.firstLearnedAt != null)
+      .where((d) => d.isLearned && d.firstLearnedAt != null)
       .map((d) => d.firstLearnedAt!)
       .fold<DateTime?>(null, (earliest, date) {
     if (earliest == null || date.isBefore(earliest)) {

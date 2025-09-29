@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:googleapis/sheets/v4.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import '../domain/vocabulary_word.dart';
+import '../../profile/services/data_migration_service.dart';
 
 class GoogleSheetsService {
   static const String _credentialsPath = 'assets/credentials.json';
@@ -137,12 +138,11 @@ class GoogleSheetsService {
         mnemonic: mnemonic.isEmpty ? 'No mnemonic available' : mnemonic,
         example: example.isEmpty ? 'No example available' : example,
         category: category.isEmpty ? 'General' : category,
-        difficulty: ['easy', 'medium', 'hard'].contains(difficulty.toLowerCase()) 
-            ? difficulty.toLowerCase() 
-            : 'medium',
+        difficulty: DataMigrationService.migrateDifficultyFromString(difficulty.isNotEmpty ? difficulty : 'medium'),
         synonyms: synonyms,
         antonyms: antonyms,
         image: imageUrl.isEmpty ? null : imageUrl,
+        video: videoUrl.isEmpty ? null : videoUrl,
         setIds: setIds,
       );
     } catch (e) {

@@ -4,6 +4,7 @@ import '../widgets/animated_progress_utils.dart';
 import '../../domain/timer_models.dart';
 import '../../../home/domain/vocabulary_word.dart';
 import '../../../home/domain/user_word_data.dart';
+import '../../../profile/domain/user_statistics.dart';
 import 'dart:math' as math;
 
 class AnimatedFlashCard extends StatefulWidget {
@@ -255,7 +256,7 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
             const SizedBox(width: MnemonicsSpacing.s),
             _buildInfoChip(
               'Difficulty',
-              widget.word.difficulty,
+              widget.word.difficulty.name,
               _getDifficultyColor(widget.word.difficulty),
             ),
           ],
@@ -764,16 +765,14 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
     });
   }
 
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty.toLowerCase()) {
-      case 'easy':
+  Color _getDifficultyColor(WordDifficulty difficulty) {
+    switch (difficulty) {
+      case WordDifficulty.basic:
         return Colors.green;
-      case 'medium':
+      case WordDifficulty.intermediate:
         return Colors.orange;
-      case 'hard':
+      case WordDifficulty.advanced:
         return Colors.red;
-      default:
-        return MnemonicsColors.textSecondary;
     }
   }
 }

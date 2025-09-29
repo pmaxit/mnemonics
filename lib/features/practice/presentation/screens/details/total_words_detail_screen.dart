@@ -8,6 +8,7 @@ import '../../../../home/providers.dart';
 import '../../../../home/domain/vocabulary_word.dart';
 import '../../../../home/domain/user_word_data.dart';
 import '../../widgets/animated_progress_utils.dart';
+import '../../../../profile/domain/user_statistics.dart';
 
 class TotalWordsDetailScreen extends ConsumerStatefulWidget {
   const TotalWordsDetailScreen({super.key});
@@ -171,7 +172,7 @@ class _TotalWordsDetailScreenState extends ConsumerState<TotalWordsDetailScreen>
             example: '',
             synonyms: [],
             antonyms: [],
-            difficulty: 'medium',
+            difficulty: WordDifficulty.intermediate,
             category: 'unknown',
           ),
         );
@@ -207,7 +208,7 @@ class _TotalWordsDetailScreenState extends ConsumerState<TotalWordsDetailScreen>
       }
       
       // Difficulty filter
-      if (_selectedDifficulty != 'All' && word.difficulty != _selectedDifficulty.toLowerCase()) {
+      if (_selectedDifficulty != 'All' && word.difficulty.name != _selectedDifficulty.toLowerCase()) {
         return false;
       }
       
@@ -232,10 +233,9 @@ class _TotalWordsDetailScreenState extends ConsumerState<TotalWordsDetailScreen>
         filtered.sort((a, b) => a.word.word.compareTo(b.word.word));
         break;
       case 'Difficulty':
-        final difficultyOrder = ['easy', 'medium', 'hard'];
         filtered.sort((a, b) {
-          final aIndex = difficultyOrder.indexOf(a.word.difficulty);
-          final bIndex = difficultyOrder.indexOf(b.word.difficulty);
+          final aIndex = a.word.difficulty.numericValue;
+          final bIndex = b.word.difficulty.numericValue;
           return aIndex.compareTo(bIndex);
         });
         break;
@@ -261,8 +261,8 @@ class _TotalWordsDetailScreenState extends ConsumerState<TotalWordsDetailScreen>
     
     for (final item in learnedWords) {
       categoryBreakdown[item.word.category] = (categoryBreakdown[item.word.category] ?? 0) + 1;
-      difficultyBreakdown[item.word.difficulty] = (difficultyBreakdown[item.word.difficulty] ?? 0) + 1;
-      stageBreakdown[item.userData.learningStage] = (stageBreakdown[item.userData.learningStage] ?? 0) + 1;
+      difficultyBreakdown[item.word.difficulty.name] = (difficultyBreakdown[item.word.difficulty.name] ?? 0) + 1;
+      stageBreakdown[item.userData.learningStage.name] = (stageBreakdown[item.userData.learningStage.name] ?? 0) + 1;
     }
     
     return Container(
@@ -709,7 +709,7 @@ class _TotalWordsDetailScreenState extends ConsumerState<TotalWordsDetailScreen>
                         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
                       ),
                       child: Text(
-                        word.difficulty.toUpperCase(),
+                        word.difficulty.displayName.toUpperCase(),
                         style: MnemonicsTypography.bodyRegular.copyWith(
                           color: difficultyColor,
                           fontWeight: FontWeight.bold,
@@ -728,7 +728,7 @@ class _TotalWordsDetailScreenState extends ConsumerState<TotalWordsDetailScreen>
                         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
                       ),
                       child: Text(
-                        userData.learningStage.toUpperCase(),
+                        userData.learningStage.displayName.toUpperCase(),
                         style: MnemonicsTypography.bodyRegular.copyWith(
                           color: stageColor,
                           fontWeight: FontWeight.bold,
@@ -905,29 +905,25 @@ class _TotalWordsDetailScreenState extends ConsumerState<TotalWordsDetailScreen>
     );
   }
 
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty.toLowerCase()) {
-      case 'easy':
+  Color _getDifficultyColor(WordDifficulty difficulty) {
+    switch (difficulty) {
+      case WordDifficulty.basic:
         return Colors.green;
-      case 'medium':
+      case WordDifficulty.intermediate:
         return Colors.orange;
-      case 'hard':
+      case WordDifficulty.advanced:
         return Colors.red;
-      default:
-        return Colors.grey;
     }
   }
 
-  Color _getStageColor(String stage) {
-    switch (stage.toLowerCase()) {
-      case 'new':
+  Color _getStageColor(LearningStage stage) {
+    switch (stage) {
+      case LearningStage.newWord:
         return Colors.blue;
-      case 'learning':
+      case LearningStage.learning:
         return Colors.orange;
-      case 'mastered':
+      case LearningStage.mastered:
         return Colors.amber;
-      default:
-        return Colors.grey;
     }
   }
 }

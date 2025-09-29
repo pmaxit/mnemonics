@@ -20,41 +20,37 @@ class ProgressOverviewScreen extends ConsumerStatefulWidget {
 
 class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
     with TickerProviderStateMixin {
-  late AnimationController _pageController;
-  late Animation<double> _pageAnimation;
-  bool _hasAnimated = false;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
-    
-    _pageController = AnimationController(
-      duration: AnimatedProgressUtils.pageTransition,
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    
-    _pageAnimation = Tween<double>(
+    _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
-      parent: _pageController,
-      curve: AnimatedProgressUtils.entryEasing,
+      parent: _animationController,
+      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
     ));
-    
-    // Start page animation only once
-    if (!_hasAnimated) {
-      _hasAnimated = true;
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (mounted) {
-          _pageController.forward();
-        }
-      });
-    }
+    _slideAnimation = Tween<double>(
+      begin: 50.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
+    ));
+    _animationController.forward();
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -78,170 +74,181 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
     }
 
     return SingleChildScrollView(
-            padding: const EdgeInsets.only(
-              left: MnemonicsSpacing.l,
-              right: MnemonicsSpacing.l,
-              bottom: MnemonicsSpacing.l,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Animated header matching Profile style
-                _buildAnimatedHeader(isDarkMode),
-                const SizedBox(height: MnemonicsSpacing.l),
-                
-                // Motivational tagline with animation
-                _buildMotivationalTagline(statistics),
-                const SizedBox(height: MnemonicsSpacing.xl),
-                
-                // Main statistics grid
-                Row(
-                  children: [
-                    Expanded(
-                      child: AnimatedStatCard(
-                        key: const ValueKey('total_learned'),
-                        label: 'Total Learned',
-                        value: statistics.totalLearned,
-                        icon: Icons.school,
-                        accentColor: MnemonicsColors.primaryGreen,
-                        isAchievement: true,
-                        animationDelay: 0,
-                        onTap: () => context.push('/practice/total-words'),
-                      ),
-                    ),
-                    const SizedBox(width: MnemonicsSpacing.m),
-                    Expanded(
-                      child: AnimatedStatCard(
-                        key: const ValueKey('learned_today'),
-                        label: 'Learned Today',
-                        value: statistics.learnedToday,
-                        icon: Icons.today,
-                        accentColor: MnemonicsColors.secondaryOrange,
-                        isAchievement: statistics.learnedToday > 0,
-                        animationDelay: 0,
-                        onTap: () => context.push('/practice/words-today'),
-                      ),
-                    ),
-                  ],
+      padding: const EdgeInsets.only(
+        left: MnemonicsSpacing.l,
+        right: MnemonicsSpacing.l,
+        bottom: MnemonicsSpacing.l,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Animated header matching Profile style (only this slides up)
+          AnimatedBuilder(
+            animation: _animationController,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(0, _slideAnimation.value),
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: _buildAnimatedHeader(isDarkMode),
                 ),
-                const SizedBox(height: MnemonicsSpacing.m),
-                
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => context.push('/practice/streak'),
-                        child: StreakCard(
-                          key: const ValueKey('streak_card'),
-                          streakCount: statistics.streak,
-                          animationDelay: 0,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: MnemonicsSpacing.m),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => context.push('/practice/accuracy'),
-                        child: ProgressPercentageCard(
-                          key: const ValueKey('accuracy_card'),
-                          label: 'Accuracy',
-                          percentage: statistics.averageAccuracy * 100,
-                          accentColor: _getAccuracyColor(statistics.averageAccuracy),
-                          animationDelay: 0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: MnemonicsSpacing.xl),
-                
-                // Animated progress chart
-                AnimatedProgressChart(
-                  weeklyProgress: statistics.weeklyProgress,
+              );
+            },
+          ),
+          const SizedBox(height: MnemonicsSpacing.l),
+          
+          // Motivational tagline with animation
+          _buildMotivationalTagline(statistics),
+          const SizedBox(height: MnemonicsSpacing.xl),
+          
+          // Main statistics grid
+          Row(
+            children: [
+              Expanded(
+                child: AnimatedStatCard(
+                  key: const ValueKey('total_learned'),
+                  label: 'Total Learned',
+                  value: statistics.totalLearned,
+                  icon: Icons.school,
+                  accentColor: MnemonicsColors.primaryGreen,
+                  isAchievement: true,
                   animationDelay: 0,
+                  onTap: () => context.push('/practice/total-words'),
                 ),
-                const SizedBox(height: MnemonicsSpacing.xl),
-                
-                // Learning stages breakdown
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Learning Stages',
-                      style: MnemonicsTypography.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 20,
-                      ),
-                    ),
-                    const SizedBox(height: MnemonicsSpacing.m),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AnimatedStatCard(
-                            key: const ValueKey('new_words'),
-                            label: 'New',
-                            value: statistics.newCount,
-                            icon: Icons.fiber_new,
-                            accentColor: Colors.blue,
-                            animationDelay: 0,
-                            onTap: () => context.push('/practice/learning-stages/new'),
-                          ),
-                        ),
-                        const SizedBox(width: MnemonicsSpacing.s),
-                        Expanded(
-                          child: AnimatedStatCard(
-                            key: const ValueKey('learning_words'),
-                            label: 'Learning',
-                            value: statistics.inProgressCount,
-                            icon: Icons.psychology,
-                            accentColor: Colors.orange,
-                            animationDelay: 0,
-                            onTap: () => context.push('/practice/learning-stages/learning'),
-                          ),
-                        ),
-                        const SizedBox(width: MnemonicsSpacing.s),
-                        Expanded(
-                          child: AnimatedStatCard(
-                            key: const ValueKey('mastered_words'),
-                            label: 'Mastered',
-                            value: statistics.masteredCount,
-                            icon: Icons.star,
-                            accentColor: Colors.amber,
-                            isAchievement: true,
-                            animationDelay: 0,
-                            onTap: () => context.push('/practice/learning-stages/mastered'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: MnemonicsSpacing.xl),
-                
-                // Category breakdown
-                AnimatedBreakdownSection(
-                  key: const ValueKey('category_breakdown'),
-                  title: 'Progress by Category',
-                  data: statistics.categoryBreakdown,
+              ),
+              const SizedBox(width: MnemonicsSpacing.m),
+              Expanded(
+                child: AnimatedStatCard(
+                  key: const ValueKey('learned_today'),
+                  label: 'Learned Today',
+                  value: statistics.learnedToday,
+                  icon: Icons.today,
+                  accentColor: MnemonicsColors.secondaryOrange,
+                  isAchievement: statistics.learnedToday > 0,
                   animationDelay: 0,
-                  onCategoryTap: (category) => context.push('/practice/breakdown/category/$category'),
+                  onTap: () => context.push('/practice/words-today'),
                 ),
-                const SizedBox(height: MnemonicsSpacing.xl),
-                
-                // Difficulty breakdown
-                AnimatedBreakdownSection(
-                  key: const ValueKey('difficulty_breakdown'),
-                  title: 'Progress by Difficulty',
-                  data: statistics.difficultyBreakdown,
-                  animationDelay: 0,
-                  onCategoryTap: (difficulty) => context.push('/practice/breakdown/difficulty/$difficulty'),
+              ),
+            ],
+          ),
+          const SizedBox(height: MnemonicsSpacing.m),
+          
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => context.push('/practice/streak'),
+                  child: StreakCard(
+                    key: const ValueKey('streak_card'),
+                    streakCount: statistics.streak,
+                    animationDelay: 0,
+                  ),
                 ),
-                
-                // Bottom spacing
-                const SizedBox(height: MnemonicsSpacing.xl),
-              ],
-            ),
-          );
+              ),
+              const SizedBox(width: MnemonicsSpacing.m),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => context.push('/practice/accuracy'),
+                  child: ProgressPercentageCard(
+                    key: const ValueKey('accuracy_card'),
+                    label: 'Accuracy',
+                    percentage: statistics.averageAccuracy * 100,
+                    accentColor: _getAccuracyColor(statistics.averageAccuracy),
+                    animationDelay: 0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: MnemonicsSpacing.xl),
+          
+          // Animated progress chart
+          AnimatedProgressChart(
+            weeklyProgress: statistics.weeklyProgress,
+            animationDelay: 0,
+          ),
+          const SizedBox(height: MnemonicsSpacing.xl),
+          
+          // Learning stages breakdown
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Learning Stages',
+                style: MnemonicsTypography.bodyLarge.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                ),
+              ),
+              const SizedBox(height: MnemonicsSpacing.m),
+              Row(
+                children: [
+                  Expanded(
+                    child: AnimatedStatCard(
+                      key: const ValueKey('new_words'),
+                      label: 'New',
+                      value: statistics.newCount,
+                      icon: Icons.fiber_new,
+                      accentColor: Colors.blue,
+                      animationDelay: 0,
+                      onTap: () => context.push('/practice/learning-stages/new'),
+                    ),
+                  ),
+                  const SizedBox(width: MnemonicsSpacing.s),
+                  Expanded(
+                    child: AnimatedStatCard(
+                      key: const ValueKey('learning_words'),
+                      label: 'Learning',
+                      value: statistics.inProgressCount,
+                      icon: Icons.psychology,
+                      accentColor: Colors.orange,
+                      animationDelay: 0,
+                      onTap: () => context.push('/practice/learning-stages/learning'),
+                    ),
+                  ),
+                  const SizedBox(width: MnemonicsSpacing.s),
+                  Expanded(
+                    child: AnimatedStatCard(
+                      key: const ValueKey('mastered_words'),
+                      label: 'Mastered',
+                      value: statistics.masteredCount,
+                      icon: Icons.star,
+                      accentColor: Colors.amber,
+                      isAchievement: true,
+                      animationDelay: 0,
+                      onTap: () => context.push('/practice/learning-stages/mastered'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: MnemonicsSpacing.xl),
+          
+          // Category breakdown
+          AnimatedBreakdownSection(
+            key: const ValueKey('category_breakdown'),
+            title: 'Progress by Category',
+            data: statistics.categoryBreakdown,
+            animationDelay: 0,
+            onCategoryTap: (category) => context.push('/practice/breakdown/category/$category'),
+          ),
+          const SizedBox(height: MnemonicsSpacing.xl),
+          
+          // Difficulty breakdown
+          AnimatedBreakdownSection(
+            key: const ValueKey('difficulty_breakdown'),
+            title: 'Progress by Difficulty',
+            data: statistics.difficultyBreakdown,
+            animationDelay: 0,
+            onCategoryTap: (difficulty) => context.push('/practice/breakdown/difficulty/$difficulty'),
+          ),
+          
+          // Bottom spacing
+          const SizedBox(height: MnemonicsSpacing.xl),
+        ],
+      ),
+    );
   }
 
   Color _getAccuracyColor(double accuracy) {

@@ -25,7 +25,7 @@ final sessionRemainingTimeProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SessionRemainingTimeRef = AutoDisposeStreamProviderRef<Duration>;
-String _$learningSessionHash() => r'5fe112297631725ad61dd7f285b29e417744521a';
+String _$learningSessionHash() => r'24518b1b08148adb46f1bb9887abfee48f284c66';
 
 /// See also [LearningSession].
 @ProviderFor(LearningSession)

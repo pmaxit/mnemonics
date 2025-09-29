@@ -3,9 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/design/design_system.dart';
 import '../../../../common/design/theme_provider.dart';
 import '../../../home/domain/vocabulary_word.dart';
-import '../../../home/domain/user_word_data.dart';
-import '../../../home/providers.dart';
 import '../../providers/detailed_statistics_provider.dart';
+import '../../domain/user_statistics.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,9 +12,9 @@ enum WordStatType {
   learned('Learned Words', 'Words you have mastered'),
   struggling('Struggling Words', 'Words that need more practice'),
   newWords('New Words', 'Words not yet started'),
-  easy('Easy Words', 'Words rated as easy'),
-  medium('Medium Words', 'Words rated as medium'),
-  hard('Hard Words', 'Words rated as hard'),
+  basic('Basic Words', 'Words with basic complexity'),
+  intermediate('Intermediate Words', 'Words with intermediate complexity'),
+  advanced('Advanced Words', 'Words with advanced complexity'),
   category('Category Words', 'Words from specific category'),
   allWords('All Words', 'Complete vocabulary list');
 
@@ -49,9 +48,14 @@ class _DetailedWordStatisticsScreenState extends ConsumerState<DetailedWordStati
   String _currentSearch = '';
   
   static const int _pageSize = 20;
-  bool _isLoadingMore = false;
-  List<WordWithUserData> _allLoadedWords = [];
-  int _displayCount = 20; // Number of items currently being displayed
+  bool _isLoadingMoreReviewed = false;
+  bool _isLoadingMoreRemaining = false;
+  List<WordWithUserData> _allReviewedWords = [];
+  List<WordWithUserData> _allRemainingWords = [];
+  int _reviewedDisplayCount = 20;
+  int _remainingDisplayCount = 20;
+  bool _showReviewedSection = true;
+  bool _showRemainingSection = true;
 
   @override
   void initState() {
@@ -76,17 +80,39 @@ class _DetailedWordStatisticsScreenState extends ConsumerState<DetailedWordStati
   }
 
   void _loadMoreWords() {
-    if (!_isLoadingMore && _displayCount < _allLoadedWords.length && mounted) {
+    // Load more for whichever section is currently being scrolled
+    _loadMoreReviewedWords();
+    _loadMoreRemainingWords();
+  }
+
+  void _loadMoreReviewedWords() {
+    if (!_isLoadingMoreReviewed && _reviewedDisplayCount < _allReviewedWords.length && mounted) {
       setState(() {
-        _isLoadingMore = true;
+        _isLoadingMoreReviewed = true;
       });
       
-      // Increase display count to show more items
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           setState(() {
-            _displayCount = (_displayCount + _pageSize).clamp(0, _allLoadedWords.length);
-            _isLoadingMore = false;
+            _reviewedDisplayCount = (_reviewedDisplayCount + _pageSize).clamp(0, _allReviewedWords.length);
+            _isLoadingMoreReviewed = false;
+          });
+        }
+      });
+    }
+  }
+
+  void _loadMoreRemainingWords() {
+    if (!_isLoadingMoreRemaining && _remainingDisplayCount < _allRemainingWords.length && mounted) {
+      setState(() {
+        _isLoadingMoreRemaining = true;
+      });
+      
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          setState(() {
+            _remainingDisplayCount = (_remainingDisplayCount + _pageSize).clamp(0, _allRemainingWords.length);
+            _isLoadingMoreRemaining = false;
           });
         }
       });
@@ -125,10 +151,10 @@ class _DetailedWordStatisticsScreenState extends ConsumerState<DetailedWordStati
                 icon: const Icon(Icons.sort),
                 onSelected: (value) => _updateSort(value),
                 itemBuilder: (context) => [
-                  PopupMenuItem(value: 'word', child: Text('Sort by Word')),
-                  PopupMenuItem(value: 'accuracy', child: Text('Sort by Accuracy')),
-                  PopupMenuItem(value: 'difficulty', child: Text('Sort by Difficulty')),
-                  PopupMenuItem(value: 'lastReviewed', child: Text('Sort by Last Reviewed')),
+                  const PopupMenuItem(value: 'word', child: Text('Sort by Word')),
+                  const PopupMenuItem(value: 'accuracy', child: Text('Sort by Accuracy')),
+                  const PopupMenuItem(value: 'difficulty', child: Text('Sort by Difficulty')),
+                  const PopupMenuItem(value: 'lastReviewed', child: Text('Sort by Last Reviewed')),
                 ],
               ),
               IconButton(
@@ -145,9 +171,9 @@ class _DetailedWordStatisticsScreenState extends ConsumerState<DetailedWordStati
               // Statistics Summary
               _buildStatsSummary(wordsAsync, isDarkMode),
               
-              // Word List
+              // Word List with Two Sections
               Expanded(
-                child: _buildWordList(wordsAsync, isDarkMode),
+                child: _buildTwoSectionWordList(wordsAsync, isDarkMode),
               ),
             ],
           ),
@@ -243,8 +269,7 @@ class _DetailedWordStatisticsScreenState extends ConsumerState<DetailedWordStati
       loading: () => const SizedBox.shrink(),
       error: (error, stack) => const SizedBox.shrink(),
       data: (words) {
-        // Use allLoadedWords if available, otherwise fall back to words from provider
-        final wordsToAnalyze = _allLoadedWords.isNotEmpty ? _allLoadedWords : words;
+        final totalWords = _allReviewedWords.length + _allRemainingWords.length;
         return Container(
         margin: const EdgeInsets.symmetric(horizontal: MnemonicsSpacing.m),
         padding: const EdgeInsets.all(MnemonicsSpacing.m),
@@ -257,28 +282,28 @@ class _DetailedWordStatisticsScreenState extends ConsumerState<DetailedWordStati
           children: [
             Expanded(
               child: _buildSummaryItem(
-                'Total',
-                wordsToAnalyze.length.toString(),
-                Icons.library_books,
+                'Reviewed',
+                _allReviewedWords.length.toString(),
+                Icons.check_circle_outline,
                 MnemonicsColors.primaryGreen,
                 isDarkMode,
               ),
             ),
             Expanded(
               child: _buildSummaryItem(
-                'Avg Accuracy',
-                '${_calculateAverageAccuracy(wordsToAnalyze).toStringAsFixed(1)}%',
-                Icons.trending_up,
+                'Remaining',
+                _allRemainingWords.length.toString(),
+                Icons.pending_outlined,
                 MnemonicsColors.secondaryOrange,
                 isDarkMode,
               ),
             ),
             Expanded(
               child: _buildSummaryItem(
-                'Mastered',
-                _countMastered(wordsToAnalyze).toString(),
-                Icons.stars,
-                Colors.amber,
+                'Total',
+                totalWords.toString(),
+                Icons.library_books,
+                Colors.blue,
                 isDarkMode,
               ),
             ),
@@ -312,7 +337,7 @@ class _DetailedWordStatisticsScreenState extends ConsumerState<DetailedWordStati
     );
   }
 
-  Widget _buildWordList(AsyncValue<List<WordWithUserData>> wordsAsync, bool isDarkMode) {
+  Widget _buildTwoSectionWordList(AsyncValue<List<WordWithUserData>> wordsAsync, bool isDarkMode) {
     return wordsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(
@@ -345,44 +370,204 @@ class _DetailedWordStatisticsScreenState extends ConsumerState<DetailedWordStati
           return _buildEmptyState(isDarkMode);
         }
         
-        // Update loaded words when data changes
-        if (_allLoadedWords.length != allWords.length || 
-            (_allLoadedWords.isNotEmpty && allWords.isNotEmpty && 
-             _allLoadedWords.first.word.word != allWords.first.word.word)) {
+        // Separate words into reviewed and remaining
+        final reviewedWords = allWords.where((wordData) {
+          return wordData.userData != null && 
+                 (wordData.userData!.reviewCount > 0 || wordData.userData!.totalAnswers > 0);
+        }).toList();
+        
+        final remainingWords = allWords.where((wordData) {
+          return wordData.userData == null || 
+                 (wordData.userData!.reviewCount == 0 && wordData.userData!.totalAnswers == 0);
+        }).toList();
+        
+        // Update the lists when data changes
+        if (_allReviewedWords.length != reviewedWords.length || 
+            _allRemainingWords.length != remainingWords.length) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               setState(() {
-                _allLoadedWords = allWords;
-                _displayCount = _pageSize.clamp(0, allWords.length); // Reset display count
+                _allReviewedWords = reviewedWords;
+                _allRemainingWords = remainingWords;
+                _reviewedDisplayCount = _pageSize.clamp(0, reviewedWords.length);
+                _remainingDisplayCount = _pageSize.clamp(0, remainingWords.length);
               });
             }
           });
         }
         
-        final displayedWords = _allLoadedWords.take(_displayCount).toList();
-        
-        return ListView.builder(
+        return SingleChildScrollView(
           controller: _scrollController,
           padding: const EdgeInsets.all(MnemonicsSpacing.m),
-          itemCount: displayedWords.length + 
-                    (displayedWords.length < _allLoadedWords.length ? 1 : 0),
-          itemBuilder: (context, index) {
-            if (index >= displayedWords.length) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(MnemonicsSpacing.m),
-                  child: CircularProgressIndicator(),
+          child: Column(
+            children: [
+              // Reviewed Words Section
+              if (_allReviewedWords.isNotEmpty) ...[
+                _buildSectionHeader(
+                  'Reviewed Words',
+                  _allReviewedWords.length,
+                  Icons.check_circle,
+                  MnemonicsColors.primaryGreen,
+                  _showReviewedSection,
+                  () => setState(() => _showReviewedSection = !_showReviewedSection),
+                  isDarkMode,
                 ),
-              );
-            }
-            
-            final wordData = displayedWords[index];
-            return _buildWordCard(wordData, isDarkMode);
-          },
+                if (_showReviewedSection) ...[
+                  const SizedBox(height: MnemonicsSpacing.s),
+                  _buildWordSection(
+                    _allReviewedWords,
+                    _reviewedDisplayCount,
+                    _isLoadingMoreReviewed,
+                    _loadMoreReviewedWords,
+                    isDarkMode,
+                    MnemonicsColors.primaryGreen.withOpacity(0.05),
+                  ),
+                ],
+                const SizedBox(height: MnemonicsSpacing.l),
+              ],
+              
+              // Remaining Words Section
+              if (_allRemainingWords.isNotEmpty) ...[
+                _buildSectionHeader(
+                  'Remaining Words',
+                  _allRemainingWords.length,
+                  Icons.pending,
+                  MnemonicsColors.secondaryOrange,
+                  _showRemainingSection,
+                  () => setState(() => _showRemainingSection = !_showRemainingSection),
+                  isDarkMode,
+                ),
+                if (_showRemainingSection) ...[
+                  const SizedBox(height: MnemonicsSpacing.s),
+                  _buildWordSection(
+                    _allRemainingWords,
+                    _remainingDisplayCount,
+                    _isLoadingMoreRemaining,
+                    _loadMoreRemainingWords,
+                    isDarkMode,
+                    MnemonicsColors.secondaryOrange.withOpacity(0.05),
+                  ),
+                ],
+              ],
+            ],
+          ),
         );
       },
     );
   }
+
+  Widget _buildSectionHeader(
+    String title,
+    int count,
+    IconData icon,
+    Color color,
+    bool isExpanded,
+    VoidCallback onToggle,
+    bool isDarkMode,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+        boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+        onTap: onToggle,
+        child: Padding(
+          padding: const EdgeInsets.all(MnemonicsSpacing.m),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(MnemonicsSpacing.s),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: MnemonicsSpacing.m),
+              Expanded(
+                child: Text(
+                  title,
+                  style: MnemonicsTypography.bodyLarge.copyWith(
+                    color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: MnemonicsSpacing.s,
+                  vertical: MnemonicsSpacing.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+                ),
+                child: Text(
+                  count.toString(),
+                  style: MnemonicsTypography.bodyRegular.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: MnemonicsSpacing.s),
+              Icon(
+                isExpanded ? Icons.expand_less : Icons.expand_more,
+                color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWordSection(
+    List<WordWithUserData> words,
+    int displayCount,
+    bool isLoadingMore,
+    VoidCallback loadMore,
+    bool isDarkMode,
+    Color backgroundColor,
+  ) {
+    final displayedWords = words.take(displayCount).toList();
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+      ),
+      padding: const EdgeInsets.all(MnemonicsSpacing.s),
+      child: Column(
+        children: [
+          ...displayedWords.map((wordData) => Padding(
+            padding: const EdgeInsets.only(bottom: MnemonicsSpacing.s),
+            child: _buildWordCard(wordData, isDarkMode),
+          )),
+          
+          // Load more button
+          if (displayedWords.length < words.length) ...[
+            const SizedBox(height: MnemonicsSpacing.s),
+            if (isLoadingMore)
+              const Center(child: CircularProgressIndicator())
+            else
+              ElevatedButton(
+                onPressed: loadMore,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+                  foregroundColor: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                ),
+                child: Text('Load More (${words.length - displayedWords.length} remaining)'),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
 
   Widget _buildEmptyState(bool isDarkMode) {
     return Center(
@@ -473,7 +658,7 @@ class _DetailedWordStatisticsScreenState extends ConsumerState<DetailedWordStati
                             borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
                           ),
                           child: Text(
-                            userData.learningStage.toUpperCase(),
+                            userData.learningStage.displayName.toUpperCase(),
                             style: MnemonicsTypography.bodyRegular.copyWith(
                               color: _getStageColor(userData.learningStage),
                               fontSize: 10,
@@ -541,8 +726,7 @@ class _DetailedWordStatisticsScreenState extends ConsumerState<DetailedWordStati
                   const SizedBox(width: MnemonicsSpacing.s),
                   Row(
                     children: List.generate(3, (index) {
-                      final difficultyLevel = word.difficulty.toLowerCase() == 'easy' ? 1 :
-                                            word.difficulty.toLowerCase() == 'medium' ? 2 : 3;
+                      final difficultyLevel = word.difficulty.numericValue;
                       return Icon(
                         index < difficultyLevel ? Icons.star : Icons.star_border,
                         color: MnemonicsColors.secondaryOrange,
@@ -568,14 +752,13 @@ class _DetailedWordStatisticsScreenState extends ConsumerState<DetailedWordStati
     );
   }
 
-  Color _getStageColor(String stage) {
-    switch (stage.toLowerCase()) {
-      case 'mastered':
+  Color _getStageColor(LearningStage stage) {
+    switch (stage) {
+      case LearningStage.mastered:
         return MnemonicsColors.primaryGreen;
-      case 'learning':
+      case LearningStage.learning:
         return MnemonicsColors.secondaryOrange;
-      case 'new':
-      default:
+      case LearningStage.newWord:
         return MnemonicsColors.textSecondary;
     }
   }
@@ -604,27 +787,30 @@ class _DetailedWordStatisticsScreenState extends ConsumerState<DetailedWordStati
   }
 
   int _countMastered(List<WordWithUserData> words) {
-    return words.where((w) => w.userData?.learningStage == 'mastered').length;
+    return words.where((w) => w.userData?.learningStage == LearningStage.mastered).length;
   }
 
   void _updateSort(String sortBy) {
     setState(() {
       _sortBy = sortBy;
-      _displayCount = _pageSize; // Reset display count when sorting changes
+      _reviewedDisplayCount = _pageSize; // Reset display count when sorting changes
+      _remainingDisplayCount = _pageSize;
     });
   }
 
   void _toggleSortOrder() {
     setState(() {
       _sortAscending = !_sortAscending;
-      _displayCount = _pageSize; // Reset display count when sort order changes
+      _reviewedDisplayCount = _pageSize; // Reset display count when sort order changes
+      _remainingDisplayCount = _pageSize;
     });
   }
 
   void _performSearch(String query) {
     setState(() {
       _currentSearch = query;
-      _displayCount = _pageSize; // Reset display count when search changes
+      _reviewedDisplayCount = _pageSize; // Reset display count when search changes
+      _remainingDisplayCount = _pageSize;
     });
   }
 
@@ -632,7 +818,8 @@ class _DetailedWordStatisticsScreenState extends ConsumerState<DetailedWordStati
     _searchController.clear();
     setState(() {
       _currentSearch = '';
-      _displayCount = _pageSize; // Reset display count when search is cleared
+      _reviewedDisplayCount = _pageSize; // Reset display count when search is cleared
+      _remainingDisplayCount = _pageSize;
     });
   }
 

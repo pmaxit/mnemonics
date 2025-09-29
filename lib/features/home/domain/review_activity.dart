@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import '../../profile/domain/user_statistics.dart';
 
 part 'review_activity.g.dart';
 
@@ -11,7 +12,7 @@ class ReviewActivity extends HiveObject {
   DateTime reviewedAt;
 
   @HiveField(2)
-  String rating;
+  ReviewDifficultyRating rating;
 
   ReviewActivity({
     required this.word,
@@ -22,12 +23,15 @@ class ReviewActivity extends HiveObject {
   Map<String, dynamic> toJson() => {
     'word': word,
     'reviewedAt': reviewedAt.toIso8601String(),
-    'rating': rating,
+    'rating': rating.name,
   };
 
   factory ReviewActivity.fromJson(Map<String, dynamic> json) => ReviewActivity(
     word: json['word'] as String,
     reviewedAt: DateTime.parse(json['reviewedAt']),
-    rating: json['rating'] as String,
+    rating: ReviewDifficultyRating.values.firstWhere(
+      (rating) => rating.name == (json['rating'] as String? ?? 'medium'),
+      orElse: () => ReviewDifficultyRating.medium,
+    ),
   );
 } 

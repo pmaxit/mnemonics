@@ -7,7 +7,7 @@ part 'theme_provider.g.dart';
 @riverpod
 class ThemeNotifier extends _$ThemeNotifier {
   @override
-  ThemeMode build() => ThemeMode.system;
+  ThemeMode build() => ThemeMode.light;
 
   void toggleTheme() {
     switch (state) {

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../../common/design/design_system.dart';
-import '../../domain/profile_statistics.dart';
+import '../../domain/user_statistics.dart';
 import '../screens/detailed_word_statistics_screen.dart';
 import '../screens/category_detail_screen.dart';
 
 class LearningInsightsWidget extends StatelessWidget {
-  final ProfileStatistics profileStats;
+  final UserStatistics profileStats;
   final bool isDarkMode;
 
   const LearningInsightsWidget({
@@ -93,7 +93,7 @@ class LearningInsightsWidget extends StatelessWidget {
       );
     }
 
-    final topCategories = profileStats.categoryStats
+    final topCategories = profileStats.categoryStats.values
         .where((c) => c.wordsLearned > 0)
         .toList()
       ..sort((a, b) => b.wordsLearned.compareTo(a.wordsLearned));
@@ -118,7 +118,7 @@ class LearningInsightsWidget extends StatelessWidget {
 
   Widget _buildCategoryProgressBar(
     BuildContext context,
-    CategoryStats category,
+    CategoryProgress category,
     Color textColor,
     Color secondaryTextColor,
   ) {
@@ -206,7 +206,7 @@ class LearningInsightsWidget extends StatelessWidget {
         ),
         const SizedBox(height: MnemonicsSpacing.s),
         Row(
-          children: profileStats.difficultyStats.map((difficulty) => 
+          children: profileStats.difficultyStats.values.map((difficulty) => 
             Expanded(
               child: _buildDifficultyCard(
                 context,
@@ -223,7 +223,7 @@ class LearningInsightsWidget extends StatelessWidget {
 
   Widget _buildDifficultyCard(
     BuildContext context,
-    DifficultyStats difficulty,
+    DifficultyProgress difficulty,
     Color textColor,
     Color secondaryTextColor,
   ) {
@@ -251,12 +251,15 @@ class LearningInsightsWidget extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  _formatDifficultyName(difficulty.difficulty),
-                  style: MnemonicsTypography.bodyRegular.copyWith(
-                    color: textColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
+                Expanded(
+                  child: Text(
+                    _formatDifficultyName(difficulty.difficulty),
+                    style: MnemonicsTypography.bodyRegular.copyWith(
+                      color: textColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Icon(
@@ -371,9 +374,9 @@ class LearningInsightsWidget extends StatelessWidget {
     }
 
     // Category recommendation
-    final weakestCategory = profileStats.categoryStats
+    final weakestCategory = profileStats.categoryStats.values
         .where((c) => c.wordsLearned > 0)
-        .fold<CategoryStats?>(null, (weakest, category) {
+        .fold<CategoryProgress?>(null, (weakest, category) {
       if (weakest == null || category.averageAccuracy < weakest.averageAccuracy) {
         return category;
       }
@@ -396,8 +399,8 @@ class LearningInsightsWidget extends StatelessWidget {
     ).join(' ');
   }
 
-  String _formatDifficultyName(String difficulty) {
-    return difficulty[0].toUpperCase() + difficulty.substring(1);
+  String _formatDifficultyName(WordDifficulty difficulty) {
+    return difficulty.displayName;
   }
 
   Color _getCategoryColor(String category) {
@@ -417,16 +420,14 @@ class LearningInsightsWidget extends StatelessWidget {
     }
   }
 
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty.toLowerCase()) {
-      case 'easy':
+  Color _getDifficultyColor(WordDifficulty difficulty) {
+    switch (difficulty) {
+      case WordDifficulty.basic:
         return Colors.green;
-      case 'medium':
+      case WordDifficulty.intermediate:
         return MnemonicsColors.secondaryOrange;
-      case 'hard':
+      case WordDifficulty.advanced:
         return Colors.red;
-      default:
-        return MnemonicsColors.primaryGreen;
     }
   }
 
@@ -445,20 +446,18 @@ class LearningInsightsWidget extends StatelessWidget {
     );
   }
 
-  void _navigateToDifficulty(BuildContext context, String difficulty) {
+  void _navigateToDifficulty(BuildContext context, WordDifficulty difficulty) {
     WordStatType statType;
-    switch (difficulty.toLowerCase()) {
-      case 'easy':
-        statType = WordStatType.easy;
+    switch (difficulty) {
+      case WordDifficulty.basic:
+        statType = WordStatType.basic;
         break;
-      case 'medium':
-        statType = WordStatType.medium;
+      case WordDifficulty.intermediate:
+        statType = WordStatType.intermediate;
         break;
-      case 'hard':
-        statType = WordStatType.hard;
+      case WordDifficulty.advanced:
+        statType = WordStatType.advanced;
         break;
-      default:
-        statType = WordStatType.allWords;
     }
 
     Navigator.of(context).push(

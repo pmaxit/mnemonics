@@ -7,6 +7,7 @@ import '../../../providers/statistics_provider.dart';
 import '../../../../home/providers.dart';
 import '../../../../home/domain/vocabulary_word.dart';
 import '../../../../home/domain/user_word_data.dart';
+import '../../../../profile/domain/user_statistics.dart';
 import '../../widgets/animated_progress_utils.dart';
 
 class BreakdownDetailScreen extends ConsumerStatefulWidget {
@@ -153,7 +154,7 @@ class _BreakdownDetailScreenState extends ConsumerState<BreakdownDetailScreen>
             example: '',
             synonyms: [],
             antonyms: [],
-            difficulty: 'medium',
+            difficulty: WordDifficulty.intermediate,
             category: 'unknown',
           ),
         );
@@ -170,7 +171,7 @@ class _BreakdownDetailScreenState extends ConsumerState<BreakdownDetailScreen>
     for (final item in learnedWords) {
       final key = widget.breakdownType == 'category' 
           ? item.word.category
-          : item.word.difficulty;
+          : item.word.difficulty.name;
       
       if (!breakdown.containsKey(key)) {
         breakdown[key] = BreakdownCategory(
@@ -188,13 +189,13 @@ class _BreakdownDetailScreenState extends ConsumerState<BreakdownDetailScreen>
       breakdown[key]!.totalCount++;
       
       switch (item.userData.learningStage) {
-        case 'mastered':
+        case LearningStage.mastered:
           breakdown[key]!.masteredCount++;
           break;
-        case 'learning':
+        case LearningStage.learning:
           breakdown[key]!.learningCount++;
           break;
-        case 'new':
+        case LearningStage.newWord:
           breakdown[key]!.newCount++;
           break;
       }
@@ -705,7 +706,7 @@ class _BreakdownDetailScreenState extends ConsumerState<BreakdownDetailScreen>
                       borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
                     ),
                     child: Text(
-                      item.userData.learningStage.toUpperCase(),
+                      item.userData.learningStage.displayName.toUpperCase(),
                       style: MnemonicsTypography.bodyRegular.copyWith(
                         color: _getStageColor(item.userData.learningStage),
                         fontWeight: FontWeight.bold,
@@ -791,16 +792,14 @@ class _BreakdownDetailScreenState extends ConsumerState<BreakdownDetailScreen>
     }
   }
 
-  Color _getStageColor(String stage) {
-    switch (stage.toLowerCase()) {
-      case 'new':
+  Color _getStageColor(LearningStage stage) {
+    switch (stage) {
+      case LearningStage.newWord:
         return Colors.blue;
-      case 'learning':
+      case LearningStage.learning:
         return Colors.orange;
-      case 'mastered':
+      case LearningStage.mastered:
         return Colors.amber;
-      default:
-        return Colors.grey;
     }
   }
 }

@@ -8,7 +8,7 @@
     "example": "The guide obfuscated the real path to keep us safe.",
     "synonyms": ["confuse", "blur", "befuddle"],
     "antonyms": ["clarify", "explain"],
-    "difficulty": "hard",
+    "difficulty": "advanced",
     "category": "academic",
     "setIds": ["sat"]
   },
@@ -21,7 +21,7 @@
     "example": "She gave a lucid presentation on the topic.",
     "synonyms": ["clear", "intelligible"],
     "antonyms": ["confusing", "obscure"],
-    "difficulty": "medium",
+    "difficulty": "intermediate",
     "category": "common",
     "setIds": ["sat"]
   },
@@ -34,7 +34,7 @@
     "example": "He was a popular and gregarious man.",
     "synonyms": ["sociable", "outgoing"],
     "antonyms": ["reserved", "unsociable"],
-    "difficulty": "easy",
+    "difficulty": "basic",
     "category": "common",
     "setIds": ["sat"]
   },
@@ -47,7 +47,7 @@
     "example": "Mobile phones are ubiquitous these days.",
     "synonyms": ["omnipresent", "pervasive"],
     "antonyms": ["rare", "scarce"],
-    "difficulty": "medium",
+    "difficulty": "intermediate",
     "category": "academic",
     "setIds": ["sat"]
   },
@@ -60,7 +60,7 @@
     "example": "Fame in the film industry is often ephemeral.",
     "synonyms": ["fleeting", "transient"],
     "antonyms": ["permanent", "lasting"],
-    "difficulty": "hard",
+    "difficulty": "advanced",
     "category": "academic",
     "setIds": ["sat"]
   },
@@ -73,7 +73,7 @@
     "example": "Her altruistic nature made her popular among her friends.",
     "synonyms": ["selfless", "charitable"],
     "antonyms": ["selfish", "self-centered"],
-    "difficulty": "medium",
+    "difficulty": "intermediate",
     "category": "common",
     "setIds": ["gre"]
   },
@@ -86,7 +86,7 @@
     "example": "His belligerent attitude caused many problems.",
     "synonyms": ["aggressive", "hostile"],
     "antonyms": ["peaceful", "friendly"],
-    "difficulty": "medium",
+    "difficulty": "intermediate",
     "category": "academic",
     "setIds": ["gre"]
   },
@@ -99,7 +99,7 @@
     "example": "The cacophony in the market made it hard to concentrate.",
     "synonyms": ["din", "racket"],
     "antonyms": ["harmony", "silence"],
-    "difficulty": "hard",
+    "difficulty": "advanced",
     "category": "academic",
     "setIds": ["gre"]
   },
@@ -112,7 +112,7 @@
     "example": "The mountains are still in pristine condition.",
     "synonyms": ["pure", "spotless"],
     "antonyms": ["dirty", "spoiled"],
-    "difficulty": "medium",
+    "difficulty": "intermediate",
     "category": "common",
     "setIds": ["gre"]
   },
@@ -125,7 +125,7 @@
     "example": "The sagacious leader guided the team to success.",
     "synonyms": ["wise", "prudent"],
     "antonyms": ["foolish", "ignorant"],
-    "difficulty": "hard",
+    "difficulty": "advanced",
     "category": "academic",
     "setIds": ["gre"]
   },
@@ -138,7 +138,7 @@
     "example": "After lunch, I always feel lethargic.",
     "synonyms": ["sluggish", "inactive"],
     "antonyms": ["energetic", "active"],
-    "difficulty": "easy",
+    "difficulty": "basic",
     "category": "common",
     "setIds": ["gre"]
   },
@@ -151,7 +151,7 @@
     "example": "He was magnanimous in victory.",
     "synonyms": ["generous", "charitable"],
     "antonyms": ["petty", "mean"],
-    "difficulty": "medium",
+    "difficulty": "intermediate",
     "category": "academic",
     "setIds": ["mylist"]
   },
@@ -164,7 +164,7 @@
     "example": "His quixotic plans were never realized.",
     "synonyms": ["idealistic", "impractical"],
     "antonyms": ["realistic", "pragmatic"],
-    "difficulty": "hard",
+    "difficulty": "advanced",
     "category": "academic",
     "setIds": ["mylist"]
   }

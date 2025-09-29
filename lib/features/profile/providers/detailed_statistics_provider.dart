@@ -6,6 +6,7 @@ import '../../home/providers.dart';
 import '../../home/infrastructure/vocabulary_repository.dart';
 import '../../home/infrastructure/user_word_data_repository.dart';
 import '../presentation/screens/detailed_word_statistics_screen.dart';
+import '../domain/user_statistics.dart';
 
 part 'detailed_statistics_provider.g.dart';
 
@@ -147,19 +148,19 @@ List<WordWithUserData> _filterByStatType(List<WordWithUserData> words, WordStatT
                item.userData!.reviewCount == 0;
       }).toList();
       
-    case WordStatType.easy:
+    case WordStatType.basic:
       return words.where((item) {
-        return item.word.difficulty.toLowerCase() == 'easy';
+        return item.word.difficulty == WordDifficulty.basic;
       }).toList();
       
-    case WordStatType.medium:
+    case WordStatType.intermediate:
       return words.where((item) {
-        return item.word.difficulty.toLowerCase() == 'medium';
+        return item.word.difficulty == WordDifficulty.intermediate;
       }).toList();
       
-    case WordStatType.hard:
+    case WordStatType.advanced:
       return words.where((item) {
-        return item.word.difficulty.toLowerCase() == 'hard';
+        return item.word.difficulty == WordDifficulty.advanced;
       }).toList();
       
     case WordStatType.category:
@@ -187,9 +188,8 @@ List<WordWithUserData> _sortWords(List<WordWithUserData> words, String sortBy, b
         break;
         
       case 'difficulty':
-        final difficultyOrder = {'easy': 1, 'medium': 2, 'hard': 3};
-        final aDifficulty = difficultyOrder[a.word.difficulty.toLowerCase()] ?? 2;
-        final bDifficulty = difficultyOrder[b.word.difficulty.toLowerCase()] ?? 2;
+        final aDifficulty = a.word.difficulty.numericValue;
+        final bDifficulty = b.word.difficulty.numericValue;
         comparison = aDifficulty.compareTo(bDifficulty);
         break;
         
@@ -313,7 +313,7 @@ Future<Map<String, DifficultyStats>> difficultyDetailedStats(DifficultyDetailedS
     // Group words by difficulty
     final wordsByDifficulty = <String, List<VocabularyWord>>{};
     for (final word in allWords) {
-      final difficulty = word.difficulty.toLowerCase();
+      final difficulty = word.difficulty.name;
       wordsByDifficulty.putIfAbsent(difficulty, () => []).add(word);
     }
     

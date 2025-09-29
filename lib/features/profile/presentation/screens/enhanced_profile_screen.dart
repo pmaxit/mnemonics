@@ -4,13 +4,14 @@ import '../../../../common/design/design_system.dart';
 import '../../../../common/design/theme_provider.dart';
 import '../../../home/providers.dart';
 import '../../../home/infrastructure/user_word_data_repository.dart';
-import '../../providers/profile_statistics_provider.dart';
-import '../../domain/profile_statistics.dart';
+import '../../providers/unified_statistics_provider.dart';
+import '../../domain/user_statistics.dart';
 import '../widgets/profile_header_widget.dart';
 import '../widgets/statistics_overview_widget.dart';
 import '../widgets/achievements_widget.dart';
 import '../widgets/learning_insights_widget.dart';
 import '../widgets/profile_settings_widget.dart';
+import '../widgets/difficulty_stats_widget.dart';
 import 'dart:io';
 import '../../../../common/widgets/animated_wave_background.dart';
 
@@ -51,7 +52,7 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    final profileStatsAsync = ref.watch(profileStatisticsProvider);
+    final profileStatsAsync = ref.watch(unifiedStatisticsProvider);
     final userSettings = ref.watch(userSettingsProvider);
     final themeMode = ref.watch(themeNotifierProvider);
     final isDarkMode = themeMode == ThemeMode.dark ||
@@ -124,6 +125,14 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
                   SliverToBoxAdapter(
                     child: LearningInsightsWidget(
                       profileStats: profileStats,
+                      isDarkMode: isDarkMode,
+                    ),
+                  ),
+
+                  // Difficulty Statistics
+                  SliverToBoxAdapter(
+                    child: DifficultyStatsWidget(
+                      difficultyStats: profileStats.difficultyStats,
                       isDarkMode: isDarkMode,
                     ),
                   ),
@@ -281,23 +290,65 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
 
     if (confirmed == true) {
       try {
-        final repo = ref.read(userWordDataRepositoryProvider);
-        await repo.clearAllData();
+        // Show loading indicator
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Resetting progress...'),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        }
+
+        // Clear user word data
+        final userWordRepo = ref.read(userWordDataRepositoryProvider);
+        await userWordRepo.clearAllData();
+        
+        // Clear review activities
+        final reviewRepo = ref.read(reviewActivityRepositoryProvider);
+        await reviewRepo.clearAllData();
+        
+        // Reset user settings to defaults
+        final userSettingsNotifier = ref.read(userSettingsProvider.notifier);
+        await userSettingsNotifier.updateDailyGoal(10); // Default goal
+        await userSettingsNotifier.updateLanguages(['en']); // Default language
+        await userSettingsNotifier.updateReviewFrequency(1); // Default frequency
+        
+        // Invalidate all providers to refresh UI state
+        ref.invalidate(allUserWordDataProvider);
+        ref.invalidate(reviewActivityListProvider);
+        ref.invalidate(unifiedStatisticsProvider);
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Progress reset successfully'),
+              content: Text('✅ All learning progress has been reset successfully'),
               backgroundColor: MnemonicsColors.primaryGreen,
+              duration: Duration(seconds: 3),
             ),
           );
         }
       } catch (e) {
+        String errorMessage = 'Reset failed';
+        if (e.toString().contains('HiveError')) {
+          errorMessage = 'Database error occurred during reset';
+        } else if (e.toString().contains('Permission')) {
+          errorMessage = 'Permission denied - unable to clear data';
+        } else {
+          errorMessage = 'Reset failed: ${e.toString()}';
+        }
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Reset failed: $e'),
+              content: Text('❌ $errorMessage'),
               backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+              action: SnackBarAction(
+                label: 'Retry',
+                textColor: Colors.white,
+                onPressed: () => _handleProgressReset(),
+              ),
             ),
           );
         }

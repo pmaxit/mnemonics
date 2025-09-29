@@ -401,8 +401,7 @@ abstract class _LearningSessionState extends LearningSessionState {
 /// @nodoc
 mixin _$SessionWordReview {
   String get word => throw _privateConstructorUsedError;
-  String get difficulty =>
-      throw _privateConstructorUsedError; // 'easy', 'medium', 'hard'
+  ReviewDifficultyRating get difficulty => throw _privateConstructorUsedError;
   DateTime get reviewedAt => throw _privateConstructorUsedError;
   Duration get timeSpent => throw _privateConstructorUsedError;
   bool get wasSkipped => throw _privateConstructorUsedError;
@@ -422,7 +421,7 @@ abstract class $SessionWordReviewCopyWith<$Res> {
   @useResult
   $Res call(
       {String word,
-      String difficulty,
+      ReviewDifficultyRating difficulty,
       DateTime reviewedAt,
       Duration timeSpent,
       bool wasSkipped});
@@ -457,7 +456,7 @@ class _$SessionWordReviewCopyWithImpl<$Res, $Val extends SessionWordReview>
       difficulty: null == difficulty
           ? _value.difficulty
           : difficulty // ignore: cast_nullable_to_non_nullable
-              as String,
+              as ReviewDifficultyRating,
       reviewedAt: null == reviewedAt
           ? _value.reviewedAt
           : reviewedAt // ignore: cast_nullable_to_non_nullable
@@ -484,7 +483,7 @@ abstract class _$$SessionWordReviewImplCopyWith<$Res>
   @useResult
   $Res call(
       {String word,
-      String difficulty,
+      ReviewDifficultyRating difficulty,
       DateTime reviewedAt,
       Duration timeSpent,
       bool wasSkipped});
@@ -517,7 +516,7 @@ class __$$SessionWordReviewImplCopyWithImpl<$Res>
       difficulty: null == difficulty
           ? _value.difficulty
           : difficulty // ignore: cast_nullable_to_non_nullable
-              as String,
+              as ReviewDifficultyRating,
       reviewedAt: null == reviewedAt
           ? _value.reviewedAt
           : reviewedAt // ignore: cast_nullable_to_non_nullable
@@ -547,8 +546,7 @@ class _$SessionWordReviewImpl implements _SessionWordReview {
   @override
   final String word;
   @override
-  final String difficulty;
-// 'easy', 'medium', 'hard'
+  final ReviewDifficultyRating difficulty;
   @override
   final DateTime reviewedAt;
   @override
@@ -595,7 +593,7 @@ class _$SessionWordReviewImpl implements _SessionWordReview {
 abstract class _SessionWordReview implements SessionWordReview {
   const factory _SessionWordReview(
       {required final String word,
-      required final String difficulty,
+      required final ReviewDifficultyRating difficulty,
       required final DateTime reviewedAt,
       required final Duration timeSpent,
       final bool wasSkipped}) = _$SessionWordReviewImpl;
@@ -603,7 +601,7 @@ abstract class _SessionWordReview implements SessionWordReview {
   @override
   String get word;
   @override
-  String get difficulty; // 'easy', 'medium', 'hard'
+  ReviewDifficultyRating get difficulty;
   @override
   DateTime get reviewedAt;
   @override

@@ -8,6 +8,7 @@ import '../../home/infrastructure/user_word_data_repository.dart';
 import '../../home/infrastructure/vocabulary_repository.dart';
 import '../../home/domain/spaced_repetition.dart';
 import '../../home/providers.dart';
+import '../../profile/domain/user_statistics.dart';
 import '../../home/domain/review_activity.dart';
 
 part 'learning_session_provider.g.dart';
@@ -137,9 +138,13 @@ class LearningSession extends _$LearningSession {
     final timeSpent = DateTime.now().difference(reviewStartTime);
 
     // Create review record
+    final difficultyEnum = ReviewDifficultyRating.values.firstWhere(
+      (d) => d.name == difficulty.toLowerCase(),
+      orElse: () => ReviewDifficultyRating.medium,
+    );
     final review = SessionWordReview(
       word: currentWord.word,
-      difficulty: difficulty,
+      difficulty: difficultyEnum,
       reviewedAt: DateTime.now(),
       timeSpent: timeSpent,
     );
@@ -166,7 +171,7 @@ class LearningSession extends _$LearningSession {
     // Create skip record
     final review = SessionWordReview(
       word: currentWord.word,
-      difficulty: 'hard', // Skipped words are considered hard
+      difficulty: ReviewDifficultyRating.hard, // Skipped words are considered hard
       reviewedAt: DateTime.now(),
       timeSpent: timeSpent,
       wasSkipped: true,
@@ -254,7 +259,7 @@ class LearningSession extends _$LearningSession {
     UserWordData? userData = await userWordRepo.getUserWordData(word.word);
     
     final now = DateTime.now();
-    final isCorrect = difficulty == 'easy';
+    final isCorrect = difficulty == ReviewDifficultyRating.easy;
     
     if (userData == null) {
       userData = UserWordData(
@@ -268,7 +273,7 @@ class LearningSession extends _$LearningSession {
       userData.firstLearnedAt = now;
       userData.correctAnswers = isCorrect ? 1 : 0;
       userData.totalAnswers = 1;
-      userData.learningStage = 'learning';
+      userData.learningStage = LearningStage.learning;
     } else {
       userData.reviewCount += 1;
       userData.lastReviewedAt = now;
@@ -281,10 +286,10 @@ class LearningSession extends _$LearningSession {
       // Update learning stage based on accuracy
       final accuracyRate = userData.accuracyRate;
       if (accuracyRate >= 0.8 && userData.reviewCount >= 3) {
-        userData.learningStage = 'mastered';
+        userData.learningStage = LearningStage.mastered;
         userData.isLearned = true;
       } else if (userData.reviewCount > 0) {
-        userData.learningStage = 'learning';
+        userData.learningStage = LearningStage.learning;
       }
     }
 
@@ -301,10 +306,14 @@ class LearningSession extends _$LearningSession {
     await userWordRepo.saveUserWordData(userData);
     
     // Save review activity
+    final ratingEnum = ReviewDifficultyRating.values.firstWhere(
+      (r) => r.name == difficulty.toLowerCase(),
+      orElse: () => ReviewDifficultyRating.medium,
+    );
     final reviewActivity = ReviewActivity(
       word: word.word,
       reviewedAt: now,
-      rating: difficulty,
+      rating: ratingEnum,
     );
     
     await reviewRepo.saveActivity(reviewActivity);
@@ -319,9 +328,9 @@ class LearningSession extends _$LearningSession {
     final masteredWords = <String>[];
     
     for (final review in state.completedReviews) {
-      if (review.difficulty == 'hard' || review.wasSkipped) {
+      if (review.difficulty == ReviewDifficultyRating.hard || review.wasSkipped) {
         strugglingWords.add(review.word);
-      } else if (review.difficulty == 'easy') {
+      } else if (review.difficulty == ReviewDifficultyRating.easy) {
         masteredWords.add(review.word);
       }
     }

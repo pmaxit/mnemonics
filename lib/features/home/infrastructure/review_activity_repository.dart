@@ -18,4 +18,9 @@ class ReviewActivityRepository {
     final box = await Hive.openBox<ReviewActivity>(boxName);
     return box.values.toList();
   }
+
+  Future<void> clearAllData() async {
+    final box = await Hive.openBox<ReviewActivity>(boxName);
+    await box.clear();
+  }
 } 

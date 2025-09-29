@@ -26,7 +26,7 @@ class UserWordDataAdapter extends TypeAdapter<UserWordData> {
       firstLearnedAt: fields[6] as DateTime?,
       correctAnswers: fields[7] as int,
       totalAnswers: fields[8] as int,
-      learningStage: fields[9] as String,
+      learningStage: fields[9] as LearningStage,
     );
   }
 

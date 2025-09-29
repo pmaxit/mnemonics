@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/vocabulary_word.dart';
+import '../../profile/services/data_migration_service.dart';
 import 'google_sheets_service.dart';
 
 final vocabularyRepositoryProvider = Provider<VocabularyRepository>((ref) {
@@ -33,7 +34,7 @@ class VocabularyRepository {
   Future<List<VocabularyWord>> _loadVocabularyFromJson() async {
     final jsonString = await rootBundle.loadString(_jsonPath);
     final List<dynamic> jsonList = json.decode(jsonString);
-    return jsonList.map((e) => VocabularyWord.fromJson(e as Map<String, dynamic>)).toList();
+    return jsonList.map((e) => DataMigrationService.migrateVocabularyWord(e as Map<String, dynamic>)).toList();
   }
 
   Future<List<String>> getAvailableCategories() async {

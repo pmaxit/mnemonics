@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import '../../profile/domain/user_statistics.dart';
 
 part 'user_word_data.g.dart';
 
@@ -32,7 +33,7 @@ class UserWordData extends HiveObject {
   int totalAnswers;
 
   @HiveField(9)
-  String learningStage;
+  LearningStage learningStage;
 
   UserWordData({
     required this.word,
@@ -44,14 +45,14 @@ class UserWordData extends HiveObject {
     this.firstLearnedAt,
     this.correctAnswers = 0,
     this.totalAnswers = 0,
-    this.learningStage = 'new',
+    this.learningStage = LearningStage.newWord,
   });
 
   double get accuracyRate => totalAnswers > 0 ? correctAnswers / totalAnswers : 0.0;
 
-  bool get isInProgress => learningStage == 'learning' || (reviewCount > 0 && !isLearned);
+  bool get isInProgress => learningStage == LearningStage.learning || (reviewCount > 0 && !isLearned);
 
-  bool get isMastered => learningStage == 'mastered' || (isLearned && accuracyRate >= 0.8);
+  bool get isMastered => learningStage == LearningStage.mastered || (isLearned && accuracyRate >= 0.8);
 
   Map<String, dynamic> toJson() => {
     'word': word,
@@ -63,7 +64,7 @@ class UserWordData extends HiveObject {
     'firstLearnedAt': firstLearnedAt?.toIso8601String(),
     'correctAnswers': correctAnswers,
     'totalAnswers': totalAnswers,
-    'learningStage': learningStage,
+    'learningStage': learningStage.name,
   };
 
   factory UserWordData.fromJson(Map<String, dynamic> json) => UserWordData(
@@ -76,6 +77,26 @@ class UserWordData extends HiveObject {
     firstLearnedAt: json['firstLearnedAt'] != null ? DateTime.parse(json['firstLearnedAt']) : null,
     correctAnswers: json['correctAnswers'] as int? ?? 0,
     totalAnswers: json['totalAnswers'] as int? ?? 0,
-    learningStage: json['learningStage'] as String? ?? 'new',
+    learningStage: LearningStage.values.firstWhere(
+      (stage) => stage.name == (json['learningStage'] as String? ?? 'newWord'),
+      orElse: () => LearningStage.newWord,
+    ),
   );
+}
+
+// Hive adapter for LearningStage enum
+class LearningStageAdapter extends TypeAdapter<LearningStage> {
+  @override
+  final int typeId = 3; // Use a unique typeId
+
+  @override
+  LearningStage read(BinaryReader reader) {
+    final index = reader.readByte();
+    return LearningStage.values[index];
+  }
+
+  @override
+  void write(BinaryWriter writer, LearningStage obj) {
+    writer.writeByte(obj.index);
+  }
 } 

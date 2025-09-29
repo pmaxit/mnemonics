@@ -6,6 +6,7 @@ import '../../../../common/design/design_system.dart';
 import '../../../../common/design/theme_provider.dart';
 import '../../../../common/widgets/course_card.dart';
 import '../../domain/vocabulary_word.dart';
+import '../../../profile/domain/user_statistics.dart';
 import 'package:go_router/go_router.dart';
 import 'learn_word_detail_screen.dart';
 import '../../infrastructure/word_set_repository.dart';
@@ -25,60 +26,37 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
   String? _difficulty;
   String? _category;
   
-  late AnimationController _headerAnimationController;
-  late AnimationController _listAnimationController;
-  late Animation<double> _headerFadeAnimation;
-  late Animation<double> _headerSlideAnimation;
-  late Animation<double> _searchFadeAnimation;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _slideAnimation;
   
   @override
   void initState() {
     super.initState();
-    _headerAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    _listAnimationController = AnimationController(
+    _animationController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    
-    _headerFadeAnimation = Tween<double>(
+    _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
-      parent: _headerAnimationController,
+      parent: _animationController,
       curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
     ));
-    
-    _headerSlideAnimation = Tween<double>(
-      begin: -30.0,
+    _slideAnimation = Tween<double>(
+      begin: 50.0,
       end: 0.0,
     ).animate(CurvedAnimation(
-      parent: _headerAnimationController,
-      curve: const Interval(0.2, 1.0, curve: Curves.elasticOut),
+      parent: _animationController,
+      curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
     ));
-    
-    _searchFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _headerAnimationController,
-      curve: const Interval(0.4, 1.0, curve: Curves.easeOut),
-    ));
-    
-    _headerAnimationController.forward();
-    Future.delayed(const Duration(milliseconds: 200), () {
-      if (mounted) {
-        _listAnimationController.forward();
-      }
-    });
+    _animationController.forward();
   }
   
   @override
   void dispose() {
-    _headerAnimationController.dispose();
-    _listAnimationController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -129,54 +107,54 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
             color: Colors.transparent,
             child: Column(
               children: [
-                // Animated Header
-                _buildAnimatedHeader(setName ?? 'Word List', isDarkMode),
-                
-                // Animated Search Bar
+                // Animated Header (only this slides up)
                 AnimatedBuilder(
-                  animation: _headerAnimationController,
+                  animation: _animationController,
                   builder: (context, child) {
-                    return FadeTransition(
-                      opacity: _searchFadeAnimation,
-                      child: Transform.translate(
-                        offset: Offset(0, _headerSlideAnimation.value),
-                        child: Container(
-                          margin: const EdgeInsets.all(MnemonicsSpacing.m),
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: 'Search words, meanings, or mnemonics',
-                              prefixIcon: Icon(
-                                Icons.search,
-                                color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
-                              ),
-                              filled: true,
-                              fillColor: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                                borderSide: BorderSide.none,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                                borderSide: BorderSide(
-                                  color: isDarkMode 
-                                      ? MnemonicsColors.darkBorder.withOpacity(0.3)
-                                      : MnemonicsColors.surface,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                                borderSide: BorderSide(
-                                  color: MnemonicsColors.primaryGreen,
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                            onChanged: (value) => setState(() => _search = value),
-                          ),
-                        ),
+                    return Transform.translate(
+                      offset: Offset(0, _slideAnimation.value),
+                      child: FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: _buildAnimatedHeader(setName ?? 'Word List', isDarkMode),
                       ),
                     );
                   },
+                ),
+                
+                // Search Bar (static)
+                Container(
+                  margin: const EdgeInsets.all(MnemonicsSpacing.m),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search words, meanings, or mnemonics',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                      ),
+                      filled: true,
+                      fillColor: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                        borderSide: BorderSide(
+                          color: isDarkMode 
+                              ? MnemonicsColors.darkBorder.withOpacity(0.3)
+                              : MnemonicsColors.surface,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                        borderSide: BorderSide(
+                          color: MnemonicsColors.primaryGreen,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    onChanged: (value) => setState(() => _search = value),
+                  ),
                 ),
                 Expanded(
                   child: vocabAsync.when(
@@ -184,48 +162,14 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
                     error: (e, _) => Center(child: Text('Error: $e')),
                     data: (_) => filtered.isEmpty
                         ? _buildEmptyState(isDarkMode)
-                        : AnimatedBuilder(
-                            animation: _listAnimationController,
-                            builder: (context, child) {
-                              return ListView.separated(
-                                padding: const EdgeInsets.symmetric(horizontal: MnemonicsSpacing.l, vertical: MnemonicsSpacing.m),
-                                itemCount: filtered.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: MnemonicsSpacing.m),
-                                itemBuilder: (context, i) {
-                                  final word = filtered[i];
-                                  final accent = accentColors[i % accentColors.length];
-                                  
-                                  // Staggered animation for each card
-                                  final animationDelay = (i * 0.1).clamp(0.0, 1.0);
-                                  final cardAnimation = Tween<double>(
-                                    begin: 0.0,
-                                    end: 1.0,
-                                  ).animate(CurvedAnimation(
-                                    parent: _listAnimationController,
-                                    curve: Interval(
-                                      animationDelay,
-                                      (0.4 + animationDelay).clamp(0.0, 1.0),
-                                      curve: Curves.elasticOut,
-                                    ),
-                                  ));
-                                  
-                                  return AnimatedBuilder(
-                                    animation: cardAnimation,
-                                    builder: (context, child) {
-                                      return Transform.translate(
-                                        offset: Offset(0, 30 * (1 - cardAnimation.value)),
-                                        child: Opacity(
-                                          opacity: cardAnimation.value.clamp(0.0, 1.0),
-                                          child: Transform.scale(
-                                            scale: (0.9 + (0.1 * cardAnimation.value)).clamp(0.1, 2.0),
-                                            child: _buildWordCard(word, accent, i, filtered, isDarkMode),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                              );
+                        : ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: MnemonicsSpacing.l, vertical: MnemonicsSpacing.m),
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: MnemonicsSpacing.m),
+                            itemBuilder: (context, i) {
+                              final word = filtered[i];
+                              final accent = accentColors[i % accentColors.length];
+                              return _buildWordCard(word, accent, i, filtered, isDarkMode);
                             },
                           ),
                   ),
@@ -239,80 +183,69 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
   }
 
   Widget _buildAnimatedHeader(String title, bool isDarkMode) {
-    return AnimatedBuilder(
-      animation: _headerAnimationController,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, _headerSlideAnimation.value),
-          child: FadeTransition(
-            opacity: _headerFadeAnimation,
-            child: Container(
-              margin: const EdgeInsets.all(MnemonicsSpacing.m),
-              padding: const EdgeInsets.all(MnemonicsSpacing.l),
-              decoration: BoxDecoration(
-                color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
-                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-                boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
-                border: isDarkMode
-                    ? Border.all(
-                        color: MnemonicsColors.darkBorder.withOpacity(0.3),
-                        width: 1,
-                      )
-                    : null,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(MnemonicsSpacing.s),
-                    decoration: BoxDecoration(
-                      color: MnemonicsColors.primaryGreen.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                    ),
-                    child: Icon(
-                      Icons.library_books,
-                      color: MnemonicsColors.primaryGreen,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: MnemonicsSpacing.m),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: MnemonicsTypography.headingMedium.copyWith(
-                            color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'Tap any word to start learning',
-                          style: MnemonicsTypography.bodyRegular.copyWith(
-                            color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(MnemonicsSpacing.s),
-                    decoration: BoxDecoration(
-                      color: MnemonicsColors.secondaryOrange.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
-                    ),
-                    child: Icon(
-                      Icons.psychology,
-                      color: MnemonicsColors.secondaryOrange,
-                      size: 20,
-                    ),
-                  ),
-                ],
-              ),
+    return Container(
+      margin: const EdgeInsets.all(MnemonicsSpacing.m),
+      padding: const EdgeInsets.all(MnemonicsSpacing.l),
+      decoration: BoxDecoration(
+        color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+        boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+        border: isDarkMode
+            ? Border.all(
+                color: MnemonicsColors.darkBorder.withOpacity(0.3),
+                width: 1,
+              )
+            : null,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(MnemonicsSpacing.s),
+            decoration: BoxDecoration(
+              color: MnemonicsColors.primaryGreen.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+            ),
+            child: Icon(
+              Icons.library_books,
+              color: MnemonicsColors.primaryGreen,
+              size: 24,
             ),
           ),
-        );
-      },
+          const SizedBox(width: MnemonicsSpacing.m),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: MnemonicsTypography.headingMedium.copyWith(
+                    color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Tap any word to start learning',
+                  style: MnemonicsTypography.bodyRegular.copyWith(
+                    color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(MnemonicsSpacing.s),
+            decoration: BoxDecoration(
+              color: MnemonicsColors.secondaryOrange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+            ),
+            child: Icon(
+              Icons.psychology,
+              color: MnemonicsColors.secondaryOrange,
+              size: 20,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -461,7 +394,7 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
                               borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
                             ),
                             child: Text(
-                              word.difficulty.toUpperCase(),
+                              word.difficulty.displayName.toUpperCase(),
                               style: MnemonicsTypography.bodyRegular.copyWith(
                                 color: _getDifficultyColor(word.difficulty),
                                 fontSize: 11,
@@ -495,16 +428,14 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
     );
   }
 
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty.toLowerCase()) {
-      case 'easy':
+  Color _getDifficultyColor(WordDifficulty difficulty) {
+    switch (difficulty) {
+      case WordDifficulty.basic:
         return Colors.green;
-      case 'medium':
+      case WordDifficulty.intermediate:
         return MnemonicsColors.secondaryOrange;
-      case 'hard':
+      case WordDifficulty.advanced:
         return Colors.red;
-      default:
-        return MnemonicsColors.primaryGreen;
     }
   }
 } 

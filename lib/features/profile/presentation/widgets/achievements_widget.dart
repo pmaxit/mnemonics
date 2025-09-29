@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../common/design/design_system.dart';
-import '../../domain/profile_statistics.dart';
+import '../../domain/user_statistics.dart';
 
 class AchievementsWidget extends StatelessWidget {
   final List<Milestone> milestones;

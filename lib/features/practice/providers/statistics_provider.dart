@@ -4,6 +4,7 @@ import '../../home/providers.dart';
 import '../../home/domain/user_word_data.dart';
 import '../../home/domain/vocabulary_word.dart';
 import '../../home/domain/review_activity.dart';
+import '../../profile/domain/user_statistics.dart' hide DailyProgress;
 
 final statisticsProvider = FutureProvider<StatisticsData>((ref) async {
   final vocabAsync = ref.watch(vocabularyListProvider);
@@ -54,14 +55,14 @@ final statisticsProvider = FutureProvider<StatisticsData>((ref) async {
         example: '',
         synonyms: [],
         antonyms: [],
-        difficulty: 'Unknown',
+        difficulty: WordDifficulty.intermediate,
         category: 'Unknown',
       ),
     );
     
     if (userWord.isLearned || userWord.isInProgress) {
       categoryBreakdown[vocabWord.category] = (categoryBreakdown[vocabWord.category] ?? 0) + 1;
-      difficultyBreakdown[vocabWord.difficulty] = (difficultyBreakdown[vocabWord.difficulty] ?? 0) + 1;
+      difficultyBreakdown[vocabWord.difficulty.name] = (difficultyBreakdown[vocabWord.difficulty.name] ?? 0) + 1;
     }
   }
   

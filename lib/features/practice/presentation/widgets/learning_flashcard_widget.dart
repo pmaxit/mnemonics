@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../common/design/design_system.dart';
 import '../../domain/learning_session_models.dart';
 import '../../../home/domain/vocabulary_word.dart';
+import '../../../profile/domain/user_statistics.dart';
 
 class LearningFlashcardWidget extends StatefulWidget {
   final VocabularyWord word;
@@ -176,9 +177,7 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(5, (index) {
-              final difficulty = widget.word.difficulty.toLowerCase();
-              final filledStars = difficulty == 'easy' ? 2 : 
-                                 difficulty == 'medium' ? 3 : 4;
+              final filledStars = widget.word.difficulty.numericValue + 1;
               return Icon(
                 index < filledStars ? Icons.star : Icons.star_border,
                 color: MnemonicsColors.secondaryOrange,

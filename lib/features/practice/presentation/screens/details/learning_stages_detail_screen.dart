@@ -7,6 +7,7 @@ import '../../../providers/statistics_provider.dart';
 import '../../../../home/providers.dart';
 import '../../../../home/domain/vocabulary_word.dart';
 import '../../../../home/domain/user_word_data.dart';
+import '../../../../profile/domain/user_statistics.dart';
 import '../../widgets/animated_progress_utils.dart';
 
 class LearningStagesDetailScreen extends ConsumerStatefulWidget {
@@ -179,7 +180,7 @@ class _LearningStagesDetailScreenState extends ConsumerState<LearningStagesDetai
     final stageWords = <({VocabularyWord word, UserWordData userData})>[];
     
     for (final userData in userWordDataList) {
-      if (userData.learningStage.toLowerCase() == stage.toLowerCase()) {
+      if (userData.learningStage.name.toLowerCase() == stage.toLowerCase()) {
         final word = allWords.firstWhere(
           (w) => w.word == userData.word,
           orElse: () => const VocabularyWord(
@@ -189,7 +190,7 @@ class _LearningStagesDetailScreenState extends ConsumerState<LearningStagesDetai
             example: '',
             synonyms: [],
             antonyms: [],
-            difficulty: 'medium',
+            difficulty: WordDifficulty.intermediate,
             category: 'unknown',
           ),
         );
@@ -245,7 +246,7 @@ class _LearningStagesDetailScreenState extends ConsumerState<LearningStagesDetai
         filtered.sort((a, b) => a.word.word.compareTo(b.word.word));
         break;
       case 'Difficulty':
-        final difficultyOrder = ['easy', 'medium', 'hard'];
+        final difficultyOrder = [WordDifficulty.basic, WordDifficulty.intermediate, WordDifficulty.advanced];
         filtered.sort((a, b) {
           final aIndex = difficultyOrder.indexOf(a.word.difficulty);
           final bIndex = difficultyOrder.indexOf(b.word.difficulty);
@@ -273,7 +274,7 @@ class _LearningStagesDetailScreenState extends ConsumerState<LearningStagesDetai
     final categoryBreakdown = <String, int>{};
     
     for (final item in stageWords) {
-      difficultyBreakdown[item.word.difficulty] = (difficultyBreakdown[item.word.difficulty] ?? 0) + 1;
+      difficultyBreakdown[item.word.difficulty.name] = (difficultyBreakdown[item.word.difficulty.name] ?? 0) + 1;
       categoryBreakdown[item.word.category] = (categoryBreakdown[item.word.category] ?? 0) + 1;
     }
     
@@ -659,7 +660,7 @@ class _LearningStagesDetailScreenState extends ConsumerState<LearningStagesDetai
                         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
                       ),
                       child: Text(
-                        word.difficulty.toUpperCase(),
+                        word.difficulty.name.toUpperCase(),
                         style: MnemonicsTypography.bodyRegular.copyWith(
                           color: difficultyColor,
                           fontWeight: FontWeight.bold,
@@ -863,16 +864,14 @@ class _LearningStagesDetailScreenState extends ConsumerState<LearningStagesDetai
     }
   }
 
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty.toLowerCase()) {
-      case 'easy':
+  Color _getDifficultyColor(WordDifficulty difficulty) {
+    switch (difficulty) {
+      case WordDifficulty.basic:
         return Colors.green;
-      case 'medium':
+      case WordDifficulty.intermediate:
         return Colors.orange;
-      case 'hard':
+      case WordDifficulty.advanced:
         return Colors.red;
-      default:
-        return Colors.grey;
     }
   }
 

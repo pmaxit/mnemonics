@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/design/design_system.dart';
-import '../../domain/profile_statistics.dart';
+import '../../domain/user_statistics.dart';
 import '../../domain/user_info.dart';
 import '../../providers/user_info_provider.dart';
 import 'package:intl/intl.dart';
 
 class ProfileHeaderWidget extends ConsumerStatefulWidget {
-  final ProfileStatistics profileStats;
+  final UserStatistics profileStats;
   final bool isDarkMode;
 
   const ProfileHeaderWidget({

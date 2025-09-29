@@ -180,7 +180,7 @@ final categoryDetailedStatsProvider =
 typedef CategoryDetailedStatsRef
     = AutoDisposeFutureProviderRef<Map<String, CategoryStats>>;
 String _$difficultyDetailedStatsHash() =>
-    r'fb13a1cfc32b28f0b17362b6755877545be5f19a';
+    r'e58fba5221ab50d215221475a7bc02c800b82b53';
 
 /// See also [difficultyDetailedStats].
 @ProviderFor(difficultyDetailedStats)

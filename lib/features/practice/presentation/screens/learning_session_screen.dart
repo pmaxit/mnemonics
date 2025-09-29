@@ -19,36 +19,37 @@ class LearningSessionScreen extends ConsumerStatefulWidget {
 
 class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
     with TickerProviderStateMixin {
-  late AnimationController _pageController;
-  late Animation<double> _pageAnimation;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
-    
-    _pageController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    
-    _pageAnimation = Tween<double>(
+    _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
-      parent: _pageController,
-      curve: Curves.easeInOut,
+      parent: _animationController,
+      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
     ));
-    
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) {
-        _pageController.forward();
-      }
-    });
+    _slideAnimation = Tween<double>(
+      begin: 50.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
+    ));
+    _animationController.forward();
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -118,29 +119,29 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
   }
 
   Widget _buildBody(LearningSessionState sessionState, LearningSession sessionNotifier, bool isDarkMode) {
-    return AnimatedBuilder(
-      animation: _pageAnimation,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _pageAnimation.value,
-          child: Transform.translate(
-            offset: Offset(0, 30 * (1 - _pageAnimation.value)),
-            child: _buildCurrentPhase(sessionState, sessionNotifier, isDarkMode),
-          ),
-        );
-      },
-    );
+    return _buildCurrentPhase(sessionState, sessionNotifier, isDarkMode);
   }
 
   Widget _buildCurrentPhase(LearningSessionState sessionState, LearningSession sessionNotifier, bool isDarkMode) {
     switch (sessionState.phase) {
       case LearningSessionPhase.setup:
-        return SessionSetupWidget(
-          sessionState: sessionState,
-          onDurationChanged: sessionNotifier.updateDuration,
-          onModeChanged: sessionNotifier.updateMode,
-          onStartSession: sessionNotifier.startSession,
-          isDarkMode: isDarkMode,
+        return AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(0, _slideAnimation.value),
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SessionSetupWidget(
+                  sessionState: sessionState,
+                  onDurationChanged: sessionNotifier.updateDuration,
+                  onModeChanged: sessionNotifier.updateMode,
+                  onStartSession: sessionNotifier.startSession,
+                  isDarkMode: isDarkMode,
+                ),
+              ),
+            );
+          },
         );
       case LearningSessionPhase.countdown:
         return SessionCountdownWidget(

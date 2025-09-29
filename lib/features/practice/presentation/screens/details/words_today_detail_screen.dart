@@ -8,6 +8,7 @@ import '../../../../home/providers.dart';
 import '../../../../home/domain/vocabulary_word.dart';
 import '../../../../home/domain/user_word_data.dart';
 import '../../widgets/animated_progress_utils.dart';
+import '../../../../profile/domain/user_statistics.dart';
 
 class WordsTodayDetailScreen extends ConsumerStatefulWidget {
   const WordsTodayDetailScreen({super.key});
@@ -157,7 +158,7 @@ class _WordsTodayDetailScreenState extends ConsumerState<WordsTodayDetailScreen>
             example: '',
             synonyms: [],
             antonyms: [],
-            difficulty: 'medium',
+            difficulty: WordDifficulty.intermediate,
             category: 'unknown',
           ),
         );
@@ -196,7 +197,7 @@ class _WordsTodayDetailScreenState extends ConsumerState<WordsTodayDetailScreen>
       }
       
       // Difficulty filter
-      if (_selectedDifficulty != 'All' && word.difficulty != _selectedDifficulty.toLowerCase()) {
+      if (_selectedDifficulty != 'All' && word.difficulty.name != _selectedDifficulty.toLowerCase()) {
         return false;
       }
       
@@ -262,7 +263,7 @@ class _WordsTodayDetailScreenState extends ConsumerState<WordsTodayDetailScreen>
               Expanded(
                 child: _buildSummaryCard(
                   'Easiest',
-                  todaysWords.where((item) => item.word.difficulty == 'easy').length.toString(),
+                  todaysWords.where((item) => item.word.difficulty == WordDifficulty.basic).length.toString(),
                   Icons.sentiment_very_satisfied,
                   Colors.green,
                   isDarkMode,
@@ -272,7 +273,7 @@ class _WordsTodayDetailScreenState extends ConsumerState<WordsTodayDetailScreen>
               Expanded(
                 child: _buildSummaryCard(
                   'Hardest',
-                  todaysWords.where((item) => item.word.difficulty == 'hard').length.toString(),
+                  todaysWords.where((item) => item.word.difficulty == WordDifficulty.advanced).length.toString(),
                   Icons.sentiment_very_dissatisfied,
                   Colors.red,
                   isDarkMode,
@@ -534,7 +535,7 @@ class _WordsTodayDetailScreenState extends ConsumerState<WordsTodayDetailScreen>
                         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
                       ),
                       child: Text(
-                        word.difficulty.toUpperCase(),
+                        word.difficulty.displayName.toUpperCase(),
                         style: MnemonicsTypography.bodyRegular.copyWith(
                           color: difficultyColor,
                           fontWeight: FontWeight.bold,
@@ -680,16 +681,14 @@ class _WordsTodayDetailScreenState extends ConsumerState<WordsTodayDetailScreen>
     );
   }
 
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty.toLowerCase()) {
-      case 'easy':
+  Color _getDifficultyColor(WordDifficulty difficulty) {
+    switch (difficulty) {
+      case WordDifficulty.basic:
         return Colors.green;
-      case 'medium':
+      case WordDifficulty.intermediate:
         return Colors.orange;
-      case 'hard':
+      case WordDifficulty.advanced:
         return Colors.red;
-      default:
-        return Colors.grey;
     }
   }
 }

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:video_player/video_player.dart';
+import 'package:chewie/chewie.dart';
 import '../../domain/vocabulary_word.dart';
 import '../../../../common/design/design_system.dart';
-import '../../../../common/design/theme_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../home/infrastructure/user_word_data_repository.dart';
 import '../../../home/domain/user_word_data.dart';
 import '../../../home/domain/spaced_repetition.dart';
+import '../../../profile/domain/user_statistics.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
 import '../../../practice/domain/user_progress_service.dart';
 
@@ -37,6 +38,9 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
   late Animation<double> _slideAnimation;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  
+  VideoPlayerController? _videoController;
+  ChewieController? _chewieController;
 
   @override
   void initState() {
@@ -96,6 +100,45 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
       _nextReview = data?.nextReview;
       _loading = false;
     });
+    
+    // Initialize video player if video URL exists
+    await _initializeVideo();
+  }
+
+  void _disposeVideoControllers() {
+    _chewieController?.dispose();
+    _videoController?.dispose();
+    _chewieController = null;
+    _videoController = null;
+  }
+
+  Future<void> _initializeVideo() async {
+    _disposeVideoControllers();
+    
+    final currentWord = widget.words[_currentIndex];
+    if (currentWord.video != null && currentWord.video!.isNotEmpty) {
+      try {
+        _videoController = VideoPlayerController.networkUrl(Uri.parse(currentWord.video!));
+        await _videoController!.initialize();
+        
+        _chewieController = ChewieController(
+          videoPlayerController: _videoController!,
+          autoPlay: true,
+          looping: false,
+          allowFullScreen: true,
+          allowMuting: true,
+          showControls: true,
+          aspectRatio: _videoController!.value.aspectRatio,
+        );
+        
+        if (mounted) {
+          setState(() {});
+        }
+      } catch (e) {
+        print('Error initializing video: $e');
+        _disposeVideoControllers();
+      }
+    }
   }
 
   @override
@@ -104,6 +147,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     _contentAnimationController.dispose();
     _pageController.dispose();
     _notesController?.dispose();
+    _disposeVideoControllers();
     super.dispose();
   } 
 
@@ -201,6 +245,33 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                               ),
                             ),
                           const SizedBox(height: MnemonicsSpacing.m),
+                          // Video Player
+                          if (word.video != null && word.video!.isNotEmpty && _chewieController != null)
+                            Container(
+                              height: 200,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                                child: Chewie(controller: _chewieController!),
+                              ),
+                            )
+                          else if (word.video != null && word.video!.isNotEmpty)
+                            Container(
+                              height: 200,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: MnemonicsColors.surface,
+                                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                              ),
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                          if (word.video != null && word.video!.isNotEmpty) 
+                            const SizedBox(height: MnemonicsSpacing.m),
                           if (word.synonyms.isNotEmpty) ...[
                             Text('Synonyms:', style: MnemonicsTypography.bodyLarge),
                             Wrap(
@@ -321,7 +392,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
             children: [
               _buildInfoChip('Category', word.category, MnemonicsColors.primaryGreen),
               const SizedBox(width: MnemonicsSpacing.s),
-              _buildInfoChip('Difficulty', word.difficulty, _getDifficultyColor(word.difficulty)),
+              _buildInfoChip('Difficulty', word.difficulty.displayName, _getDifficultyColor(word.difficulty)),
             ],
           ),
           if (_userWordData != null) ...[
@@ -359,16 +430,14 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     );
   }
 
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty.toLowerCase()) {
-      case 'easy':
+  Color _getDifficultyColor(WordDifficulty difficulty) {
+    switch (difficulty) {
+      case WordDifficulty.basic:
         return Colors.green;
-      case 'medium':
+      case WordDifficulty.intermediate:
         return Colors.orange;
-      case 'hard':
+      case WordDifficulty.advanced:
         return Colors.red;
-      default:
-        return MnemonicsColors.textSecondary;
     }
   }
 
@@ -421,9 +490,12 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     final progressService = ref.read(userProgressServiceProvider);
     final word = widget.words[_currentIndex].word;
     
-    // Convert rating to string for review activity
-    final ratingStr = rating.toString().split('.').last;
-    await progressService.recordReviewActivity(word, ratingStr);
+    // Convert rating to enum for review activity
+    final ratingEnum = ReviewDifficultyRating.values.firstWhere(
+      (r) => r.name == rating.toString().split('.').last.toLowerCase(),
+      orElse: () => ReviewDifficultyRating.medium,
+    );
+    await progressService.recordReviewActivity(word, ratingEnum);
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -449,12 +521,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
   Future<void> _trackWordView() async {
     if (_wordViewed) return;
     
-    final progressService = ref.read(userProgressServiceProvider);
-    final word = widget.words[_currentIndex].word;
-    
-    // Track that the user viewed this word
-    await progressService.recordWordLearned(word, isCorrect: true);
-    
+    // Simply mark this word as viewed without affecting learning statistics
     _wordViewed = true;
   }
 
@@ -462,12 +529,9 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     if (_viewStartTime == null) return;
     
     final viewDuration = DateTime.now().difference(_viewStartTime!);
-    if (viewDuration.inSeconds >= 5) { // Only track if viewed for at least 5 seconds
-      final progressService = ref.read(userProgressServiceProvider);
-      final word = widget.words[_currentIndex].word;
-      
-      // Record extended viewing as additional engagement
-      await progressService.recordWordLearned(word, isCorrect: true);
+    if (viewDuration.inSeconds >= 5) {
+      // Track extended viewing duration for analytics (without affecting learning statistics)
+      // This could be used for engagement metrics but doesn't count as "learned"
     }
   }
 
@@ -488,7 +552,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     data.nextReview = _nextReview;
     data.lastReviewedAt = now;
     
-    if (data.firstLearnedAt == null) {
+    if (data.firstLearnedAt == null && _isLearned) {
       data.firstLearnedAt = now;
     }
     
@@ -561,7 +625,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                   children: [
                     _buildHeaderChip(word.category, Colors.white.withOpacity(0.9)),
                     const SizedBox(width: MnemonicsSpacing.s),
-                    _buildHeaderChip(word.difficulty, Colors.white.withOpacity(0.9)),
+                    _buildHeaderChip(word.difficulty.displayName, Colors.white.withOpacity(0.9)),
                   ],
                 ),
               ],

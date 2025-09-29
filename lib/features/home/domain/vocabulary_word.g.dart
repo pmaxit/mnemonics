@@ -12,12 +12,13 @@ _$VocabularyWordImpl _$$VocabularyWordImplFromJson(Map<String, dynamic> json) =>
       meaning: json['meaning'] as String,
       mnemonic: json['mnemonic'] as String,
       image: json['image'] as String?,
+      video: json['video'] as String?,
       example: json['example'] as String,
       synonyms:
           (json['synonyms'] as List<dynamic>).map((e) => e as String).toList(),
       antonyms:
           (json['antonyms'] as List<dynamic>).map((e) => e as String).toList(),
-      difficulty: json['difficulty'] as String,
+      difficulty: $enumDecode(_$WordDifficultyEnumMap, json['difficulty']),
       category: json['category'] as String,
       setIds: (json['setIds'] as List<dynamic>?)
               ?.map((e) => e as String)
@@ -32,10 +33,17 @@ Map<String, dynamic> _$$VocabularyWordImplToJson(
       'meaning': instance.meaning,
       'mnemonic': instance.mnemonic,
       'image': instance.image,
+      'video': instance.video,
       'example': instance.example,
       'synonyms': instance.synonyms,
       'antonyms': instance.antonyms,
-      'difficulty': instance.difficulty,
+      'difficulty': _$WordDifficultyEnumMap[instance.difficulty]!,
       'category': instance.category,
       'setIds': instance.setIds,
     };
+
+const _$WordDifficultyEnumMap = {
+  WordDifficulty.basic: 'basic',
+  WordDifficulty.intermediate: 'intermediate',
+  WordDifficulty.advanced: 'advanced',
+};

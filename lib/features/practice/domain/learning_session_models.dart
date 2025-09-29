@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../home/domain/vocabulary_word.dart';
 import '../../home/domain/user_word_data.dart';
+import '../../profile/domain/user_statistics.dart';
 
 part 'learning_session_models.freezed.dart';
 
@@ -97,7 +98,7 @@ class LearningSessionState with _$LearningSessionState {
     };
     
     for (final review in completedReviews) {
-      breakdown[review.difficulty] = (breakdown[review.difficulty] ?? 0) + 1;
+      breakdown[review.difficulty.name] = (breakdown[review.difficulty.name] ?? 0) + 1;
     }
     
     return breakdown;
@@ -108,7 +109,7 @@ class LearningSessionState with _$LearningSessionState {
 class SessionWordReview with _$SessionWordReview {
   const factory SessionWordReview({
     required String word,
-    required String difficulty, // 'easy', 'medium', 'hard'
+    required ReviewDifficultyRating difficulty,
     required DateTime reviewedAt,
     required Duration timeSpent,
     @Default(false) bool wasSkipped,

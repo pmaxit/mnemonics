@@ -7,6 +7,7 @@ import '../../../providers/statistics_provider.dart';
 import '../../../../home/providers.dart';
 import '../../../../home/domain/vocabulary_word.dart';
 import '../../../../home/domain/user_word_data.dart';
+import '../../../../profile/domain/user_statistics.dart';
 import '../../widgets/animated_progress_utils.dart';
 
 class AccuracyDetailScreen extends ConsumerStatefulWidget {
@@ -185,7 +186,7 @@ class _AccuracyDetailScreenState extends ConsumerState<AccuracyDetailScreen>
             example: '',
             synonyms: [],
             antonyms: [],
-            difficulty: 'medium',
+            difficulty: WordDifficulty.intermediate,
             category: 'unknown',
           ),
         );
@@ -194,7 +195,7 @@ class _AccuracyDetailScreenState extends ConsumerState<AccuracyDetailScreen>
           final accuracy = userData.accuracyRate;
           
           // Group by difficulty
-          difficultyAccuracy.putIfAbsent(word.difficulty, () => []).add(accuracy);
+          difficultyAccuracy.putIfAbsent(word.difficulty.name, () => []).add(accuracy);
           
           // Group by category
           categoryAccuracy.putIfAbsent(word.category, () => []).add(accuracy);

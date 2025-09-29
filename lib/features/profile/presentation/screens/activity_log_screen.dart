@@ -92,7 +92,7 @@ class _ActivityLogScreenState extends ConsumerState<ActivityLogScreen> {
                             ...entry.value.map((activity) => ListTile(
                                   title: Text(activity.word, style: const TextStyle(fontWeight: FontWeight.bold)),
                                   subtitle: Text(_formatDateTime(activity.reviewedAt)),
-                                  trailing: _buildRatingChip(activity.rating),
+                                  trailing: _buildRatingChip(activity.rating.name),
                                 )),
                           ];
                         }).toList(),

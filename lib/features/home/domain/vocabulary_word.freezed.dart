@@ -24,10 +24,11 @@ mixin _$VocabularyWord {
   String get meaning => throw _privateConstructorUsedError;
   String get mnemonic => throw _privateConstructorUsedError;
   String? get image => throw _privateConstructorUsedError;
+  String? get video => throw _privateConstructorUsedError;
   String get example => throw _privateConstructorUsedError;
   List<String> get synonyms => throw _privateConstructorUsedError;
   List<String> get antonyms => throw _privateConstructorUsedError;
-  String get difficulty => throw _privateConstructorUsedError;
+  WordDifficulty get difficulty => throw _privateConstructorUsedError;
   String get category => throw _privateConstructorUsedError;
   List<String> get setIds => throw _privateConstructorUsedError;
 
@@ -52,10 +53,11 @@ abstract class $VocabularyWordCopyWith<$Res> {
       String meaning,
       String mnemonic,
       String? image,
+      String? video,
       String example,
       List<String> synonyms,
       List<String> antonyms,
-      String difficulty,
+      WordDifficulty difficulty,
       String category,
       List<String> setIds});
 }
@@ -79,6 +81,7 @@ class _$VocabularyWordCopyWithImpl<$Res, $Val extends VocabularyWord>
     Object? meaning = null,
     Object? mnemonic = null,
     Object? image = freezed,
+    Object? video = freezed,
     Object? example = null,
     Object? synonyms = null,
     Object? antonyms = null,
@@ -103,6 +106,10 @@ class _$VocabularyWordCopyWithImpl<$Res, $Val extends VocabularyWord>
           ? _value.image
           : image // ignore: cast_nullable_to_non_nullable
               as String?,
+      video: freezed == video
+          ? _value.video
+          : video // ignore: cast_nullable_to_non_nullable
+              as String?,
       example: null == example
           ? _value.example
           : example // ignore: cast_nullable_to_non_nullable
@@ -118,7 +125,7 @@ class _$VocabularyWordCopyWithImpl<$Res, $Val extends VocabularyWord>
       difficulty: null == difficulty
           ? _value.difficulty
           : difficulty // ignore: cast_nullable_to_non_nullable
-              as String,
+              as WordDifficulty,
       category: null == category
           ? _value.category
           : category // ignore: cast_nullable_to_non_nullable
@@ -144,10 +151,11 @@ abstract class _$$VocabularyWordImplCopyWith<$Res>
       String meaning,
       String mnemonic,
       String? image,
+      String? video,
       String example,
       List<String> synonyms,
       List<String> antonyms,
-      String difficulty,
+      WordDifficulty difficulty,
       String category,
       List<String> setIds});
 }
@@ -169,6 +177,7 @@ class __$$VocabularyWordImplCopyWithImpl<$Res>
     Object? meaning = null,
     Object? mnemonic = null,
     Object? image = freezed,
+    Object? video = freezed,
     Object? example = null,
     Object? synonyms = null,
     Object? antonyms = null,
@@ -193,6 +202,10 @@ class __$$VocabularyWordImplCopyWithImpl<$Res>
           ? _value.image
           : image // ignore: cast_nullable_to_non_nullable
               as String?,
+      video: freezed == video
+          ? _value.video
+          : video // ignore: cast_nullable_to_non_nullable
+              as String?,
       example: null == example
           ? _value.example
           : example // ignore: cast_nullable_to_non_nullable
@@ -208,7 +221,7 @@ class __$$VocabularyWordImplCopyWithImpl<$Res>
       difficulty: null == difficulty
           ? _value.difficulty
           : difficulty // ignore: cast_nullable_to_non_nullable
-              as String,
+              as WordDifficulty,
       category: null == category
           ? _value.category
           : category // ignore: cast_nullable_to_non_nullable
@@ -229,6 +242,7 @@ class _$VocabularyWordImpl implements _VocabularyWord {
       required this.meaning,
       required this.mnemonic,
       this.image,
+      this.video,
       required this.example,
       required final List<String> synonyms,
       required final List<String> antonyms,
@@ -251,6 +265,8 @@ class _$VocabularyWordImpl implements _VocabularyWord {
   @override
   final String? image;
   @override
+  final String? video;
+  @override
   final String example;
   final List<String> _synonyms;
   @override
@@ -269,7 +285,7 @@ class _$VocabularyWordImpl implements _VocabularyWord {
   }
 
   @override
-  final String difficulty;
+  final WordDifficulty difficulty;
   @override
   final String category;
   final List<String> _setIds;
@@ -283,7 +299,7 @@ class _$VocabularyWordImpl implements _VocabularyWord {
 
   @override
   String toString() {
-    return 'VocabularyWord(word: $word, meaning: $meaning, mnemonic: $mnemonic, image: $image, example: $example, synonyms: $synonyms, antonyms: $antonyms, difficulty: $difficulty, category: $category, setIds: $setIds)';
+    return 'VocabularyWord(word: $word, meaning: $meaning, mnemonic: $mnemonic, image: $image, video: $video, example: $example, synonyms: $synonyms, antonyms: $antonyms, difficulty: $difficulty, category: $category, setIds: $setIds)';
   }
 
   @override
@@ -296,6 +312,7 @@ class _$VocabularyWordImpl implements _VocabularyWord {
             (identical(other.mnemonic, mnemonic) ||
                 other.mnemonic == mnemonic) &&
             (identical(other.image, image) || other.image == image) &&
+            (identical(other.video, video) || other.video == video) &&
             (identical(other.example, example) || other.example == example) &&
             const DeepCollectionEquality().equals(other._synonyms, _synonyms) &&
             const DeepCollectionEquality().equals(other._antonyms, _antonyms) &&
@@ -314,6 +331,7 @@ class _$VocabularyWordImpl implements _VocabularyWord {
       meaning,
       mnemonic,
       image,
+      video,
       example,
       const DeepCollectionEquality().hash(_synonyms),
       const DeepCollectionEquality().hash(_antonyms),
@@ -344,10 +362,11 @@ abstract class _VocabularyWord implements VocabularyWord {
       required final String meaning,
       required final String mnemonic,
       final String? image,
+      final String? video,
       required final String example,
       required final List<String> synonyms,
       required final List<String> antonyms,
-      required final String difficulty,
+      required final WordDifficulty difficulty,
       required final String category,
       final List<String> setIds}) = _$VocabularyWordImpl;
 
@@ -363,13 +382,15 @@ abstract class _VocabularyWord implements VocabularyWord {
   @override
   String? get image;
   @override
+  String? get video;
+  @override
   String get example;
   @override
   List<String> get synonyms;
   @override
   List<String> get antonyms;
   @override
-  String get difficulty;
+  WordDifficulty get difficulty;
   @override
   String get category;
   @override

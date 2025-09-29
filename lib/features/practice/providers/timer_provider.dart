@@ -6,6 +6,7 @@ import '../../home/domain/vocabulary_word.dart';
 import '../../home/domain/user_word_data.dart';
 import '../../home/providers.dart';
 import '../domain/user_progress_service.dart';
+import '../../profile/domain/user_statistics.dart';
 
 final timerSessionProvider = StateNotifierProvider<TimerSessionNotifier, TimerSessionState>((ref) {
   return TimerSessionNotifier(
@@ -183,8 +184,8 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
     progressService.recordWordLearned(word, isCorrect: isCorrect);
     
     // Record review activity
-    final ratingString = difficulty.name;
-    progressService.recordReviewActivity(word, ratingString);
+    final rating = ReviewDifficultyRating.values[difficulty.index];
+    progressService.recordReviewActivity(word, rating);
   }
 
   int _getNextRandomWordIndex() {

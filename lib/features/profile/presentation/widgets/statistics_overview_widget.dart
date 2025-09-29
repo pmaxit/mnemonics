@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../../common/design/design_system.dart';
-import '../../domain/profile_statistics.dart';
+import '../../domain/user_statistics.dart';
 import '../screens/detailed_word_statistics_screen.dart';
 
 class StatisticsOverviewWidget extends StatelessWidget {
-  final ProfileStatistics profileStats;
+  final UserStatistics profileStats;
   final bool isDarkMode;
 
   const StatisticsOverviewWidget({
@@ -74,7 +74,7 @@ class StatisticsOverviewWidget extends StatelessWidget {
                 child: _buildQuickStat(
                   context,
                   'Study Sessions',
-                  profileStats.studySessionsThisWeek.toString(),
+                  '${(profileStats.totalStudyTimeMinutes / 30).round()}',
                   Icons.play_circle_outline,
                   MnemonicsColors.secondaryOrange,
                   textColor,
@@ -211,7 +211,7 @@ class StatisticsOverviewWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Total sessions: ${profileStats.studySessionsThisWeek}'),
+            Text('Total sessions: ${(profileStats.totalStudyTimeMinutes / 30).round()}'),
             const SizedBox(height: MnemonicsSpacing.s),
             Text('Total study time: ${(profileStats.totalStudyTimeMinutes / 60).toStringAsFixed(1)} hours'),
             const SizedBox(height: MnemonicsSpacing.s),
