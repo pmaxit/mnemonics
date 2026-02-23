@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../domain/learning_session_models.dart';
 import '../../home/domain/vocabulary_word.dart';
@@ -25,7 +24,7 @@ class LearningSession extends _$LearningSession {
       _sessionTimer?.cancel();
       _countdownTimer?.cancel();
     });
-    
+
     return const LearningSessionState();
   }
 
@@ -41,14 +40,16 @@ class LearningSession extends _$LearningSession {
     try {
       // Load words based on selected mode
       final words = await _loadWordsForSession(state.mode);
-      
+
       if (words.isEmpty) {
-        throw Exception('No words available for the selected mode');
+        state = state.copyWith(phase: LearningSessionPhase.completed);
+        throw StateError(
+            'No words available for the selected mode. Try practicing other words first!');
       }
 
       // Shuffle words for variety
       words.shuffle();
-      
+
       state = state.copyWith(
         sessionWords: words,
         currentWordIndex: 0,
@@ -62,7 +63,7 @@ class LearningSession extends _$LearningSession {
       // Start countdown
       _startCountdown();
     } catch (e) {
-      // Handle error - could add error state to model
+      if (e is StateError) rethrow;
       rethrow;
     }
   }
@@ -104,9 +105,10 @@ class LearningSession extends _$LearningSession {
   void resumeSession() {
     if (state.phase == LearningSessionPhase.paused) {
       // Calculate remaining time
-      final elapsed = DateTime.now().difference(_sessionStartTime ?? DateTime.now());
+      final elapsed =
+          DateTime.now().difference(_sessionStartTime ?? DateTime.now());
       final remaining = state.sessionDuration - elapsed;
-      
+
       if (remaining.isNegative) {
         _completeSession();
         return;
@@ -154,7 +156,7 @@ class LearningSession extends _$LearningSession {
 
     // Add to completed reviews
     final updatedReviews = [...state.completedReviews, review];
-    
+
     state = state.copyWith(completedReviews: updatedReviews);
 
     // Move to next word
@@ -171,7 +173,8 @@ class LearningSession extends _$LearningSession {
     // Create skip record
     final review = SessionWordReview(
       word: currentWord.word,
-      difficulty: ReviewDifficultyRating.hard, // Skipped words are considered hard
+      difficulty:
+          ReviewDifficultyRating.hard, // Skipped words are considered hard
       reviewedAt: DateTime.now(),
       timeSpent: timeSpent,
       wasSkipped: true,
@@ -216,18 +219,16 @@ class LearningSession extends _$LearningSession {
   Future<List<VocabularyWord>> _loadWordsForSession(SessionMode mode) async {
     final vocabularyRepo = ref.read(vocabularyRepositoryProvider);
     final userWordRepo = ref.read(userWordDataRepositoryProvider);
-    
+
     final allWords = await vocabularyRepo.loadVocabulary();
     final userWordDataList = await userWordRepo.getAllUserWordData();
-    
-    final userWordMap = {
-      for (final data in userWordDataList) data.word: data
-    };
+
+    final userWordMap = {for (final data in userWordDataList) data.word: data};
 
     switch (mode) {
       case SessionMode.allWords:
         return allWords;
-        
+
       case SessionMode.dueForReview:
         final now = DateTime.now();
         return allWords.where((word) {
@@ -235,14 +236,14 @@ class LearningSession extends _$LearningSession {
           if (userData == null) return true; // New words are due for review
           return userData.nextReview?.isBefore(now) ?? true;
         }).toList();
-        
+
       case SessionMode.strugglingWords:
         return allWords.where((word) {
           final userData = userWordMap[word.word];
           if (userData == null) return false;
           return userData.accuracyRate < 0.6; // Less than 60% accuracy
         }).toList();
-        
+
       case SessionMode.newWords:
         return allWords.where((word) {
           final userData = userWordMap[word.word];
@@ -251,21 +252,22 @@ class LearningSession extends _$LearningSession {
     }
   }
 
-  Future<void> _updateUserWordData(VocabularyWord word, String difficulty) async {
+  Future<void> _updateUserWordData(
+      VocabularyWord word, String difficulty) async {
     final userWordRepo = ref.read(userWordDataRepositoryProvider);
     final reviewRepo = ref.read(reviewActivityRepositoryProvider);
-    
+
     // Get or create user word data
     UserWordData? userData = await userWordRepo.getUserWordData(word.word);
-    
+
     final now = DateTime.now();
-    final isCorrect = difficulty == ReviewDifficultyRating.easy;
-    
+    final isCorrect = difficulty != ReviewDifficultyRating.hard.name;
+
     if (userData == null) {
       userData = UserWordData(
         word: word.word,
       );
-        
+
       userData.notes = '';
       userData.isLearned = false;
       userData.reviewCount = 1;
@@ -274,15 +276,17 @@ class LearningSession extends _$LearningSession {
       userData.correctAnswers = isCorrect ? 1 : 0;
       userData.totalAnswers = 1;
       userData.learningStage = LearningStage.learning;
+      userData.hasBeenTested = true;
     } else {
       userData.reviewCount += 1;
       userData.lastReviewedAt = now;
       userData.totalAnswers += 1;
-      
+      userData.hasBeenTested = true;
+
       if (isCorrect) {
         userData.correctAnswers += 1;
       }
-      
+
       // Update learning stage based on accuracy
       final accuracyRate = userData.accuracyRate;
       if (accuracyRate >= 0.8 && userData.reviewCount >= 3) {
@@ -299,12 +303,23 @@ class LearningSession extends _$LearningSession {
       'medium' => ReviewRating.medium,
       _ => ReviewRating.hard,
     };
-    
-    userData.nextReview = SpacedRepetitionManager.calculateNextReview(now, rating);
-    
+
+    final result = SpacedRepetitionManager.calculateNextReview(
+      now,
+      rating,
+      userData.interval,
+      userData.repetitions,
+      userData.easeFactor,
+    );
+
+    userData.nextReview = result.nextReview;
+    userData.interval = result.interval;
+    userData.repetitions = result.repetitions;
+    userData.easeFactor = result.easeFactor;
+
     // Save user word data
     await userWordRepo.saveUserWordData(userData);
-    
+
     // Save review activity
     final ratingEnum = ReviewDifficultyRating.values.firstWhere(
       (r) => r.name == difficulty.toLowerCase(),
@@ -315,20 +330,26 @@ class LearningSession extends _$LearningSession {
       reviewedAt: now,
       rating: ratingEnum,
     );
-    
+
     await reviewRepo.saveActivity(reviewActivity);
+
+    // Invalidate providers for real-time updates across the app (like ProfileScreen)
+    ref.invalidate(allUserWordDataProvider);
+    ref.invalidate(reviewActivityListProvider);
   }
 
   LearningSessionSummary getSessionSummary() {
-    final sessionDuration = state.sessionEndTime != null && state.sessionStartTime != null
-        ? state.sessionEndTime!.difference(state.sessionStartTime!)
-        : Duration.zero;
+    final sessionDuration =
+        state.sessionEndTime != null && state.sessionStartTime != null
+            ? state.sessionEndTime!.difference(state.sessionStartTime!)
+            : Duration.zero;
 
     final strugglingWords = <String>[];
     final masteredWords = <String>[];
-    
+
     for (final review in state.completedReviews) {
-      if (review.difficulty == ReviewDifficultyRating.hard || review.wasSkipped) {
+      if (review.difficulty == ReviewDifficultyRating.hard ||
+          review.wasSkipped) {
         strugglingWords.add(review.word);
       } else if (review.difficulty == ReviewDifficultyRating.easy) {
         masteredWords.add(review.word);
@@ -344,7 +365,8 @@ class LearningSession extends _$LearningSession {
         ? totalTimeSpent.inSeconds / state.wordsReviewed.toDouble()
         : 0.0;
 
-    final skippedWords = state.completedReviews.where((r) => r.wasSkipped).length;
+    final skippedWords =
+        state.completedReviews.where((r) => r.wasSkipped).length;
 
     return LearningSessionSummary(
       sessionDuration: sessionDuration,
@@ -363,8 +385,8 @@ class LearningSession extends _$LearningSession {
 @riverpod
 Stream<Duration> sessionRemainingTime(SessionRemainingTimeRef ref) {
   final sessionState = ref.watch(learningSessionProvider);
-  
-  if (sessionState.phase != LearningSessionPhase.active || 
+
+  if (sessionState.phase != LearningSessionPhase.active ||
       sessionState.sessionStartTime == null) {
     return Stream.value(Duration.zero);
   }

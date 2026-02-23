@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/design/design_system.dart';
-import '../../../../common/widgets/buttons.dart';
 import '../../../../common/design/theme_provider.dart';
 import '../../../home/providers.dart';
-import '../screens/daily_goal_screen.dart';
 import 'package:hive/hive.dart';
 import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
@@ -13,6 +11,9 @@ import 'dart:io';
 import '../../../home/domain/user_word_data.dart';
 import '../../../home/infrastructure/user_word_data_repository.dart';
 import '../../../home/domain/user_settings.dart';
+import 'package:intl/intl.dart';
+import '../../providers/profile_statistics_provider.dart';
+import '../../domain/profile_statistics.dart';
 import 'language_preferences_screen.dart';
 import 'activity_log_screen.dart';
 
@@ -28,7 +29,7 @@ class ProfileScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildUserInfoSection(),
+          _buildUserInfoSection(ref),
           const SizedBox(height: MnemonicsSpacing.xl),
           if (userSettings != null)
             _buildSettingsList(context, ref, themeMode, userSettings)
@@ -39,7 +40,9 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildUserInfoSection() {
+  Widget _buildUserInfoSection(WidgetRef ref) {
+    final statsAsync = ref.watch(profileStatisticsProvider);
+
     return Container(
       padding: const EdgeInsets.all(MnemonicsSpacing.m),
       decoration: BoxDecoration(
@@ -64,28 +67,42 @@ class ProfileScreen extends ConsumerWidget {
             style: MnemonicsTypography.headingMedium,
           ),
           const SizedBox(height: MnemonicsSpacing.xs),
-          Text(
-            'Learning since March 2024',
-            style: MnemonicsTypography.bodyRegular.copyWith(
-              color: MnemonicsColors.textSecondary,
-            ),
+          statsAsync.when(
+            data: (stats) {
+              final joinDate = stats.joinDate != null
+                  ? DateFormat('MMMM yyyy').format(stats.joinDate!)
+                  : 'Recently';
+              return Text(
+                'Learning since $joinDate',
+                style: MnemonicsTypography.bodyRegular.copyWith(
+                  color: MnemonicsColors.textSecondary,
+                ),
+              );
+            },
+            loading: () => const Text('Loading...'),
+            error: (_, __) => const Text('Learning active'),
           ),
           const SizedBox(height: MnemonicsSpacing.m),
-          _buildStatistics(),
+          statsAsync.when(
+            data: (stats) => _buildStatistics(stats),
+            loading: () => const CircularProgressIndicator(),
+            error: (_, __) => const Text('Unable to load stats'),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildStatistics() {
+  Widget _buildStatistics(ProfileStatistics stats) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildStatItem('Words Learned', '120'),
+        _buildStatItem('Words Learned', stats.totalWordsLearned.toString()),
         _buildDivider(),
-        _buildStatItem('Daily Streak', '7'),
+        _buildStatItem('Daily Streak', stats.currentStreak.toString()),
         _buildDivider(),
-        _buildStatItem('Languages', '3'),
+        _buildStatItem(
+            'Accuracy', '${(stats.averageAccuracy * 100).toStringAsFixed(0)}%'),
       ],
     );
   }
@@ -117,7 +134,8 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSettingsList(BuildContext context, WidgetRef ref, ThemeMode themeMode, UserSettings userSettings) {
+  Widget _buildSettingsList(BuildContext context, WidgetRef ref,
+      ThemeMode themeMode, UserSettings userSettings) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -139,9 +157,12 @@ class ProfileScreen extends ConsumerWidget {
                 title: 'Daily Goal',
                 subtitle: '${userSettings.dailyGoal} minutes',
                 onTap: () async {
-                  final newGoal = await _showEditGoalDialog(context, userSettings.dailyGoal);
+                  final newGoal = await _showEditGoalDialog(
+                      context, userSettings.dailyGoal);
                   if (newGoal != null) {
-                    await ref.read(userSettingsProvider.notifier).updateDailyGoal(newGoal);
+                    await ref
+                        .read(userSettingsProvider.notifier)
+                        .updateDailyGoal(newGoal);
                   }
                 },
               ),
@@ -151,9 +172,13 @@ class ProfileScreen extends ConsumerWidget {
                 title: 'Review Frequency',
                 subtitle: '${userSettings.reviewFrequency} minutes/day',
                 onTap: () async {
-                  final newFreq = await _showEditGoalDialog(context, userSettings.reviewFrequency, label: 'Review frequency (minutes per day)');
+                  final newFreq = await _showEditGoalDialog(
+                      context, userSettings.reviewFrequency,
+                      label: 'Review frequency (minutes per day)');
                   if (newFreq != null) {
-                    await ref.read(userSettingsProvider.notifier).updateReviewFrequency(newFreq);
+                    await ref
+                        .read(userSettingsProvider.notifier)
+                        .updateReviewFrequency(newFreq);
                   }
                 },
               ),
@@ -189,7 +214,8 @@ class ProfileScreen extends ConsumerWidget {
                 title: 'Import Data',
                 subtitle: 'Restore your learning history',
                 onTap: () async {
-                  final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['json']);
+                  final result = await FilePicker.platform.pickFiles(
+                      type: FileType.custom, allowedExtensions: ['json']);
                   if (result != null && result.files.single.path != null) {
                     final file = File(result.files.single.path!);
                     final jsonString = await file.readAsString();
@@ -219,7 +245,8 @@ class ProfileScreen extends ConsumerWidget {
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text('Reset Progress'),
-                      content: const Text('Are you sure you want to clear all your learning data? This cannot be undone.'),
+                      content: const Text(
+                          'Are you sure you want to clear all your learning data? This cannot be undone.'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
@@ -234,7 +261,8 @@ class ProfileScreen extends ConsumerWidget {
                   );
                   if (confirmed == true) {
                     final repo = ref.read(userWordDataRepositoryProvider);
-                    final box = await Hive.openBox<UserWordData>(UserWordDataRepository.boxName);
+                    final box = await Hive.openBox<UserWordData>(
+                        UserWordDataRepository.boxName);
                     await box.clear();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Progress reset')),
@@ -245,11 +273,15 @@ class ProfileScreen extends ConsumerWidget {
               _buildSettingsItem(
                 icon: Icons.language,
                 title: 'Language Preferences',
-                subtitle: userSettings.languageCodes.map((c) => c.toUpperCase()).join(', '),
+                subtitle: userSettings.languageCodes
+                    .map((c) => c.toUpperCase())
+                    .join(', '),
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const LanguagePreferencesScreen()),
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            const LanguagePreferencesScreen()),
                   );
                 },
               ),
@@ -260,7 +292,8 @@ class ProfileScreen extends ConsumerWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ActivityLogScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const ActivityLogScreen()),
                   );
                 },
               ),
@@ -330,12 +363,13 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Future<int?> _showEditGoalDialog(BuildContext context, int currentValue, {String label = 'Minutes per day'}) async {
+  Future<int?> _showEditGoalDialog(BuildContext context, int currentValue,
+      {String label = 'Minutes per day'}) async {
     final controller = TextEditingController(text: currentValue.toString());
     return showDialog<int>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Edit'),
+        title: const Text('Edit'),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
@@ -357,4 +391,4 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
-} 
+}

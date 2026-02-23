@@ -33,12 +33,8 @@ mixin _$UserInfo {
   DateTime? get lastActiveDate => throw _privateConstructorUsedError;
   UserPreferences get preferences => throw _privateConstructorUsedError;
 
-  /// Serializes this UserInfo to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of UserInfo
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $UserInfoCopyWith<UserInfo> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -74,8 +70,6 @@ class _$UserInfoCopyWithImpl<$Res, $Val extends UserInfo>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of UserInfo
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -139,8 +133,6 @@ class _$UserInfoCopyWithImpl<$Res, $Val extends UserInfo>
     ) as $Val);
   }
 
-  /// Create a copy of UserInfo
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $UserPreferencesCopyWith<$Res> get preferences {
@@ -183,8 +175,6 @@ class __$$UserInfoImplCopyWithImpl<$Res>
       _$UserInfoImpl _value, $Res Function(_$UserInfoImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of UserInfo
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -333,7 +323,7 @@ class _$UserInfoImpl implements _UserInfo {
                 other.preferences == preferences));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -349,9 +339,7 @@ class _$UserInfoImpl implements _UserInfo {
       lastActiveDate,
       preferences);
 
-  /// Create a copy of UserInfo
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$UserInfoImplCopyWith<_$UserInfoImpl> get copyWith =>
@@ -404,11 +392,8 @@ abstract class _UserInfo implements UserInfo {
   DateTime? get lastActiveDate;
   @override
   UserPreferences get preferences;
-
-  /// Create a copy of UserInfo
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$UserInfoImplCopyWith<_$UserInfoImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -428,12 +413,8 @@ mixin _$UserPreferences {
   bool get shareProgress => throw _privateConstructorUsedError;
   bool get enableAnalytics => throw _privateConstructorUsedError;
 
-  /// Serializes this UserPreferences to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of UserPreferences
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $UserPreferencesCopyWith<UserPreferences> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -466,8 +447,6 @@ class _$UserPreferencesCopyWithImpl<$Res, $Val extends UserPreferences>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of UserPreferences
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -511,8 +490,6 @@ class _$UserPreferencesCopyWithImpl<$Res, $Val extends UserPreferences>
     ) as $Val);
   }
 
-  /// Create a copy of UserPreferences
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $TimeOfDayCopyWith<$Res> get reminderTime {
@@ -551,8 +528,6 @@ class __$$UserPreferencesImplCopyWithImpl<$Res>
       _$UserPreferencesImpl _value, $Res Function(_$UserPreferencesImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of UserPreferences
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -660,7 +635,7 @@ class _$UserPreferencesImpl implements _UserPreferences {
                 other.enableAnalytics == enableAnalytics));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -672,9 +647,7 @@ class _$UserPreferencesImpl implements _UserPreferences {
       shareProgress,
       enableAnalytics);
 
-  /// Create a copy of UserPreferences
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$UserPreferencesImplCopyWith<_$UserPreferencesImpl> get copyWith =>
@@ -716,11 +689,8 @@ abstract class _UserPreferences implements UserPreferences {
   bool get shareProgress;
   @override
   bool get enableAnalytics;
-
-  /// Create a copy of UserPreferences
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$UserPreferencesImplCopyWith<_$UserPreferencesImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -734,12 +704,8 @@ mixin _$TimeOfDay {
   int get hour => throw _privateConstructorUsedError;
   int get minute => throw _privateConstructorUsedError;
 
-  /// Serializes this TimeOfDay to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of TimeOfDay
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $TimeOfDayCopyWith<TimeOfDay> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -762,8 +728,6 @@ class _$TimeOfDayCopyWithImpl<$Res, $Val extends TimeOfDay>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of TimeOfDay
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -802,8 +766,6 @@ class __$$TimeOfDayImplCopyWithImpl<$Res>
       _$TimeOfDayImpl _value, $Res Function(_$TimeOfDayImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of TimeOfDay
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -850,13 +812,11 @@ class _$TimeOfDayImpl implements _TimeOfDay {
             (identical(other.minute, minute) || other.minute == minute));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, hour, minute);
 
-  /// Create a copy of TimeOfDay
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$TimeOfDayImplCopyWith<_$TimeOfDayImpl> get copyWith =>
@@ -881,11 +841,8 @@ abstract class _TimeOfDay implements TimeOfDay {
   int get hour;
   @override
   int get minute;
-
-  /// Create a copy of TimeOfDay
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$TimeOfDayImplCopyWith<_$TimeOfDayImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

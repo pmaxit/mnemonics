@@ -8,7 +8,6 @@ import '../widgets/animated_timer_widgets.dart';
 import '../widgets/animated_flash_card.dart';
 import '../widgets/animated_progress_utils.dart';
 import '../../../profile/providers/user_info_provider.dart';
-import '../../../profile/domain/user_info.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
 
 class TimerScreen extends ConsumerStatefulWidget {
@@ -26,12 +25,12 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
   @override
   void initState() {
     super.initState();
-    
+
     _pageController = AnimationController(
       duration: AnimatedProgressUtils.pageTransition,
       vsync: this,
     );
-    
+
     _pageAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -39,7 +38,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
       parent: _pageController,
       curve: AnimatedProgressUtils.entryEasing,
     ));
-    
+
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) {
         _pageController.forward();
@@ -59,8 +58,9 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
     final sessionNotifier = ref.watch(timerSessionProvider.notifier);
     final themeMode = ref.watch(themeNotifierProvider);
     final isDarkMode = themeMode == ThemeMode.dark ||
-        (themeMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
-    
+        (themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
+
     final screenHeight = MediaQuery.of(context).size.height;
     return Stack(
       children: [
@@ -86,7 +86,8 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
           elevation: 0,
           actions: [
             IconButton(
-              icon: Icon(sessionState.isPaused ? Icons.play_arrow : Icons.pause),
+              icon:
+                  Icon(sessionState.isPaused ? Icons.play_arrow : Icons.pause),
               onPressed: () {
                 final notifier = ref.read(timerSessionProvider.notifier);
                 if (sessionState.isPaused) {
@@ -118,7 +119,8 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
     }
   }
 
-  Widget _buildBody(TimerSessionState sessionState, TimerSessionNotifier notifier) {
+  Widget _buildBody(
+      TimerSessionState sessionState, TimerSessionNotifier notifier) {
     switch (sessionState.currentPhase) {
       case SessionPhase.setup:
         return _buildSetupScreen(sessionState, notifier);
@@ -132,11 +134,13 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
     }
   }
 
-  Widget _buildSetupScreen(TimerSessionState sessionState, TimerSessionNotifier notifier) {
+  Widget _buildSetupScreen(
+      TimerSessionState sessionState, TimerSessionNotifier notifier) {
     final themeMode = ref.watch(themeNotifierProvider);
     final isDarkMode = themeMode == ThemeMode.dark ||
-        (themeMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
-    
+        (themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
+
     return AnimatedBuilder(
       animation: _pageAnimation,
       builder: (context, child) {
@@ -153,9 +157,9 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
               children: [
                 // Header matching Profile style
                 _buildAnimatedHeader(sessionState, isDarkMode),
-                
+
                 const SizedBox(height: MnemonicsSpacing.xl),
-                
+
                 // Time Selection
                 AnimatedTimeSelector(
                   presetMinutes: const [5, 10, 15, 30],
@@ -163,19 +167,23 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
                   onTimeSelected: notifier.updateSelectedMinutes,
                   animationDelay: 200,
                 ),
-                
+
                 const SizedBox(height: MnemonicsSpacing.xl),
-                
+
                 // Mode Selection
                 AnimatedModeSelector(
-                  modes: const [TimerMode.allWords, TimerMode.difficultOnly, TimerMode.newWords],
+                  modes: const [
+                    TimerMode.allWords,
+                    TimerMode.difficultOnly,
+                    TimerMode.newWords
+                  ],
                   selectedMode: sessionState.studyMode,
                   onModeSelected: notifier.updateStudyMode,
                   animationDelay: 400,
                 ),
-                
+
                 const SizedBox(height: MnemonicsSpacing.xl),
-                
+
                 // Start Button
                 AnimatedProgressUtils.buildStaggeredAnimation(
                   animation: _pageAnimation,
@@ -187,9 +195,11 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
                       style: ElevatedButton.styleFrom(
                         backgroundColor: MnemonicsColors.primaryGreen,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: MnemonicsSpacing.l),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: MnemonicsSpacing.l),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                          borderRadius:
+                              BorderRadius.circular(MnemonicsSpacing.radiusXL),
                         ),
                         elevation: 4,
                       ),
@@ -225,16 +235,18 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
     );
   }
 
-  Widget _buildActiveSession(TimerSessionState sessionState, TimerSessionNotifier notifier) {
+  Widget _buildActiveSession(
+      TimerSessionState sessionState, TimerSessionNotifier notifier) {
     if (sessionState.sessionWords.isEmpty) {
       return const Center(
         child: Text('No words available for this session'),
       );
     }
 
-    final currentWord = sessionState.sessionWords[sessionState.currentWordIndex];
+    final currentWord =
+        sessionState.sessionWords[sessionState.currentWordIndex];
     final remainingTime = ref.watch(sessionTimeRemainingProvider);
-    
+
     return Column(
       children: [
         // Timer and progress
@@ -244,7 +256,8 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
             children: [
               remainingTime.when(
                 data: (duration) => AnimatedProgressTimer(
-                  totalDuration: Duration(minutes: sessionState.selectedMinutes),
+                  totalDuration:
+                      Duration(minutes: sessionState.selectedMinutes),
                   remainingDuration: duration,
                   isWarning: duration.inMinutes < 2,
                 ),
@@ -252,7 +265,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
                 error: (error, stack) => Text('Error: $error'),
               ),
               const SizedBox(height: MnemonicsSpacing.s),
-              
+
               // Progress indicator
               Row(
                 children: [
@@ -288,7 +301,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
             ],
           ),
         ),
-        
+
         // Flash card
         Expanded(
           child: AnimatedFlashCard(
@@ -304,9 +317,10 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
     );
   }
 
-  Widget _buildCompletedScreen(TimerSessionState sessionState, TimerSessionNotifier notifier) {
+  Widget _buildCompletedScreen(
+      TimerSessionState sessionState, TimerSessionNotifier notifier) {
     final summary = notifier.getSessionSummary();
-    
+
     return AnimatedBuilder(
       animation: _pageAnimation,
       builder: (context, child) {
@@ -332,7 +346,8 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
                           MnemonicsColors.secondaryOrange.withOpacity(0.05),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                      borderRadius:
+                          BorderRadius.circular(MnemonicsSpacing.radiusXL),
                     ),
                     child: Column(
                       children: [
@@ -359,14 +374,14 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: MnemonicsSpacing.xl),
-                
+
                 // Summary stats
                 _buildSummaryStats(summary),
-                
+
                 const SizedBox(height: MnemonicsSpacing.xl),
-                
+
                 // Action buttons
                 Row(
                   children: [
@@ -376,9 +391,11 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: MnemonicsColors.primaryGreen,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: MnemonicsSpacing.m),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: MnemonicsSpacing.m),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                            borderRadius:
+                                BorderRadius.circular(MnemonicsSpacing.radiusL),
                           ),
                         ),
                         child: const Text('New Session'),
@@ -389,9 +406,11 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
                       child: OutlinedButton(
                         onPressed: () => Navigator.of(context).pop(),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: MnemonicsSpacing.m),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: MnemonicsSpacing.m),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                            borderRadius:
+                                BorderRadius.circular(MnemonicsSpacing.radiusL),
                           ),
                         ),
                         child: const Text('Back to Progress'),
@@ -433,14 +452,15 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
           ],
         ),
         const SizedBox(height: MnemonicsSpacing.m),
-        
+
         // Difficulty breakdown
         _buildDifficultyBreakdown(summary.difficultyBreakdown),
       ],
     );
   }
 
-  Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
+  Widget _buildSummaryCard(
+      String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(MnemonicsSpacing.m),
       decoration: BoxDecoration(
@@ -489,7 +509,6 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
             ),
           ),
           const SizedBox(height: MnemonicsSpacing.m),
-          
           Row(
             children: [
               Expanded(
@@ -522,7 +541,8 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
     );
   }
 
-  Widget _buildDifficultyItem(ReviewDifficulty difficulty, int count, Color color) {
+  Widget _buildDifficultyItem(
+      ReviewDifficulty difficulty, int count, Color color) {
     return Column(
       children: [
         Text(
@@ -573,7 +593,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
 
   Widget _buildAnimatedHeader(TimerSessionState sessionState, bool isDarkMode) {
     final userInfoAsync = ref.watch(currentUserProvider);
-    
+
     return AnimatedBuilder(
       animation: _pageAnimation,
       builder: (context, child) {
@@ -587,9 +607,13 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
               child: Container(
                 padding: const EdgeInsets.all(MnemonicsSpacing.l),
                 decoration: BoxDecoration(
-                  color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
-                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-                  boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+                  color:
+                      isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+                  borderRadius:
+                      BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                  boxShadow: isDarkMode
+                      ? MnemonicsColors.darkCardShadow
+                      : MnemonicsColors.cardShadow,
                   border: isDarkMode
                       ? Border.all(
                           color: MnemonicsColors.darkBorder.withOpacity(0.3),
@@ -616,12 +640,14 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
                                 end: Alignment.bottomRight,
                                 colors: [
                                   MnemonicsColors.secondaryOrange,
-                                  MnemonicsColors.secondaryOrange.withOpacity(0.7),
+                                  MnemonicsColors.secondaryOrange
+                                      .withOpacity(0.7),
                                 ],
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: MnemonicsColors.secondaryOrange.withOpacity(0.3),
+                                  color: MnemonicsColors.secondaryOrange
+                                      .withOpacity(0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),
@@ -647,7 +673,9 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
                           Text(
                             'Quick Study Session',
                             style: MnemonicsTypography.headingMedium.copyWith(
-                              color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                              color: isDarkMode
+                                  ? MnemonicsColors.darkTextPrimary
+                                  : MnemonicsColors.textPrimary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -655,7 +683,9 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
                           Text(
                             'Boost your vocabulary with focused flash cards',
                             style: MnemonicsTypography.bodyRegular.copyWith(
-                              color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                              color: isDarkMode
+                                  ? MnemonicsColors.darkTextSecondary
+                                  : MnemonicsColors.textSecondary,
                             ),
                           ),
                         ],
@@ -669,12 +699,13 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
                       ),
                       decoration: BoxDecoration(
                         color: MnemonicsColors.primaryGreen.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+                        borderRadius:
+                            BorderRadius.circular(MnemonicsSpacing.radiusM),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.timer,
                             color: MnemonicsColors.primaryGreen,
                             size: 16,

@@ -33,7 +33,7 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
   late AnimationController _entryController;
   late AnimationController _hoverController;
   late AnimationController _achievementController;
-  
+
   late Animation<double> _entryAnimation;
   late Animation<double> _countUpAnimation;
   late Animation<double> _hoverAnimation;
@@ -48,19 +48,19 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
   @override
   void initState() {
     super.initState();
-    
+
     // Entry animation controller
     _entryController = AnimationController(
       duration: AnimatedProgressUtils.dataAnimation,
       vsync: this,
     );
-    
+
     // Hover animation controller
     _hoverController = AnimationController(
       duration: AnimatedProgressUtils.microInteraction,
       vsync: this,
     );
-    
+
     // Achievement animation controller
     _achievementController = AnimationController(
       duration: AnimatedProgressUtils.celebration,
@@ -117,7 +117,7 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
   @override
   void didUpdateWidget(AnimatedStatCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // Trigger achievement animation if value increased significantly
     if (widget.value > oldWidget.value && widget.isAchievement) {
       _achievementController.forward().then((_) {
@@ -138,7 +138,7 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
     setState(() {
       _isHovered = isHovered;
     });
-    
+
     if (isHovered) {
       _hoverController.forward();
     } else {
@@ -157,10 +157,10 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
       ]),
       builder: (context, child) {
         // Calculate transformations
-        final entrySlide = Offset(0, 50 * (1 - _entryAnimation.value));
+        const entrySlide = Offset.zero; // Disabled slide animation
         final hoverScale = 1.0 + (_hoverAnimation.value * 0.02);
         final achievementScale = 1.0 + (_achievementAnimation.value * 0.1);
-        
+
         // Calculate shadow
         final shadowProgress = _hoverAnimation.value;
         final boxShadow = BoxShadow.lerp(
@@ -184,8 +184,9 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
                     duration: AnimatedProgressUtils.microInteraction,
                     tween: ColorTween(
                       begin: Colors.white,
-                      end: _isHovered 
-                          ? (widget.accentColor ?? MnemonicsColors.primaryGreen).withOpacity(0.02)
+                      end: _isHovered
+                          ? (widget.accentColor ?? MnemonicsColors.primaryGreen)
+                              .withOpacity(0.02)
                           : Colors.white,
                     ),
                     builder: (context, color, child) {
@@ -193,11 +194,14 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
                         padding: const EdgeInsets.all(MnemonicsSpacing.l),
                         decoration: BoxDecoration(
                           color: color,
-                          borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                          borderRadius:
+                              BorderRadius.circular(MnemonicsSpacing.radiusL),
                           boxShadow: boxShadow != null ? [boxShadow] : null,
                           border: Border.all(
                             color: _isHovered
-                                ? (widget.accentColor ?? MnemonicsColors.primaryGreen).withOpacity(0.3)
+                                ? (widget.accentColor ??
+                                        MnemonicsColors.primaryGreen)
+                                    .withOpacity(0.3)
                                 : Colors.transparent,
                             width: 2,
                           ),
@@ -209,7 +213,8 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
                             // Icon with subtle animation
                             if (widget.icon != null) ...[
                               TweenAnimationBuilder<double>(
-                                duration: AnimatedProgressUtils.microInteraction,
+                                duration:
+                                    AnimatedProgressUtils.microInteraction,
                                 tween: Tween<double>(
                                   begin: 1.0,
                                   end: _isHovered ? 1.1 : 1.0,
@@ -220,7 +225,8 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
                                     child: Icon(
                                       widget.icon!,
                                       size: 32,
-                                      color: (widget.accentColor ?? MnemonicsColors.primaryGreen)
+                                      color: (widget.accentColor ??
+                                              MnemonicsColors.primaryGreen)
                                           .withOpacity(0.8),
                                     ),
                                   );
@@ -228,24 +234,28 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
                               ),
                               const SizedBox(height: MnemonicsSpacing.s),
                             ],
-                            
+
                             // Animated value with achievement glow
                             AnimatedProgressUtils.buildPulsingWidget(
                               animation: _achievementAnimation,
-                              glowColor: widget.accentColor ?? MnemonicsColors.primaryGreen,
-                              child: AnimatedProgressUtils.buildCountUpAnimation(
+                              glowColor: widget.accentColor ??
+                                  MnemonicsColors.primaryGreen,
+                              child:
+                                  AnimatedProgressUtils.buildCountUpAnimation(
                                 animation: _countUpAnimation,
                                 targetValue: widget.value,
                                 suffix: widget.suffix,
-                                style: MnemonicsTypography.headingLarge.copyWith(
-                                  color: widget.accentColor ?? MnemonicsColors.primaryGreen,
+                                style:
+                                    MnemonicsTypography.headingLarge.copyWith(
+                                  color: widget.accentColor ??
+                                      MnemonicsColors.primaryGreen,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                            
+
                             const SizedBox(height: MnemonicsSpacing.s),
-                            
+
                             // Label with subtle fade-in
                             AnimatedBuilder(
                               animation: _entryAnimation,
@@ -254,7 +264,8 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
                                   opacity: _entryAnimation.value,
                                   child: Text(
                                     widget.label,
-                                    style: MnemonicsTypography.bodyRegular.copyWith(
+                                    style: MnemonicsTypography.bodyRegular
+                                        .copyWith(
                                       color: MnemonicsColors.textSecondary,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -304,12 +315,12 @@ class _StreakCardState extends State<StreakCard>
   @override
   void initState() {
     super.initState();
-    
+
     _fireController = AnimationController(
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
-    
+
     _fireAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -327,7 +338,7 @@ class _StreakCardState extends State<StreakCard>
   @override
   void didUpdateWidget(StreakCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     if (widget.streakCount > 0 && oldWidget.streakCount == 0) {
       _fireController.repeat(reverse: true);
     } else if (widget.streakCount == 0 && oldWidget.streakCount > 0) {
@@ -349,7 +360,9 @@ class _StreakCardState extends State<StreakCard>
       value: widget.streakCount,
       suffix: widget.streakCount == 1 ? ' day' : ' days',
       accentColor: widget.streakCount > 0 ? Colors.orange : Colors.grey,
-      icon: widget.streakCount > 0 ? Icons.local_fire_department : Icons.local_fire_department_outlined,
+      icon: widget.streakCount > 0
+          ? Icons.local_fire_department
+          : Icons.local_fire_department_outlined,
       isAchievement: true,
       animationDelay: widget.animationDelay,
     );
@@ -386,12 +399,12 @@ class _ProgressPercentageCardState extends State<ProgressPercentageCard>
   @override
   void initState() {
     super.initState();
-    
+
     _progressController = AnimationController(
       duration: AnimatedProgressUtils.dataAnimation,
       vsync: this,
     );
-    
+
     _progressAnimation = Tween<double>(
       begin: 0.0,
       end: widget.percentage / 100,

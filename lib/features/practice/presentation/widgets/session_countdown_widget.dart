@@ -57,9 +57,9 @@ class SessionCountdownWidget extends StatelessWidget {
               );
             },
           ),
-          
+
           const SizedBox(height: MnemonicsSpacing.xl),
-          
+
           // Get ready message
           TweenAnimationBuilder<double>(
             duration: const Duration(milliseconds: 1000),
@@ -92,9 +92,9 @@ class SessionCountdownWidget extends StatelessWidget {
               );
             },
           ),
-          
+
           const SizedBox(height: MnemonicsSpacing.xl),
-          
+
           // Animated progress indicator
           TweenAnimationBuilder<double>(
             duration: const Duration(milliseconds: 1200),
@@ -113,7 +113,7 @@ class SessionCountdownWidget extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(2),
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [
                           MnemonicsColors.primaryGreen,
                           MnemonicsColors.secondaryOrange,

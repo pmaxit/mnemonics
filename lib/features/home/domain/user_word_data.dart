@@ -35,6 +35,18 @@ class UserWordData extends HiveObject {
   @HiveField(9)
   LearningStage learningStage;
 
+  @HiveField(10, defaultValue: 2.5)
+  double easeFactor;
+
+  @HiveField(11, defaultValue: 0)
+  int interval;
+
+  @HiveField(12, defaultValue: 0)
+  int repetitions;
+
+  @HiveField(13, defaultValue: false)
+  bool hasBeenTested;
+
   UserWordData({
     required this.word,
     this.notes = '',
@@ -46,42 +58,66 @@ class UserWordData extends HiveObject {
     this.correctAnswers = 0,
     this.totalAnswers = 0,
     this.learningStage = LearningStage.newWord,
+    this.easeFactor = 2.5,
+    this.interval = 0,
+    this.repetitions = 0,
+    this.hasBeenTested = false,
   });
 
-  double get accuracyRate => totalAnswers > 0 ? correctAnswers / totalAnswers : 0.0;
+  double get accuracyRate =>
+      hasBeenTested && totalAnswers > 0 ? correctAnswers / totalAnswers : 0.0;
 
-  bool get isInProgress => learningStage == LearningStage.learning || (reviewCount > 0 && !isLearned);
+  bool get isInProgress =>
+      learningStage == LearningStage.learning ||
+      (reviewCount > 0 && !isLearned);
 
-  bool get isMastered => learningStage == LearningStage.mastered || (isLearned && accuracyRate >= 0.8);
+  bool get isMastered =>
+      learningStage == LearningStage.mastered ||
+      (isLearned && accuracyRate >= 0.8);
 
   Map<String, dynamic> toJson() => {
-    'word': word,
-    'notes': notes,
-    'isLearned': isLearned,
-    'nextReview': nextReview?.toIso8601String(),
-    'reviewCount': reviewCount,
-    'lastReviewedAt': lastReviewedAt?.toIso8601String(),
-    'firstLearnedAt': firstLearnedAt?.toIso8601String(),
-    'correctAnswers': correctAnswers,
-    'totalAnswers': totalAnswers,
-    'learningStage': learningStage.name,
-  };
+        'word': word,
+        'notes': notes,
+        'isLearned': isLearned,
+        'nextReview': nextReview?.toIso8601String(),
+        'reviewCount': reviewCount,
+        'lastReviewedAt': lastReviewedAt?.toIso8601String(),
+        'firstLearnedAt': firstLearnedAt?.toIso8601String(),
+        'correctAnswers': correctAnswers,
+        'totalAnswers': totalAnswers,
+        'learningStage': learningStage.name,
+        'easeFactor': easeFactor,
+        'interval': interval,
+        'repetitions': repetitions,
+        'hasBeenTested': hasBeenTested,
+      };
 
   factory UserWordData.fromJson(Map<String, dynamic> json) => UserWordData(
-    word: json['word'] as String,
-    notes: json['notes'] as String? ?? '',
-    isLearned: json['isLearned'] as bool? ?? false,
-    nextReview: json['nextReview'] != null ? DateTime.parse(json['nextReview']) : null,
-    reviewCount: json['reviewCount'] as int? ?? 0,
-    lastReviewedAt: json['lastReviewedAt'] != null ? DateTime.parse(json['lastReviewedAt']) : null,
-    firstLearnedAt: json['firstLearnedAt'] != null ? DateTime.parse(json['firstLearnedAt']) : null,
-    correctAnswers: json['correctAnswers'] as int? ?? 0,
-    totalAnswers: json['totalAnswers'] as int? ?? 0,
-    learningStage: LearningStage.values.firstWhere(
-      (stage) => stage.name == (json['learningStage'] as String? ?? 'newWord'),
-      orElse: () => LearningStage.newWord,
-    ),
-  );
+        word: json['word'] as String,
+        notes: json['notes'] as String? ?? '',
+        isLearned: json['isLearned'] as bool? ?? false,
+        nextReview: json['nextReview'] != null
+            ? DateTime.parse(json['nextReview'])
+            : null,
+        reviewCount: json['reviewCount'] as int? ?? 0,
+        lastReviewedAt: json['lastReviewedAt'] != null
+            ? DateTime.parse(json['lastReviewedAt'])
+            : null,
+        firstLearnedAt: json['firstLearnedAt'] != null
+            ? DateTime.parse(json['firstLearnedAt'])
+            : null,
+        correctAnswers: json['correctAnswers'] as int? ?? 0,
+        totalAnswers: json['totalAnswers'] as int? ?? 0,
+        learningStage: LearningStage.values.firstWhere(
+          (stage) =>
+              stage.name == (json['learningStage'] as String? ?? 'newWord'),
+          orElse: () => LearningStage.newWord,
+        ),
+        easeFactor: (json['easeFactor'] as num?)?.toDouble() ?? 2.5,
+        interval: json['interval'] as int? ?? 0,
+        repetitions: json['repetitions'] as int? ?? 0,
+        hasBeenTested: json['hasBeenTested'] as bool? ?? false,
+      );
 }
 
 // Hive adapter for LearningStage enum
@@ -99,4 +135,4 @@ class LearningStageAdapter extends TypeAdapter<LearningStage> {
   void write(BinaryWriter writer, LearningStage obj) {
     writer.writeByte(obj.index);
   }
-} 
+}

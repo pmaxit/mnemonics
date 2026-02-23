@@ -23,7 +23,8 @@ class LearningFlashcardWidget extends StatefulWidget {
   });
 
   @override
-  State<LearningFlashcardWidget> createState() => _LearningFlashcardWidgetState();
+  State<LearningFlashcardWidget> createState() =>
+      _LearningFlashcardWidgetState();
 }
 
 class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
@@ -34,12 +35,12 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
   @override
   void initState() {
     super.initState();
-    
+
     _flipController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    
+
     _flipAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -52,7 +53,7 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
   @override
   void didUpdateWidget(LearningFlashcardWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // Animate flip when side changes
     if (oldWidget.currentSide != widget.currentSide) {
       if (widget.currentSide == FlashcardSide.back) {
@@ -61,7 +62,7 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
         _flipController.reverse();
       }
     }
-    
+
     // Reset animation when word changes
     if (oldWidget.word.word != widget.word.word) {
       _flipController.reset();
@@ -98,7 +99,8 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                        borderRadius:
+                            BorderRadius.circular(MnemonicsSpacing.radiusXL),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.1),
@@ -107,7 +109,7 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
                           ),
                         ],
                       ),
-                      child: isShowingBack 
+                      child: isShowingBack
                           ? Transform(
                               alignment: Alignment.center,
                               transform: Matrix4.identity()..rotateY(3.14159),
@@ -120,9 +122,9 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
               ),
             ),
           ),
-          
+
           const SizedBox(height: MnemonicsSpacing.l),
-          
+
           // Action buttons
           if (widget.isRevealed) ...[
             _buildActionButtons(),
@@ -149,9 +151,9 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
             ),
             textAlign: TextAlign.center,
           ),
-          
+
           const SizedBox(height: MnemonicsSpacing.l),
-          
+
           // Category badge
           Container(
             padding: const EdgeInsets.symmetric(
@@ -170,9 +172,9 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
               ),
             ),
           ),
-          
+
           const SizedBox(height: MnemonicsSpacing.xl),
-          
+
           // Difficulty indicator
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -207,30 +209,32 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
                 ),
               ),
             ),
-            
+
             const SizedBox(height: MnemonicsSpacing.l),
-            
+
             // Meaning
             _buildSection('Meaning', _sanitizeText(widget.word.meaning)),
-            
+
             const SizedBox(height: MnemonicsSpacing.m),
-            
+
             // Mnemonic
             _buildSection('Mnemonic', _sanitizeText(widget.word.mnemonic)),
-            
+
             const SizedBox(height: MnemonicsSpacing.m),
-            
+
             // Example
             _buildSection('Example', _sanitizeText(widget.word.example)),
-            
+
             if (widget.word.synonyms.isNotEmpty) ...[
               const SizedBox(height: MnemonicsSpacing.m),
-              _buildListSection('Synonyms', widget.word.synonyms.map(_sanitizeText).toList()),
+              _buildListSection(
+                  'Synonyms', widget.word.synonyms.map(_sanitizeText).toList()),
             ],
-            
+
             if (widget.word.antonyms.isNotEmpty) ...[
               const SizedBox(height: MnemonicsSpacing.m),
-              _buildListSection('Antonyms', widget.word.antonyms.map(_sanitizeText).toList()),
+              _buildListSection(
+                  'Antonyms', widget.word.antonyms.map(_sanitizeText).toList()),
             ],
           ],
         ),
@@ -275,23 +279,26 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
         Wrap(
           spacing: MnemonicsSpacing.s,
           runSpacing: MnemonicsSpacing.xs,
-          children: items.map((item) => Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: MnemonicsSpacing.s,
-              vertical: MnemonicsSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: MnemonicsColors.textSecondary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
-            ),
-            child: Text(
-              item,
-              style: MnemonicsTypography.bodyRegular.copyWith(
-                color: MnemonicsColors.textSecondary,
-                fontSize: 12,
-              ),
-            ),
-          )).toList(),
+          children: items
+              .map((item) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: MnemonicsSpacing.s,
+                      vertical: MnemonicsSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: MnemonicsColors.textSecondary.withOpacity(0.1),
+                      borderRadius:
+                          BorderRadius.circular(MnemonicsSpacing.radiusM),
+                    ),
+                    child: Text(
+                      item,
+                      style: MnemonicsTypography.bodyRegular.copyWith(
+                        color: MnemonicsColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ))
+              .toList(),
         ),
       ],
     );
@@ -313,7 +320,7 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.touch_app,
             color: MnemonicsColors.primaryGreen,
             size: 20,
@@ -365,20 +372,20 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
             ),
           ],
         ),
-        
+
         const SizedBox(height: MnemonicsSpacing.m),
-        
+
         // Skip button
         TextButton(
           onPressed: widget.onSkip,
           style: TextButton.styleFrom(
             foregroundColor: MnemonicsColors.textSecondary,
           ),
-          child: Row(
+          child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.skip_next, size: 20),
-              const SizedBox(width: MnemonicsSpacing.xs),
+              SizedBox(width: MnemonicsSpacing.xs),
               Text('Skip'),
             ],
           ),
@@ -387,7 +394,8 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
     );
   }
 
-  Widget _buildRatingButton(String label, String difficulty, IconData icon, Color color) {
+  Widget _buildRatingButton(
+      String label, String difficulty, IconData icon, Color color) {
     return ElevatedButton(
       onPressed: () => widget.onRate(difficulty),
       style: ElevatedButton.styleFrom(
@@ -418,12 +426,12 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
 
   String _sanitizeText(String text) {
     if (text.isEmpty) return text;
-    
+
     // Remove any invalid Unicode characters
     final buffer = StringBuffer();
     for (int i = 0; i < text.length; i++) {
       final codeUnit = text.codeUnitAt(i);
-      
+
       // Check for valid UTF-16 code units
       if (codeUnit >= 0x20 && codeUnit <= 0xD7FF) {
         // Basic Latin, Latin-1 Supplement, and other BMP characters
@@ -431,7 +439,9 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
       } else if (codeUnit >= 0xE000 && codeUnit <= 0xFFFD) {
         // Private use area and other valid BMP characters
         buffer.writeCharCode(codeUnit);
-      } else if (codeUnit >= 0xD800 && codeUnit <= 0xDBFF && i + 1 < text.length) {
+      } else if (codeUnit >= 0xD800 &&
+          codeUnit <= 0xDBFF &&
+          i + 1 < text.length) {
         // High surrogate - check if followed by low surrogate
         final nextCodeUnit = text.codeUnitAt(i + 1);
         if (nextCodeUnit >= 0xDC00 && nextCodeUnit <= 0xDFFF) {
@@ -451,7 +461,7 @@ class _LearningFlashcardWidgetState extends State<LearningFlashcardWidget>
         buffer.write('�');
       }
     }
-    
+
     return buffer.toString();
   }
 }

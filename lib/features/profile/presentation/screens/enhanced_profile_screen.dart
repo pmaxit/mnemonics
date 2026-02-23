@@ -5,21 +5,20 @@ import '../../../../common/design/theme_provider.dart';
 import '../../../home/providers.dart';
 import '../../../home/infrastructure/user_word_data_repository.dart';
 import '../../providers/unified_statistics_provider.dart';
-import '../../domain/user_statistics.dart';
 import '../widgets/profile_header_widget.dart';
 import '../widgets/statistics_overview_widget.dart';
 import '../widgets/achievements_widget.dart';
 import '../widgets/learning_insights_widget.dart';
 import '../widgets/profile_settings_widget.dart';
 import '../widgets/difficulty_stats_widget.dart';
-import 'dart:io';
 import '../../../../common/widgets/animated_wave_background.dart';
 
 class EnhancedProfileScreen extends ConsumerStatefulWidget {
   const EnhancedProfileScreen({super.key});
 
   @override
-  ConsumerState<EnhancedProfileScreen> createState() => _EnhancedProfileScreenState();
+  ConsumerState<EnhancedProfileScreen> createState() =>
+      _EnhancedProfileScreenState();
 }
 
 class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
@@ -56,7 +55,8 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
     final userSettings = ref.watch(userSettingsProvider);
     final themeMode = ref.watch(themeNotifierProvider);
     final isDarkMode = themeMode == ThemeMode.dark ||
-        (themeMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
+        (themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     final screenHeight = MediaQuery.of(context).size.height;
     return Stack(
@@ -73,20 +73,26 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
                   Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                    color: isDarkMode
+                        ? MnemonicsColors.darkTextSecondary
+                        : MnemonicsColors.textSecondary,
                   ),
                   const SizedBox(height: MnemonicsSpacing.m),
                   Text(
                     'Unable to load profile data',
                     style: MnemonicsTypography.bodyLarge.copyWith(
-                      color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                      color: isDarkMode
+                          ? MnemonicsColors.darkTextSecondary
+                          : MnemonicsColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: MnemonicsSpacing.s),
                   Text(
                     error.toString(),
                     style: MnemonicsTypography.bodyRegular.copyWith(
-                      color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                      color: isDarkMode
+                          ? MnemonicsColors.darkTextSecondary
+                          : MnemonicsColors.textSecondary,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -144,7 +150,8 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
                         userSettings: userSettings,
                         themeMode: themeMode,
                         isDarkMode: isDarkMode,
-                        onSettingChanged: (key, value) => _handleSettingChange(key, value),
+                        onSettingChanged: (key, value) =>
+                            _handleSettingChange(key, value),
                       ),
                     )
                   else
@@ -196,14 +203,14 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
     try {
       final repo = ref.read(userWordDataRepositoryProvider);
       final allData = await repo.getAllUserWordData();
-      
+
       // Create export data with timestamp
       final exportData = {
         'exportDate': DateTime.now().toIso8601String(),
         'version': '1.0',
         'userData': allData.map((e) => e.toJson()).toList(),
       };
-      
+
       // For now, just show success message
       // In a real app, you would use file_picker or share_plus to save/share the file
       if (mounted) {
@@ -303,26 +310,28 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
         // Clear user word data
         final userWordRepo = ref.read(userWordDataRepositoryProvider);
         await userWordRepo.clearAllData();
-        
+
         // Clear review activities
         final reviewRepo = ref.read(reviewActivityRepositoryProvider);
         await reviewRepo.clearAllData();
-        
+
         // Reset user settings to defaults
         final userSettingsNotifier = ref.read(userSettingsProvider.notifier);
         await userSettingsNotifier.updateDailyGoal(10); // Default goal
         await userSettingsNotifier.updateLanguages(['en']); // Default language
-        await userSettingsNotifier.updateReviewFrequency(1); // Default frequency
-        
+        await userSettingsNotifier
+            .updateReviewFrequency(1); // Default frequency
+
         // Invalidate all providers to refresh UI state
         ref.invalidate(allUserWordDataProvider);
         ref.invalidate(reviewActivityListProvider);
         ref.invalidate(unifiedStatisticsProvider);
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('✅ All learning progress has been reset successfully'),
+              content:
+                  Text('✅ All learning progress has been reset successfully'),
               backgroundColor: MnemonicsColors.primaryGreen,
               duration: Duration(seconds: 3),
             ),
@@ -337,7 +346,7 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
         } else {
           errorMessage = 'Reset failed: ${e.toString()}';
         }
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

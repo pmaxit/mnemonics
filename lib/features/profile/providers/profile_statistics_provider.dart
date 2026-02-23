@@ -7,9 +7,11 @@ import '../domain/profile_statistics.dart';
 import '../domain/user_info.dart';
 import '../domain/user_statistics.dart' as stats;
 
+import 'package:flutter/foundation.dart';
 import 'user_info_provider.dart';
 
-final profileStatisticsProvider = FutureProvider<ProfileStatistics>((ref) async {
+final profileStatisticsProvider =
+    FutureProvider<ProfileStatistics>((ref) async {
   final vocabAsync = ref.watch(vocabularyListProvider);
   final userDataAsync = ref.watch(allUserWordDataProvider);
   final reviewActivitiesAsync = ref.watch(reviewActivityListProvider);
@@ -20,13 +22,13 @@ final profileStatisticsProvider = FutureProvider<ProfileStatistics>((ref) async 
     loading: () => <VocabularyWord>[],
     error: (error, stack) => <VocabularyWord>[],
   );
-  
+
   final userData = userDataAsync.when(
     data: (data) => data,
     loading: () => <UserWordData>[],
     error: (error, stack) => <UserWordData>[],
   );
-  
+
   final reviewActivities = reviewActivitiesAsync.when(
     data: (data) => data,
     loading: () => <ReviewActivity>[],
@@ -39,10 +41,12 @@ final profileStatisticsProvider = FutureProvider<ProfileStatistics>((ref) async 
     error: (error, stack) => null,
   );
 
-  return _calculateProfileStatistics(vocab, userData, reviewActivities, userInfo);
+  return calculateProfileStatistics(
+      vocab, userData, reviewActivities, userInfo);
 });
 
-ProfileStatistics _calculateProfileStatistics(
+@visibleForTesting
+ProfileStatistics calculateProfileStatistics(
   List<VocabularyWord> vocab,
   List<UserWordData> userData,
   List<ReviewActivity> reviewActivities,
@@ -50,56 +54,64 @@ ProfileStatistics _calculateProfileStatistics(
 ) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
-  
+
   // Basic Statistics
-  final totalWordsLearned = userData.where((d) => d.isLearned).length;
-  final wordsLearnedToday = userData.where((d) => 
-    d.isLearned &&
-    d.firstLearnedAt != null && 
-    _isSameDay(d.firstLearnedAt!, today)
-  ).length;
-  
+  final totalWordsLearned = userData.where((d) => d.hasBeenTested).length;
+  final wordsLearnedToday = userData
+      .where((d) =>
+          d.hasBeenTested &&
+          d.lastReviewedAt != null &&
+          _isSameDay(d.lastReviewedAt!, today))
+      .length;
+
   // Calculate current streak
   final currentStreak = _calculateCurrentStreak(userData, reviewActivities);
-  
+
   // Calculate total study time from review activities
   // Since ReviewActivity doesn't have duration, we'll estimate based on number of activities
   // Each review activity is estimated to take 1 minute
   final totalStudyTimeMinutes = reviewActivities.length;
-  
+
   // Calculate average accuracy
-  final totalAnswers = userData.fold<int>(0, (sum, d) => sum + d.totalAnswers);
-  final correctAnswers = userData.fold<int>(0, (sum, d) => sum + d.correctAnswers);
-  final averageAccuracy = totalAnswers > 0 ? correctAnswers / totalAnswers : 0.0;
-  
+  final testedWords = userData.where((d) => d.hasBeenTested).toList();
+  final totalAnswers =
+      testedWords.fold<int>(0, (sum, d) => sum + d.totalAnswers);
+  final correctAnswers =
+      testedWords.fold<int>(0, (sum, d) => sum + d.correctAnswers);
+  final averageAccuracy =
+      totalAnswers > 0 ? correctAnswers / totalAnswers : 0.0;
+
   // Weekly statistics
   final weekStart = today.subtract(Duration(days: today.weekday - 1));
   final weekEnd = weekStart.add(const Duration(days: 6));
-  
-  final wordsThisWeek = userData.where((d) => 
-    d.isLearned &&
-    d.firstLearnedAt != null && 
-    d.firstLearnedAt!.isAfter(weekStart) && 
-    d.firstLearnedAt!.isBefore(weekEnd.add(const Duration(days: 1)))
-  ).length;
-  
-  final studySessionsThisWeek = reviewActivities.where((a) => 
-    a.reviewedAt.isAfter(weekStart) && 
-    a.reviewedAt.isBefore(weekEnd.add(const Duration(days: 1)))
-  ).length;
-  
+
+  final wordsThisWeek = userData
+      .where((d) =>
+          d.isLearned &&
+          d.firstLearnedAt != null &&
+          d.firstLearnedAt!.isAfter(weekStart) &&
+          d.firstLearnedAt!.isBefore(weekEnd.add(const Duration(days: 1))))
+      .length;
+
+  final studySessionsThisWeek = reviewActivities
+      .where((a) =>
+          a.reviewedAt.isAfter(weekStart) &&
+          a.reviewedAt.isBefore(weekEnd.add(const Duration(days: 1))))
+      .length;
+
   // Calculate learning velocity (words per week over last 4 weeks)
   final fourWeeksAgo = today.subtract(const Duration(days: 28));
-  final recentWords = userData.where((d) => 
-    d.isLearned &&
-    d.firstLearnedAt != null && 
-    d.firstLearnedAt!.isAfter(fourWeeksAgo)
-  ).length;
+  final recentWords = userData
+      .where((d) =>
+          d.hasBeenTested &&
+          d.lastReviewedAt != null &&
+          d.lastReviewedAt!.isAfter(fourWeeksAgo))
+      .length;
   final learningVelocity = recentWords / 4.0; // words per week
-  
+
   // Category breakdown
   final categoryStats = <String, CategoryStats>{};
-  for (final userWord in userData.where((d) => d.isLearned)) {
+  for (final userWord in userData.where((d) => d.hasBeenTested)) {
     final vocabWord = vocab.firstWhere(
       (v) => v.word == userWord.word,
       orElse: () => VocabularyWord(
@@ -113,7 +125,7 @@ ProfileStatistics _calculateProfileStatistics(
         category: 'general',
       ),
     );
-    
+
     final category = vocabWord.category;
     if (!categoryStats.containsKey(category)) {
       categoryStats[category] = CategoryStats(
@@ -123,12 +135,12 @@ ProfileStatistics _calculateProfileStatistics(
         averageAccuracy: 0.0,
       );
     }
-    
+
     categoryStats[category] = categoryStats[category]!.copyWith(
       wordsLearned: categoryStats[category]!.wordsLearned + 1,
     );
   }
-  
+
   // Update category accuracy
   for (final category in categoryStats.keys) {
     final categoryUserData = userData.where((d) {
@@ -145,20 +157,24 @@ ProfileStatistics _calculateProfileStatistics(
           category: 'general',
         ),
       );
-      return vocabWord.category == category && d.totalAnswers > 0;
+      return vocabWord.category == category && d.hasBeenTested;
     });
-    
+
     if (categoryUserData.isNotEmpty) {
-      final categoryTotalAnswers = categoryUserData.fold<int>(0, (sum, d) => sum + d.totalAnswers);
-      final categoryCorrectAnswers = categoryUserData.fold<int>(0, (sum, d) => sum + d.correctAnswers);
-      final categoryAccuracy = categoryTotalAnswers > 0 ? categoryCorrectAnswers / categoryTotalAnswers : 0.0;
-      
+      final categoryTotalAnswers =
+          categoryUserData.fold<int>(0, (sum, d) => sum + d.totalAnswers);
+      final categoryCorrectAnswers =
+          categoryUserData.fold<int>(0, (sum, d) => sum + d.correctAnswers);
+      final categoryAccuracy = categoryTotalAnswers > 0
+          ? categoryCorrectAnswers / categoryTotalAnswers
+          : 0.0;
+
       categoryStats[category] = categoryStats[category]!.copyWith(
         averageAccuracy: categoryAccuracy,
       );
     }
   }
-  
+
   // Difficulty breakdown
   final difficultyStats = <String, DifficultyStats>{};
   for (final difficulty in ['easy', 'medium', 'hard']) {
@@ -176,9 +192,9 @@ ProfileStatistics _calculateProfileStatistics(
           category: 'general',
         ),
       );
-      return vocabWord.difficulty == difficulty && d.isLearned;
+      return vocabWord.difficulty == difficulty && d.hasBeenTested;
     });
-    
+
     final difficultyUserData = userData.where((d) {
       final vocabWord = vocab.firstWhere(
         (v) => v.word == d.word,
@@ -193,13 +209,17 @@ ProfileStatistics _calculateProfileStatistics(
           category: 'general',
         ),
       );
-      return vocabWord.difficulty == difficulty && d.totalAnswers > 0;
+      return vocabWord.difficulty == difficulty && d.hasBeenTested;
     });
-    
-    final difficultyTotalAnswers = difficultyUserData.fold<int>(0, (sum, d) => sum + d.totalAnswers);
-    final difficultyCorrectAnswers = difficultyUserData.fold<int>(0, (sum, d) => sum + d.correctAnswers);
-    final difficultyAccuracy = difficultyTotalAnswers > 0 ? difficultyCorrectAnswers / difficultyTotalAnswers : 0.0;
-    
+
+    final difficultyTotalAnswers =
+        difficultyUserData.fold<int>(0, (sum, d) => sum + d.totalAnswers);
+    final difficultyCorrectAnswers =
+        difficultyUserData.fold<int>(0, (sum, d) => sum + d.correctAnswers);
+    final difficultyAccuracy = difficultyTotalAnswers > 0
+        ? difficultyCorrectAnswers / difficultyTotalAnswers
+        : 0.0;
+
     difficultyStats[difficulty] = DifficultyStats(
       difficulty: difficulty,
       wordsLearned: difficultyWords.length,
@@ -207,10 +227,11 @@ ProfileStatistics _calculateProfileStatistics(
       averageAccuracy: difficultyAccuracy,
     );
   }
-  
+
   // Calculate milestones
-  final milestones = _calculateMilestones(totalWordsLearned, currentStreak, totalStudyTimeMinutes);
-  
+  final milestones = _calculateMilestones(
+      totalWordsLearned, currentStreak, totalStudyTimeMinutes);
+
   return ProfileStatistics(
     totalWordsLearned: totalWordsLearned,
     wordsLearnedToday: wordsLearnedToday,
@@ -228,26 +249,19 @@ ProfileStatistics _calculateProfileStatistics(
   );
 }
 
-int _calculateCurrentStreak(List<UserWordData> userData, List<ReviewActivity> reviewActivities) {
+int _calculateCurrentStreak(
+    List<UserWordData> userData, List<ReviewActivity> reviewActivities) {
   if (userData.isEmpty && reviewActivities.isEmpty) return 0;
-  
+
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
-  
+
   // Get all unique days with learning activity
   final activeDays = <DateTime>{};
-  
+
   // Add days from user word data (only for actually learned words)
   for (final data in userData) {
-    if (data.isLearned && data.firstLearnedAt != null) {
-      final day = DateTime(
-        data.firstLearnedAt!.year,
-        data.firstLearnedAt!.month,
-        data.firstLearnedAt!.day,
-      );
-      activeDays.add(day);
-    }
-    if (data.lastReviewedAt != null) {
+    if (data.hasBeenTested && data.lastReviewedAt != null) {
       final day = DateTime(
         data.lastReviewedAt!.year,
         data.lastReviewedAt!.month,
@@ -256,7 +270,7 @@ int _calculateCurrentStreak(List<UserWordData> userData, List<ReviewActivity> re
       activeDays.add(day);
     }
   }
-  
+
   // Add days from review activities
   for (final activity in reviewActivities) {
     final day = DateTime(
@@ -266,44 +280,37 @@ int _calculateCurrentStreak(List<UserWordData> userData, List<ReviewActivity> re
     );
     activeDays.add(day);
   }
-  
+
   if (activeDays.isEmpty) return 0;
-  
+
   final sortedDays = activeDays.toList()..sort((a, b) => b.compareTo(a));
-  
+
   // Check if there's activity today or yesterday (to allow for different timezones)
   final yesterday = today.subtract(const Duration(days: 1));
   if (!activeDays.contains(today) && !activeDays.contains(yesterday)) {
     return 0;
   }
-  
+
   int streak = 0;
   DateTime currentDay = activeDays.contains(today) ? today : yesterday;
-  
+
   while (activeDays.contains(currentDay)) {
     streak++;
     currentDay = currentDay.subtract(const Duration(days: 1));
   }
-  
+
   return streak;
 }
 
-int _calculateLongestStreak(List<UserWordData> userData, List<ReviewActivity> reviewActivities) {
+int _calculateLongestStreak(
+    List<UserWordData> userData, List<ReviewActivity> reviewActivities) {
   if (userData.isEmpty && reviewActivities.isEmpty) return 0;
-  
+
   // Get all unique days with learning activity
   final activeDays = <DateTime>{};
-  
+
   for (final data in userData) {
-    if (data.isLearned && data.firstLearnedAt != null) {
-      final day = DateTime(
-        data.firstLearnedAt!.year,
-        data.firstLearnedAt!.month,
-        data.firstLearnedAt!.day,
-      );
-      activeDays.add(day);
-    }
-    if (data.lastReviewedAt != null) {
+    if (data.hasBeenTested && data.lastReviewedAt != null) {
       final day = DateTime(
         data.lastReviewedAt!.year,
         data.lastReviewedAt!.month,
@@ -312,7 +319,7 @@ int _calculateLongestStreak(List<UserWordData> userData, List<ReviewActivity> re
       activeDays.add(day);
     }
   }
-  
+
   for (final activity in reviewActivities) {
     final day = DateTime(
       activity.reviewedAt.year,
@@ -321,30 +328,31 @@ int _calculateLongestStreak(List<UserWordData> userData, List<ReviewActivity> re
     );
     activeDays.add(day);
   }
-  
+
   if (activeDays.isEmpty) return 0;
-  
+
   final sortedDays = activeDays.toList()..sort();
-  
+
   int longestStreak = 1;
   int currentStreak = 1;
-  
+
   for (int i = 1; i < sortedDays.length; i++) {
     final difference = sortedDays[i].difference(sortedDays[i - 1]).inDays;
     if (difference == 1) {
       currentStreak++;
-      longestStreak = longestStreak > currentStreak ? longestStreak : currentStreak;
+      longestStreak =
+          longestStreak > currentStreak ? longestStreak : currentStreak;
     } else {
       currentStreak = 1;
     }
   }
-  
+
   return longestStreak;
 }
 
 DateTime? _calculateJoinDate(List<UserWordData> userData) {
   if (userData.isEmpty) return null;
-  
+
   final firstLearned = userData
       .where((d) => d.isLearned && d.firstLearnedAt != null)
       .map((d) => d.firstLearnedAt!)
@@ -354,13 +362,14 @@ DateTime? _calculateJoinDate(List<UserWordData> userData) {
     }
     return earliest;
   });
-  
+
   return firstLearned;
 }
 
-List<Milestone> _calculateMilestones(int totalWords, int currentStreak, int totalStudyMinutes) {
+List<Milestone> _calculateMilestones(
+    int totalWords, int currentStreak, int totalStudyMinutes) {
   final milestones = <Milestone>[];
-  
+
   // Word milestones
   final wordMilestones = [10, 25, 50, 100, 250, 500, 1000];
   for (final milestone in wordMilestones) {
@@ -375,7 +384,7 @@ List<Milestone> _calculateMilestones(int totalWords, int currentStreak, int tota
       unlockedAt: totalWords >= milestone ? DateTime.now() : null,
     ));
   }
-  
+
   // Streak milestones
   final streakMilestones = [3, 7, 14, 30, 60, 100, 365];
   for (final milestone in streakMilestones) {
@@ -390,7 +399,7 @@ List<Milestone> _calculateMilestones(int totalWords, int currentStreak, int tota
       unlockedAt: currentStreak >= milestone ? DateTime.now() : null,
     ));
   }
-  
+
   // Study time milestones (in hours)
   final studyHours = (totalStudyMinutes / 60).floor();
   final timeMilestones = [1, 5, 10, 25, 50, 100];
@@ -406,12 +415,12 @@ List<Milestone> _calculateMilestones(int totalWords, int currentStreak, int tota
       unlockedAt: studyHours >= milestone ? DateTime.now() : null,
     ));
   }
-  
+
   return milestones;
 }
 
 bool _isSameDay(DateTime date1, DateTime date2) {
   return date1.year == date2.year &&
-         date1.month == date2.month &&
-         date1.day == date2.day;
+      date1.month == date2.month &&
+      date1.day == date2.day;
 }

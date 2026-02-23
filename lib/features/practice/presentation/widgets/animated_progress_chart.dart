@@ -24,31 +24,33 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
   late AnimationController _entryController;
   late AnimationController _drawController;
   late AnimationController _interactionController;
-  
+
   late Animation<double> _containerAnimation;
   late Animation<double> _lineDrawAnimation;
   late Animation<double> _pointsAnimation;
   late Animation<double> _gradientAnimation;
 
-  int _hoveredIndex = -1;
+  final int _hoveredIndex = -1;
   bool _isHovered = false;
 
   @override
   void initState() {
     super.initState();
-    
+
     // Entry animation for container
     _entryController = AnimationController(
       duration: AnimatedProgressUtils.dataAnimation,
       vsync: this,
     );
-    
+
     // Drawing animation for chart elements
     _drawController = AnimationController(
-      duration: Duration(milliseconds: AnimatedProgressUtils.dataAnimation.inMilliseconds + 600),
+      duration: Duration(
+          milliseconds:
+              AnimatedProgressUtils.dataAnimation.inMilliseconds + 600),
       vsync: this,
     );
-    
+
     // Interaction animation
     _interactionController = AnimationController(
       duration: AnimatedProgressUtils.microInteraction,
@@ -116,7 +118,7 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
     setState(() {
       _isHovered = isHovered;
     });
-    
+
     if (isHovered) {
       _interactionController.forward();
     } else {
@@ -130,7 +132,7 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
       animation: _containerAnimation,
       builder: (context, child) {
         return Transform.translate(
-          offset: Offset(0, 30 * (1 - _containerAnimation.value)),
+          offset: Offset.zero, // Disabled slide animation
           child: Opacity(
             opacity: _containerAnimation.value,
             child: MouseRegion(
@@ -150,8 +152,9 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
                       padding: const EdgeInsets.all(MnemonicsSpacing.l),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-                        boxShadow: _isHovered 
+                        borderRadius:
+                            BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                        boxShadow: _isHovered
                             ? AnimatedProgressUtils.hoverShadow
                             : AnimatedProgressUtils.restingShadow,
                         border: Border.all(
@@ -171,25 +174,30 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
                               return Opacity(
                                 opacity: _containerAnimation.value,
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       'Weekly Progress',
-                                      style: MnemonicsTypography.bodyLarge.copyWith(
+                                      style: MnemonicsTypography.bodyLarge
+                                          .copyWith(
                                         fontWeight: FontWeight.w600,
                                         fontSize: 20,
                                       ),
                                     ),
                                     // Animated sparkle icon
                                     TweenAnimationBuilder<double>(
-                                      duration: const Duration(milliseconds: 1500),
-                                      tween: Tween<double>(begin: 0.0, end: 1.0),
+                                      duration:
+                                          const Duration(milliseconds: 1500),
+                                      tween:
+                                          Tween<double>(begin: 0.0, end: 1.0),
                                       builder: (context, value, child) {
                                         return Transform.rotate(
                                           angle: value * 2 * 3.14159,
                                           child: Icon(
                                             Icons.auto_graph,
-                                            color: MnemonicsColors.primaryGreen.withOpacity(0.7),
+                                            color: MnemonicsColors.primaryGreen
+                                                .withOpacity(0.7),
                                             size: 20,
                                           ),
                                         );
@@ -201,7 +209,7 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
                             },
                           ),
                           const SizedBox(height: MnemonicsSpacing.m),
-                          
+
                           // Chart with drawing animations
                           Expanded(
                             child: AnimatedBuilder(
@@ -226,11 +234,13 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
                                     ),
                                     titlesData: FlTitlesData(
                                       show: true,
-                                      rightTitles: AxisTitles(
-                                        sideTitles: SideTitles(showTitles: false),
+                                      rightTitles: const AxisTitles(
+                                        sideTitles:
+                                            SideTitles(showTitles: false),
                                       ),
-                                      topTitles: AxisTitles(
-                                        sideTitles: SideTitles(showTitles: false),
+                                      topTitles: const AxisTitles(
+                                        sideTitles:
+                                            SideTitles(showTitles: false),
                                       ),
                                       bottomTitles: AxisTitles(
                                         sideTitles: SideTitles(
@@ -239,19 +249,28 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
                                           interval: 1,
                                           getTitlesWidget: (value, meta) {
                                             final index = value.toInt();
-                                            if (index >= 0 && index < widget.weeklyProgress.length) {
-                                              final date = widget.weeklyProgress[index].date;
+                                            if (index >= 0 &&
+                                                index <
+                                                    widget.weeklyProgress
+                                                        .length) {
+                                              final date = widget
+                                                  .weeklyProgress[index].date;
                                               return AnimatedBuilder(
                                                 animation: _containerAnimation,
                                                 builder: (context, child) {
                                                   return Opacity(
-                                                    opacity: _containerAnimation.value,
+                                                    opacity: _containerAnimation
+                                                        .value,
                                                     child: SideTitleWidget(
                                                       axisSide: meta.axisSide,
                                                       child: Text(
                                                         _formatDay(date),
-                                                        style: MnemonicsTypography.bodyRegular.copyWith(
-                                                          color: MnemonicsColors.textSecondary,
+                                                        style:
+                                                            MnemonicsTypography
+                                                                .bodyRegular
+                                                                .copyWith(
+                                                          color: MnemonicsColors
+                                                              .textSecondary,
                                                           fontSize: 10,
                                                         ),
                                                       ),
@@ -274,13 +293,17 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
                                               animation: _containerAnimation,
                                               builder: (context, child) {
                                                 return Opacity(
-                                                  opacity: _containerAnimation.value,
+                                                  opacity:
+                                                      _containerAnimation.value,
                                                   child: SideTitleWidget(
                                                     axisSide: meta.axisSide,
                                                     child: Text(
                                                       value.toInt().toString(),
-                                                      style: MnemonicsTypography.bodyRegular.copyWith(
-                                                        color: MnemonicsColors.textSecondary,
+                                                      style: MnemonicsTypography
+                                                          .bodyRegular
+                                                          .copyWith(
+                                                        color: MnemonicsColors
+                                                            .textSecondary,
                                                         fontSize: 10,
                                                       ),
                                                     ),
@@ -295,20 +318,28 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
                                     borderData: FlBorderData(
                                       show: true,
                                       border: Border(
-                                        left: BorderSide(color: Colors.grey.shade300),
-                                        bottom: BorderSide(color: Colors.grey.shade300),
+                                        left: BorderSide(
+                                            color: Colors.grey.shade300),
+                                        bottom: BorderSide(
+                                            color: Colors.grey.shade300),
                                       ),
                                     ),
                                     lineTouchData: LineTouchData(
                                       enabled: true,
                                       touchTooltipData: LineTouchTooltipData(
-                                        getTooltipColor: (touchedSpot) => MnemonicsColors.primaryGreen.withOpacity(0.8),
+                                        getTooltipColor: (touchedSpot) =>
+                                            MnemonicsColors.primaryGreen
+                                                .withOpacity(0.8),
                                         tooltipRoundedRadius: 8,
                                         getTooltipItems: (touchedSpots) {
                                           return touchedSpots.map((spot) {
                                             final index = spot.x.toInt();
-                                            if (index >= 0 && index < widget.weeklyProgress.length) {
-                                              final progress = widget.weeklyProgress[index];
+                                            if (index >= 0 &&
+                                                index <
+                                                    widget.weeklyProgress
+                                                        .length) {
+                                              final progress =
+                                                  widget.weeklyProgress[index];
                                               return LineTooltipItem(
                                                 '${progress.wordsLearned} words\n${_formatDate(progress.date)}',
                                                 const TextStyle(
@@ -324,7 +355,8 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
                                       ),
                                     ),
                                     minX: 0,
-                                    maxX: (widget.weeklyProgress.length - 1).toDouble(),
+                                    maxX: (widget.weeklyProgress.length - 1)
+                                        .toDouble(),
                                     minY: 0,
                                     maxY: _getMaxY(),
                                     lineBarsData: [
@@ -336,11 +368,14 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
                                         isStrokeCapRound: true,
                                         dotData: FlDotData(
                                           show: true,
-                                          getDotPainter: (spot, percent, barData, index) {
-                                            final scale = _pointsAnimation.value;
+                                          getDotPainter:
+                                              (spot, percent, barData, index) {
+                                            final scale =
+                                                _pointsAnimation.value;
                                             return FlDotCirclePainter(
                                               radius: 6 * scale,
-                                              color: MnemonicsColors.primaryGreen,
+                                              color:
+                                                  MnemonicsColors.primaryGreen,
                                               strokeWidth: 2,
                                               strokeColor: Colors.white,
                                             );
@@ -352,8 +387,11 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
                                             begin: Alignment.topCenter,
                                             end: Alignment.bottomCenter,
                                             colors: [
-                                              MnemonicsColors.primaryGreen.withOpacity(0.3 * _gradientAnimation.value),
-                                              MnemonicsColors.primaryGreen.withOpacity(0.0),
+                                              MnemonicsColors.primaryGreen
+                                                  .withOpacity(0.3 *
+                                                      _gradientAnimation.value),
+                                              MnemonicsColors.primaryGreen
+                                                  .withOpacity(0.0),
                                             ],
                                           ),
                                         ),
@@ -383,7 +421,9 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
     final totalPoints = widget.weeklyProgress.length;
     final visiblePoints = (totalPoints * progress).ceil();
 
-    for (int i = 0; i < visiblePoints && i < widget.weeklyProgress.length; i++) {
+    for (int i = 0;
+        i < visiblePoints && i < widget.weeklyProgress.length;
+        i++) {
       spots.add(FlSpot(
         i.toDouble(),
         widget.weeklyProgress[i].wordsLearned.toDouble(),
@@ -404,7 +444,9 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
 
   double _getMaxY() {
     if (widget.weeklyProgress.isEmpty) return 5;
-    final max = widget.weeklyProgress.map((p) => p.wordsLearned).reduce((a, b) => a > b ? a : b);
+    final max = widget.weeklyProgress
+        .map((p) => p.wordsLearned)
+        .reduce((a, b) => a > b ? a : b);
     return (max + 2).toDouble();
   }
 }
@@ -425,7 +467,8 @@ class AnimatedBreakdownSection extends StatefulWidget {
   });
 
   @override
-  State<AnimatedBreakdownSection> createState() => _AnimatedBreakdownSectionState();
+  State<AnimatedBreakdownSection> createState() =>
+      _AnimatedBreakdownSectionState();
 }
 
 class _AnimatedBreakdownSectionState extends State<AnimatedBreakdownSection>
@@ -441,7 +484,7 @@ class _AnimatedBreakdownSectionState extends State<AnimatedBreakdownSection>
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       duration: Duration(milliseconds: 800 + (widget.data.length * 100)),
       vsync: this,
@@ -459,9 +502,11 @@ class _AnimatedBreakdownSectionState extends State<AnimatedBreakdownSection>
       widget.data.length,
       (index) {
         final maxItems = widget.data.length;
-        final itemDelay = 0.2 + (index / maxItems) * 0.6; // Start from 0.2, spread over 0.6
-        final itemEnd = (itemDelay + 0.3).clamp(0.0, 1.0); // Ensure it doesn't exceed 1.0
-        
+        final itemDelay =
+            0.2 + (index / maxItems) * 0.6; // Start from 0.2, spread over 0.6
+        final itemEnd =
+            (itemDelay + 0.3).clamp(0.0, 1.0); // Ensure it doesn't exceed 1.0
+
         return Tween<double>(
           begin: 0.0,
           end: 1.0,
@@ -503,7 +548,7 @@ class _AnimatedBreakdownSectionState extends State<AnimatedBreakdownSection>
           animation: _headerAnimation,
           builder: (context, child) {
             return Transform.translate(
-              offset: Offset(0, 20 * (1 - _headerAnimation.value)),
+              offset: Offset.zero, // Disabled slide animation
               child: Opacity(
                 opacity: _headerAnimation.value,
                 child: Text(
@@ -518,7 +563,7 @@ class _AnimatedBreakdownSectionState extends State<AnimatedBreakdownSection>
           },
         ),
         const SizedBox(height: MnemonicsSpacing.m),
-        
+
         // Animated breakdown items
         if (widget.data.isEmpty)
           AnimatedBuilder(
@@ -530,7 +575,8 @@ class _AnimatedBreakdownSectionState extends State<AnimatedBreakdownSection>
                   padding: const EdgeInsets.all(MnemonicsSpacing.l),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                    borderRadius:
+                        BorderRadius.circular(MnemonicsSpacing.radiusL),
                     border: Border.all(color: Colors.grey.shade200),
                   ),
                   child: Center(
@@ -563,7 +609,7 @@ class _AnimatedBreakdownSectionState extends State<AnimatedBreakdownSection>
                       value: entry.value,
                       accentColor: _getColorForCategory(entry.key),
                       animationDelay: 0, // Already handled by parent
-                      onTap: widget.onCategoryTap != null 
+                      onTap: widget.onCategoryTap != null
                           ? () => widget.onCategoryTap!(entry.key)
                           : null,
                     ),

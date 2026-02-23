@@ -28,7 +28,7 @@ class UserProgressService {
   Future<void> recordWordLearned(String word, {bool isCorrect = true}) async {
     var userData = await userWordDataRepository.getUserWordData(word);
     final now = DateTime.now();
-    
+
     if (userData == null) {
       userData = UserWordData(
         word: word,
@@ -46,33 +46,32 @@ class UserProgressService {
       if (isCorrect) {
         userData.correctAnswers++;
       }
-      
-      if (userData.firstLearnedAt == null) {
-        userData.firstLearnedAt = now;
-      }
-      
+
+      userData.firstLearnedAt ??= now;
+
       _updateLearningStage(userData);
     }
-    
+
     await userWordDataRepository.saveUserWordData(userData);
-    
+
     // Invalidate related providers to trigger statistics refresh
     ref.invalidate(allUserWordDataProvider);
     ref.invalidate(reviewActivityListProvider);
   }
 
-  Future<void> recordReviewActivity(String word, ReviewDifficultyRating rating) async {
+  Future<void> recordReviewActivity(
+      String word, ReviewDifficultyRating rating) async {
     final activity = ReviewActivity(
       word: word,
       reviewedAt: DateTime.now(),
       rating: rating,
     );
-    
+
     await reviewActivityRepository.saveActivity(activity);
-    
+
     final isCorrect = rating == ReviewDifficultyRating.easy;
     await recordWordLearned(word, isCorrect: isCorrect);
-    
+
     // Invalidate providers for real-time updates
     ref.invalidate(allUserWordDataProvider);
     ref.invalidate(reviewActivityListProvider);
@@ -81,7 +80,7 @@ class UserProgressService {
   Future<void> markWordAsLearned(String word) async {
     var userData = await userWordDataRepository.getUserWordData(word);
     final now = DateTime.now();
-    
+
     if (userData == null) {
       userData = UserWordData(
         word: word,
@@ -96,13 +95,11 @@ class UserProgressService {
     } else {
       userData.isLearned = true;
       userData.learningStage = LearningStage.mastered;
-      if (userData.firstLearnedAt == null) {
-        userData.firstLearnedAt = now;
-      }
+      userData.firstLearnedAt ??= now;
     }
-    
+
     await userWordDataRepository.saveUserWordData(userData);
-    
+
     // Invalidate providers for real-time updates
     ref.invalidate(allUserWordDataProvider);
     ref.invalidate(reviewActivityListProvider);
@@ -119,9 +116,9 @@ class UserProgressService {
       userData.firstLearnedAt = null;
       userData.lastReviewedAt = null;
       userData.nextReview = null;
-      
+
       await userWordDataRepository.saveUserWordData(userData);
-      
+
       // Invalidate providers for real-time updates
       ref.invalidate(allUserWordDataProvider);
       ref.invalidate(reviewActivityListProvider);

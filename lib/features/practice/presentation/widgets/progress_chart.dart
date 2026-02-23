@@ -47,10 +47,10 @@ class ProgressChart extends StatelessWidget {
                 ),
                 titlesData: FlTitlesData(
                   show: true,
-                  rightTitles: AxisTitles(
+                  rightTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
                   ),
-                  topTitles: AxisTitles(
+                  topTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
                   ),
                   bottomTitles: AxisTitles(
@@ -152,7 +152,9 @@ class ProgressChart extends StatelessWidget {
 
   double _getMaxY() {
     if (weeklyProgress.isEmpty) return 5;
-    final max = weeklyProgress.map((p) => p.wordsLearned).reduce((a, b) => a > b ? a : b);
+    final max = weeklyProgress
+        .map((p) => p.wordsLearned)
+        .reduce((a, b) => a > b ? a : b);
     return (max + 2).toDouble();
   }
 }

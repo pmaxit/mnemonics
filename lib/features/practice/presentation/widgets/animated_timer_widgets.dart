@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../../common/design/design_system.dart';
 import '../widgets/animated_progress_utils.dart';
 import '../../domain/timer_models.dart';
-import 'dart:math' as math;
 
 class AnimatedTimeSelector extends StatefulWidget {
   final List<int> presetMinutes;
@@ -30,7 +29,7 @@ class _AnimatedTimeSelectorState extends State<AnimatedTimeSelector>
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       duration: AnimatedProgressUtils.dataAnimation,
       vsync: this,
@@ -81,7 +80,7 @@ class _AnimatedTimeSelectorState extends State<AnimatedTimeSelector>
           },
         ),
         const SizedBox(height: MnemonicsSpacing.l),
-        
+
         // Animated time cards
         Wrap(
           spacing: MnemonicsSpacing.m,
@@ -103,7 +102,7 @@ class _AnimatedTimeSelectorState extends State<AnimatedTimeSelector>
 
   Widget _buildTimeCard(int minutes) {
     final isSelected = minutes == widget.selectedMinutes;
-    
+
     return GestureDetector(
       onTap: () => widget.onTimeSelected(minutes),
       child: TweenAnimationBuilder<double>(
@@ -119,13 +118,14 @@ class _AnimatedTimeSelectorState extends State<AnimatedTimeSelector>
                 color: isSelected ? MnemonicsColors.primaryGreen : Colors.white,
                 borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
                 border: Border.all(
-                  color: isSelected 
-                      ? MnemonicsColors.primaryGreen 
+                  color: isSelected
+                      ? MnemonicsColors.primaryGreen
                       : Colors.grey.shade300,
                   width: 2,
                 ),
                 boxShadow: isSelected
-                    ? AnimatedProgressUtils.achievementShadow(MnemonicsColors.primaryGreen)
+                    ? AnimatedProgressUtils.achievementShadow(
+                        MnemonicsColors.primaryGreen)
                     : AnimatedProgressUtils.restingShadow,
               ),
               child: Column(
@@ -133,14 +133,18 @@ class _AnimatedTimeSelectorState extends State<AnimatedTimeSelector>
                 children: [
                   Icon(
                     Icons.timer,
-                    color: isSelected ? Colors.white : MnemonicsColors.primaryGreen,
+                    color: isSelected
+                        ? Colors.white
+                        : MnemonicsColors.primaryGreen,
                     size: 24,
                   ),
                   const SizedBox(height: MnemonicsSpacing.xs),
                   Text(
                     '${minutes}m',
                     style: MnemonicsTypography.bodyRegular.copyWith(
-                      color: isSelected ? Colors.white : MnemonicsColors.primaryGreen,
+                      color: isSelected
+                          ? Colors.white
+                          : MnemonicsColors.primaryGreen,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -180,7 +184,7 @@ class _AnimatedModeSelectorState extends State<AnimatedModeSelector>
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       duration: AnimatedProgressUtils.dataAnimation,
       vsync: this,
@@ -231,7 +235,7 @@ class _AnimatedModeSelectorState extends State<AnimatedModeSelector>
           },
         ),
         const SizedBox(height: MnemonicsSpacing.m),
-        
+
         // Animated mode cards
         ...widget.modes.asMap().entries.map((entry) {
           final index = entry.key;
@@ -252,7 +256,7 @@ class _AnimatedModeSelectorState extends State<AnimatedModeSelector>
 
   Widget _buildModeCard(TimerMode mode) {
     final isSelected = mode == widget.selectedMode;
-    
+
     return GestureDetector(
       onTap: () => widget.onModeSelected(mode),
       child: TweenAnimationBuilder<double>(
@@ -265,13 +269,13 @@ class _AnimatedModeSelectorState extends State<AnimatedModeSelector>
               width: double.infinity,
               padding: const EdgeInsets.all(MnemonicsSpacing.m),
               decoration: BoxDecoration(
-                color: isSelected 
+                color: isSelected
                     ? MnemonicsColors.primaryGreen.withOpacity(0.1)
                     : Colors.white,
                 borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
                 border: Border.all(
-                  color: isSelected 
-                      ? MnemonicsColors.primaryGreen 
+                  color: isSelected
+                      ? MnemonicsColors.primaryGreen
                       : Colors.grey.shade300,
                   width: 2,
                 ),
@@ -284,14 +288,17 @@ class _AnimatedModeSelectorState extends State<AnimatedModeSelector>
                   Container(
                     padding: const EdgeInsets.all(MnemonicsSpacing.s),
                     decoration: BoxDecoration(
-                      color: isSelected 
-                          ? MnemonicsColors.primaryGreen 
+                      color: isSelected
+                          ? MnemonicsColors.primaryGreen
                           : MnemonicsColors.primaryGreen.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+                      borderRadius:
+                          BorderRadius.circular(MnemonicsSpacing.radiusM),
                     ),
                     child: Icon(
                       _getModeIcon(mode),
-                      color: isSelected ? Colors.white : MnemonicsColors.primaryGreen,
+                      color: isSelected
+                          ? Colors.white
+                          : MnemonicsColors.primaryGreen,
                       size: 20,
                     ),
                   ),
@@ -304,8 +311,8 @@ class _AnimatedModeSelectorState extends State<AnimatedModeSelector>
                           mode.displayName,
                           style: MnemonicsTypography.bodyRegular.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: isSelected 
-                                ? MnemonicsColors.primaryGreen 
+                            color: isSelected
+                                ? MnemonicsColors.primaryGreen
                                 : MnemonicsColors.textPrimary,
                           ),
                         ),
@@ -320,7 +327,7 @@ class _AnimatedModeSelectorState extends State<AnimatedModeSelector>
                     ),
                   ),
                   if (isSelected)
-                    Icon(
+                    const Icon(
                       Icons.check_circle,
                       color: MnemonicsColors.primaryGreen,
                       size: 24,
@@ -372,7 +379,7 @@ class _AnimatedCountdownState extends State<AnimatedCountdown>
   @override
   void initState() {
     super.initState();
-    
+
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -407,16 +414,16 @@ class _AnimatedCountdownState extends State<AnimatedCountdown>
       setState(() {
         _currentNumber = i;
       });
-      
+
       _scaleController.forward();
       _pulseController.repeat(reverse: true);
-      
+
       await Future.delayed(const Duration(milliseconds: 900));
-      
+
       _scaleController.reset();
       _pulseController.reset();
     }
-    
+
     widget.onComplete();
   }
 
@@ -454,7 +461,6 @@ class _AnimatedCountdownState extends State<AnimatedCountdown>
               ),
             ),
             const SizedBox(height: MnemonicsSpacing.xl),
-            
             AnimatedBuilder(
               animation: Listenable.merge([_scaleAnimation, _pulseAnimation]),
               builder: (context, child) {
@@ -519,7 +525,7 @@ class _AnimatedProgressTimerState extends State<AnimatedProgressTimer>
   @override
   void initState() {
     super.initState();
-    
+
     _warningController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -541,7 +547,7 @@ class _AnimatedProgressTimerState extends State<AnimatedProgressTimer>
   @override
   void didUpdateWidget(AnimatedProgressTimer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     if (widget.isWarning && !oldWidget.isWarning) {
       _warningController.repeat(reverse: true);
     } else if (!widget.isWarning && oldWidget.isWarning) {
@@ -559,8 +565,9 @@ class _AnimatedProgressTimerState extends State<AnimatedProgressTimer>
   @override
   Widget build(BuildContext context) {
     final progress = widget.totalDuration.inMilliseconds > 0
-        ? (widget.totalDuration.inMilliseconds - widget.remainingDuration.inMilliseconds) / 
-          widget.totalDuration.inMilliseconds
+        ? (widget.totalDuration.inMilliseconds -
+                widget.remainingDuration.inMilliseconds) /
+            widget.totalDuration.inMilliseconds
         : 0.0;
 
     return AnimatedBuilder(
@@ -572,22 +579,23 @@ class _AnimatedProgressTimerState extends State<AnimatedProgressTimer>
             children: [
               Icon(
                 Icons.timer,
-                color: widget.isWarning ? Colors.orange : MnemonicsColors.primaryGreen,
+                color: widget.isWarning
+                    ? Colors.orange
+                    : MnemonicsColors.primaryGreen,
                 size: 20,
               ),
               const SizedBox(width: MnemonicsSpacing.s),
-              
               Text(
                 _formatDuration(widget.remainingDuration),
                 style: MnemonicsTypography.bodyRegular.copyWith(
-                  color: widget.isWarning ? Colors.orange : MnemonicsColors.primaryGreen,
+                  color: widget.isWarning
+                      ? Colors.orange
+                      : MnemonicsColors.primaryGreen,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'monospace',
                 ),
               ),
-              
               const SizedBox(width: MnemonicsSpacing.m),
-              
               Expanded(
                 child: TweenAnimationBuilder<double>(
                   duration: const Duration(milliseconds: 500),
@@ -597,7 +605,9 @@ class _AnimatedProgressTimerState extends State<AnimatedProgressTimer>
                       value: animatedProgress,
                       backgroundColor: Colors.grey.shade300,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        widget.isWarning ? Colors.orange : MnemonicsColors.primaryGreen,
+                        widget.isWarning
+                            ? Colors.orange
+                            : MnemonicsColors.primaryGreen,
                       ),
                       minHeight: 6,
                     );

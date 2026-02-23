@@ -22,25 +22,26 @@ class SessionCompletionWidget extends StatelessWidget {
         children: [
           // Celebration header
           _buildCelebrationHeader(),
-          
+
           const SizedBox(height: MnemonicsSpacing.xl),
-          
+
           // Main stats
           _buildMainStats(),
-          
+
           const SizedBox(height: MnemonicsSpacing.l),
-          
+
           // Detailed breakdown
           _buildDetailedBreakdown(),
-          
+
           const SizedBox(height: MnemonicsSpacing.xl),
-          
+
           // Performance insights
-          if (summary.strugglingWords.isNotEmpty || summary.masteredWords.isNotEmpty)
+          if (summary.strugglingWords.isNotEmpty ||
+              summary.masteredWords.isNotEmpty)
             _buildPerformanceInsights(),
-          
+
           const SizedBox(height: MnemonicsSpacing.xl),
-          
+
           // Action buttons
           _buildActionButtons(),
         ],
@@ -147,7 +148,8 @@ class SessionCompletionWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(MnemonicsSpacing.l),
       decoration: BoxDecoration(
@@ -209,7 +211,7 @@ class SessionCompletionWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: MnemonicsSpacing.m),
-          
+
           // Duration and unique words
           Row(
             children: [
@@ -229,9 +231,9 @@ class SessionCompletionWidget extends StatelessWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: MnemonicsSpacing.m),
-          
+
           // Difficulty breakdown
           Text(
             'Difficulty Ratings',
@@ -240,7 +242,7 @@ class SessionCompletionWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: MnemonicsSpacing.s),
-          
+
           Row(
             children: [
               Expanded(
@@ -271,7 +273,7 @@ class SessionCompletionWidget extends StatelessWidget {
               ),
             ],
           ),
-          
+
           // Accuracy rate
           const SizedBox(height: MnemonicsSpacing.m),
           Row(
@@ -285,8 +287,8 @@ class SessionCompletionWidget extends StatelessWidget {
               Text(
                 '${(summary.accuracyRate * 100).toStringAsFixed(1)}%',
                 style: MnemonicsTypography.bodyLarge.copyWith(
-                  color: summary.accuracyRate >= 0.7 
-                      ? MnemonicsColors.primaryGreen 
+                  color: summary.accuracyRate >= 0.7
+                      ? MnemonicsColors.primaryGreen
                       : MnemonicsColors.secondaryOrange,
                   fontWeight: FontWeight.w600,
                 ),
@@ -329,7 +331,8 @@ class SessionCompletionWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildDifficultyItem(String title, int count, Color color, String emoji) {
+  Widget _buildDifficultyItem(
+      String title, int count, Color color, String emoji) {
     return Container(
       padding: const EdgeInsets.symmetric(
         vertical: MnemonicsSpacing.s,
@@ -390,7 +393,6 @@ class SessionCompletionWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: MnemonicsSpacing.m),
-          
           if (summary.masteredWords.isNotEmpty) ...[
             _buildWordsList(
               'Words You\'re Mastering',
@@ -401,7 +403,6 @@ class SessionCompletionWidget extends StatelessWidget {
             if (summary.strugglingWords.isNotEmpty)
               const SizedBox(height: MnemonicsSpacing.m),
           ],
-          
           if (summary.strugglingWords.isNotEmpty) ...[
             _buildWordsList(
               'Words to Focus On',
@@ -415,7 +416,8 @@ class SessionCompletionWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildWordsList(String title, List<String> words, Color color, IconData icon) {
+  Widget _buildWordsList(
+      String title, List<String> words, Color color, IconData icon) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -436,27 +438,31 @@ class SessionCompletionWidget extends StatelessWidget {
         Wrap(
           spacing: MnemonicsSpacing.s,
           runSpacing: MnemonicsSpacing.xs,
-          children: words.take(10).map((word) => Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: MnemonicsSpacing.s,
-              vertical: MnemonicsSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
-              border: Border.all(
-                color: color.withOpacity(0.3),
-              ),
-            ),
-            child: Text(
-              word,
-              style: MnemonicsTypography.bodyRegular.copyWith(
-                color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          )).toList(),
+          children: words
+              .take(10)
+              .map((word) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: MnemonicsSpacing.s,
+                      vertical: MnemonicsSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius:
+                          BorderRadius.circular(MnemonicsSpacing.radiusM),
+                      border: Border.all(
+                        color: color.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Text(
+                      word,
+                      style: MnemonicsTypography.bodyRegular.copyWith(
+                        color: color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ))
+              .toList(),
         ),
         if (words.length > 10) ...[
           const SizedBox(height: MnemonicsSpacing.xs),
@@ -488,12 +494,12 @@ class SessionCompletionWidget extends StatelessWidget {
               ),
               elevation: 2,
             ),
-            child: Row(
+            child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.refresh, size: 20),
-                const SizedBox(width: MnemonicsSpacing.s),
-                const Text('New Session'),
+                Icon(Icons.refresh, size: 20),
+                SizedBox(width: MnemonicsSpacing.s),
+                Text('New Session'),
               ],
             ),
           ),
@@ -507,16 +513,16 @@ class SessionCompletionWidget extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
               ),
-              side: BorderSide(
+              side: const BorderSide(
                 color: MnemonicsColors.primaryGreen,
               ),
             ),
-            child: Row(
+            child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.arrow_back, size: 20),
-                const SizedBox(width: MnemonicsSpacing.s),
-                const Text('Back'),
+                Icon(Icons.arrow_back, size: 20),
+                SizedBox(width: MnemonicsSpacing.s),
+                Text('Back'),
               ],
             ),
           ),

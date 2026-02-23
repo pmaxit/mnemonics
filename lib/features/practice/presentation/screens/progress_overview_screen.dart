@@ -7,7 +7,6 @@ import '../../providers/statistics_provider.dart';
 import '../../domain/statistics_data.dart';
 import '../widgets/animated_progress_chart.dart';
 import '../widgets/animated_stat_card.dart';
-import '../widgets/animated_progress_utils.dart';
 import '../../../profile/providers/user_info_provider.dart';
 import '../../../profile/domain/user_info.dart';
 
@@ -15,7 +14,8 @@ class ProgressOverviewScreen extends ConsumerStatefulWidget {
   const ProgressOverviewScreen({super.key});
 
   @override
-  ConsumerState<ProgressOverviewScreen> createState() => _ProgressOverviewScreenState();
+  ConsumerState<ProgressOverviewScreen> createState() =>
+      _ProgressOverviewScreenState();
 }
 
 class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
@@ -59,15 +59,17 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
     final statisticsAsync = ref.watch(statisticsProvider);
     final themeMode = ref.watch(themeNotifierProvider);
     final isDarkMode = themeMode == ThemeMode.dark ||
-        (themeMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
+        (themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     if (statisticsAsync.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (statisticsAsync.hasError) {
-      return Center(child: Text('Error loading statistics: ${statisticsAsync.error}'));
+      return Center(
+          child: Text('Error loading statistics: ${statisticsAsync.error}'));
     }
-    
+
     final statistics = statisticsAsync.asData?.value;
     if (statistics == null) {
       return const Center(child: Text('No statistics data available.'));
@@ -96,11 +98,11 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
             },
           ),
           const SizedBox(height: MnemonicsSpacing.l),
-          
+
           // Motivational tagline with animation
           _buildMotivationalTagline(statistics),
           const SizedBox(height: MnemonicsSpacing.xl),
-          
+
           // Main statistics grid
           Row(
             children: [
@@ -132,7 +134,7 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
             ],
           ),
           const SizedBox(height: MnemonicsSpacing.m),
-          
+
           Row(
             children: [
               Expanded(
@@ -161,14 +163,14 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
             ],
           ),
           const SizedBox(height: MnemonicsSpacing.xl),
-          
+
           // Animated progress chart
           AnimatedProgressChart(
             weeklyProgress: statistics.weeklyProgress,
             animationDelay: 0,
           ),
           const SizedBox(height: MnemonicsSpacing.xl),
-          
+
           // Learning stages breakdown
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,7 +193,8 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
                       icon: Icons.fiber_new,
                       accentColor: Colors.blue,
                       animationDelay: 0,
-                      onTap: () => context.push('/practice/learning-stages/new'),
+                      onTap: () =>
+                          context.push('/practice/learning-stages/new'),
                     ),
                   ),
                   const SizedBox(width: MnemonicsSpacing.s),
@@ -203,7 +206,8 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
                       icon: Icons.psychology,
                       accentColor: Colors.orange,
                       animationDelay: 0,
-                      onTap: () => context.push('/practice/learning-stages/learning'),
+                      onTap: () =>
+                          context.push('/practice/learning-stages/learning'),
                     ),
                   ),
                   const SizedBox(width: MnemonicsSpacing.s),
@@ -216,7 +220,8 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
                       accentColor: Colors.amber,
                       isAchievement: true,
                       animationDelay: 0,
-                      onTap: () => context.push('/practice/learning-stages/mastered'),
+                      onTap: () =>
+                          context.push('/practice/learning-stages/mastered'),
                     ),
                   ),
                 ],
@@ -224,26 +229,28 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
             ],
           ),
           const SizedBox(height: MnemonicsSpacing.xl),
-          
+
           // Category breakdown
           AnimatedBreakdownSection(
             key: const ValueKey('category_breakdown'),
             title: 'Progress by Category',
             data: statistics.categoryBreakdown,
             animationDelay: 0,
-            onCategoryTap: (category) => context.push('/practice/breakdown/category/$category'),
+            onCategoryTap: (category) =>
+                context.push('/practice/breakdown/category/$category'),
           ),
           const SizedBox(height: MnemonicsSpacing.xl),
-          
+
           // Difficulty breakdown
           AnimatedBreakdownSection(
             key: const ValueKey('difficulty_breakdown'),
             title: 'Progress by Difficulty',
             data: statistics.difficultyBreakdown,
             animationDelay: 0,
-            onCategoryTap: (difficulty) => context.push('/practice/breakdown/difficulty/$difficulty'),
+            onCategoryTap: (difficulty) =>
+                context.push('/practice/breakdown/difficulty/$difficulty'),
           ),
-          
+
           // Bottom spacing
           const SizedBox(height: MnemonicsSpacing.xl),
         ],
@@ -259,7 +266,7 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
 
   Widget _buildMotivationalTagline(StatisticsData statistics) {
     final tagline = _getMotivationalMessage(statistics);
-    
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(MnemonicsSpacing.l),
@@ -301,7 +308,7 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
             ),
           ),
           const SizedBox(width: MnemonicsSpacing.m),
-          
+
           // Text
           Expanded(
             child: Column(
@@ -316,7 +323,7 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
                   ),
                 ),
                 const SizedBox(height: MnemonicsSpacing.xs),
-                
+
                 // Progress indicator
                 Container(
                   height: 4,
@@ -327,14 +334,17 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
                         _getTaglineColor(statistics).withOpacity(0.3),
                         _getTaglineColor(statistics),
                       ],
-                      stops: [0.0, _getMotivationProgress(statistics).clamp(0.0, 1.0)],
+                      stops: [
+                        0.0,
+                        _getMotivationProgress(statistics).clamp(0.0, 1.0)
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          
+
           // Achievement badge
           if (statistics.totalLearned > 0)
             Container(
@@ -423,13 +433,15 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
 
   Widget _buildAnimatedHeader(bool isDarkMode) {
     final userInfoAsync = ref.watch(currentUserProvider);
-    
+
     return Container(
       padding: const EdgeInsets.all(MnemonicsSpacing.l),
       decoration: BoxDecoration(
         color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-        boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+        boxShadow: isDarkMode
+            ? MnemonicsColors.darkCardShadow
+            : MnemonicsColors.cardShadow,
         border: isDarkMode
             ? Border.all(
                 color: MnemonicsColors.darkBorder.withOpacity(0.3),
@@ -493,21 +505,27 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
                   data: (userInfo) => Text(
                     'Your Progress',
                     style: MnemonicsTypography.headingMedium.copyWith(
-                      color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                      color: isDarkMode
+                          ? MnemonicsColors.darkTextPrimary
+                          : MnemonicsColors.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   loading: () => Text(
                     'Your Progress',
                     style: MnemonicsTypography.headingMedium.copyWith(
-                      color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                      color: isDarkMode
+                          ? MnemonicsColors.darkTextPrimary
+                          : MnemonicsColors.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   error: (error, stack) => Text(
                     'Your Progress',
                     style: MnemonicsTypography.headingMedium.copyWith(
-                      color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                      color: isDarkMode
+                          ? MnemonicsColors.darkTextPrimary
+                          : MnemonicsColors.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -516,7 +534,9 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
                 Text(
                   'Track your learning journey',
                   style: MnemonicsTypography.bodyRegular.copyWith(
-                    color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                    color: isDarkMode
+                        ? MnemonicsColors.darkTextSecondary
+                        : MnemonicsColors.textSecondary,
                   ),
                 ),
               ],
@@ -539,4 +559,4 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
       ),
     );
   }
-} 
+}

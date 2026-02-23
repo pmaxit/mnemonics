@@ -14,7 +14,8 @@ class LearningSessionScreen extends ConsumerStatefulWidget {
   const LearningSessionScreen({super.key});
 
   @override
-  ConsumerState<LearningSessionScreen> createState() => _LearningSessionScreenState();
+  ConsumerState<LearningSessionScreen> createState() =>
+      _LearningSessionScreenState();
 }
 
 class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
@@ -59,10 +60,11 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
     final sessionNotifier = ref.watch(learningSessionProvider.notifier);
     final themeMode = ref.watch(themeNotifierProvider);
     final isDarkMode = themeMode == ThemeMode.dark ||
-        (themeMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
-    
+        (themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
+
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     return Stack(
       children: [
         AnimatedWaveBackground(height: screenHeight),
@@ -75,7 +77,8 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
     );
   }
 
-  PreferredSizeWidget? _buildAppBar(LearningSessionState sessionState, LearningSession sessionNotifier) {
+  PreferredSizeWidget? _buildAppBar(
+      LearningSessionState sessionState, LearningSession sessionNotifier) {
     switch (sessionState.phase) {
       case LearningSessionPhase.setup:
         return null;
@@ -87,7 +90,8 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
           elevation: 0,
           actions: [
             IconButton(
-              icon: Icon(sessionState.isPaused ? Icons.play_arrow : Icons.pause),
+              icon:
+                  Icon(sessionState.isPaused ? Icons.play_arrow : Icons.pause),
               onPressed: () {
                 if (sessionState.isPaused) {
                   sessionNotifier.resumeSession();
@@ -118,30 +122,23 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
     }
   }
 
-  Widget _buildBody(LearningSessionState sessionState, LearningSession sessionNotifier, bool isDarkMode) {
+  Widget _buildBody(LearningSessionState sessionState,
+      LearningSession sessionNotifier, bool isDarkMode) {
     return _buildCurrentPhase(sessionState, sessionNotifier, isDarkMode);
   }
 
-  Widget _buildCurrentPhase(LearningSessionState sessionState, LearningSession sessionNotifier, bool isDarkMode) {
+  Widget _buildCurrentPhase(LearningSessionState sessionState,
+      LearningSession sessionNotifier, bool isDarkMode) {
     switch (sessionState.phase) {
       case LearningSessionPhase.setup:
-        return AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) {
-            return Transform.translate(
-              offset: Offset(0, _slideAnimation.value),
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: SessionSetupWidget(
-                  sessionState: sessionState,
-                  onDurationChanged: sessionNotifier.updateDuration,
-                  onModeChanged: sessionNotifier.updateMode,
-                  onStartSession: sessionNotifier.startSession,
-                  isDarkMode: isDarkMode,
-                ),
-              ),
-            );
-          },
+        return SessionSetupWidget(
+          sessionState: sessionState,
+          onDurationChanged: sessionNotifier.updateDuration,
+          onModeChanged: sessionNotifier.updateMode,
+          onStartSession: sessionNotifier.startSession,
+          isDarkMode: isDarkMode,
+          fadeAnimation: _fadeAnimation,
+          slideAnimation: _slideAnimation,
         );
       case LearningSessionPhase.countdown:
         return SessionCountdownWidget(
@@ -159,13 +156,14 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
     }
   }
 
-  Widget _buildActiveSession(LearningSessionState sessionState, LearningSession sessionNotifier) {
+  Widget _buildActiveSession(
+      LearningSessionState sessionState, LearningSession sessionNotifier) {
     if (sessionState.sessionWords.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.info_outline,
               size: 64,
               color: MnemonicsColors.textSecondary,
@@ -189,7 +187,7 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
 
     final currentWord = sessionState.currentWord!;
     final remainingTime = ref.watch(sessionRemainingTimeProvider);
-    
+
     return Column(
       children: [
         // Timer and progress header
@@ -205,12 +203,13 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
                     vertical: MnemonicsSpacing.s,
                   ),
                   decoration: BoxDecoration(
-                    color: duration.inMinutes < 2 
+                    color: duration.inMinutes < 2
                         ? Colors.red.withOpacity(0.1)
                         : MnemonicsColors.primaryGreen.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                    borderRadius:
+                        BorderRadius.circular(MnemonicsSpacing.radiusL),
                     border: Border.all(
-                      color: duration.inMinutes < 2 
+                      color: duration.inMinutes < 2
                           ? Colors.red.withOpacity(0.3)
                           : MnemonicsColors.primaryGreen.withOpacity(0.3),
                     ),
@@ -220,7 +219,7 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
                     children: [
                       Icon(
                         Icons.timer,
-                        color: duration.inMinutes < 2 
+                        color: duration.inMinutes < 2
                             ? Colors.red
                             : MnemonicsColors.primaryGreen,
                         size: 20,
@@ -229,7 +228,7 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
                       Text(
                         '${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}',
                         style: MnemonicsTypography.headingMedium.copyWith(
-                          color: duration.inMinutes < 2 
+                          color: duration.inMinutes < 2
                               ? Colors.red
                               : MnemonicsColors.primaryGreen,
                           fontWeight: FontWeight.bold,
@@ -242,7 +241,7 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
                 error: (error, stack) => Text('Error: $error'),
               ),
               const SizedBox(height: MnemonicsSpacing.m),
-              
+
               // Progress indicators
               Row(
                 children: [
@@ -260,8 +259,10 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
                         const SizedBox(height: MnemonicsSpacing.xs),
                         LinearProgressIndicator(
                           value: sessionState.progress,
-                          backgroundColor: MnemonicsColors.textSecondary.withOpacity(0.2),
-                          valueColor: AlwaysStoppedAnimation<Color>(MnemonicsColors.primaryGreen),
+                          backgroundColor:
+                              MnemonicsColors.textSecondary.withOpacity(0.2),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              MnemonicsColors.primaryGreen),
                         ),
                         const SizedBox(height: MnemonicsSpacing.xs),
                         Text(
@@ -299,7 +300,7 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
             ],
           ),
         ),
-        
+
         // Main flashcard area
         Expanded(
           child: LearningFlashcardWidget(
@@ -320,7 +321,8 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('End Session?'),
-        content: const Text('Are you sure you want to end this learning session early?'),
+        content: const Text(
+            'Are you sure you want to end this learning session early?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

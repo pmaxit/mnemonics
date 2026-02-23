@@ -22,10 +22,8 @@ final sessionRemainingTimeProvider =
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef SessionRemainingTimeRef = AutoDisposeStreamProviderRef<Duration>;
-String _$learningSessionHash() => r'24518b1b08148adb46f1bb9887abfee48f284c66';
+String _$learningSessionHash() => r'270391025064d17bdb52a318fb0212712b6e6a2e';
 
 /// See also [LearningSession].
 @ProviderFor(LearningSession)
@@ -42,4 +40,4 @@ final learningSessionProvider =
 
 typedef _$LearningSession = AutoDisposeNotifier<LearningSessionState>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

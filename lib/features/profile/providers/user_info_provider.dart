@@ -8,7 +8,7 @@ final userInfoRepositoryProvider = Provider<UserInfoRepository>((ref) {
 
 final currentUserProvider = FutureProvider<UserInfo>((ref) async {
   final repository = ref.watch(userInfoRepositoryProvider);
-  
+
   // Try to get existing user, if none exists, create dummy user
   final existingUser = await repository.getCurrentUserInfo();
   if (existingUser != null) {
@@ -16,12 +16,13 @@ final currentUserProvider = FutureProvider<UserInfo>((ref) async {
     await repository.updateLastActiveDate(DateTime.now());
     return existingUser;
   }
-  
+
   // Create dummy user if none exists
   return await repository.createDummyUser();
 });
 
-final userInfoNotifierProvider = AsyncNotifierProvider<UserInfoNotifier, UserInfo>(() {
+final userInfoNotifierProvider =
+    AsyncNotifierProvider<UserInfoNotifier, UserInfo>(() {
   return UserInfoNotifier();
 });
 
@@ -33,13 +34,13 @@ class UserInfoNotifier extends AsyncNotifier<UserInfo> {
     // Initialize with current user or create dummy user
     final repository = ref.watch(userInfoRepositoryProvider);
     final existingUser = await repository.getCurrentUserInfo();
-    
+
     if (existingUser != null) {
       // Update last active date
       await repository.updateLastActiveDate(DateTime.now());
       return existingUser;
     }
-    
+
     return await repository.createDummyUser();
   }
 
@@ -51,7 +52,7 @@ class UserInfoNotifier extends AsyncNotifier<UserInfo> {
     List<String>? preferredLanguages,
   }) async {
     state = const AsyncValue.loading();
-    
+
     try {
       await _repository.updateUserProfile(
         name: name,
@@ -59,7 +60,7 @@ class UserInfoNotifier extends AsyncNotifier<UserInfo> {
         profileImageUrl: profileImageUrl,
         preferredLanguages: preferredLanguages,
       );
-      
+
       final updatedUser = await _repository.getCurrentUserInfo();
       if (updatedUser != null) {
         state = AsyncValue.data(updatedUser);
@@ -72,10 +73,10 @@ class UserInfoNotifier extends AsyncNotifier<UserInfo> {
   /// Update user preferences
   Future<void> updatePreferences(UserPreferences preferences) async {
     state = const AsyncValue.loading();
-    
+
     try {
       await _repository.updatePreferences(preferences);
-      
+
       final updatedUser = await _repository.getCurrentUserInfo();
       if (updatedUser != null) {
         state = AsyncValue.data(updatedUser);
@@ -95,8 +96,10 @@ class UserInfoNotifier extends AsyncNotifier<UserInfo> {
     if (currentUser == null) return;
 
     final updatedPreferences = currentUser.preferences.copyWith(
-      enableNotifications: enableNotifications ?? currentUser.preferences.enableNotifications,
-      reminderFrequency: reminderFrequency ?? currentUser.preferences.reminderFrequency,
+      enableNotifications:
+          enableNotifications ?? currentUser.preferences.enableNotifications,
+      reminderFrequency:
+          reminderFrequency ?? currentUser.preferences.reminderFrequency,
       reminderTime: reminderTime ?? currentUser.preferences.reminderTime,
     );
 
@@ -114,10 +117,13 @@ class UserInfoNotifier extends AsyncNotifier<UserInfo> {
     if (currentUser == null) return;
 
     final updatedPreferences = currentUser.preferences.copyWith(
-      enableSoundEffects: enableSoundEffects ?? currentUser.preferences.enableSoundEffects,
-      enableAnimations: enableAnimations ?? currentUser.preferences.enableAnimations,
+      enableSoundEffects:
+          enableSoundEffects ?? currentUser.preferences.enableSoundEffects,
+      enableAnimations:
+          enableAnimations ?? currentUser.preferences.enableAnimations,
       shareProgress: shareProgress ?? currentUser.preferences.shareProgress,
-      enableAnalytics: enableAnalytics ?? currentUser.preferences.enableAnalytics,
+      enableAnalytics:
+          enableAnalytics ?? currentUser.preferences.enableAnalytics,
     );
 
     await updatePreferences(updatedPreferences);
@@ -127,13 +133,14 @@ class UserInfoNotifier extends AsyncNotifier<UserInfo> {
   Future<void> markUserActive() async {
     try {
       await _repository.updateLastActiveDate(DateTime.now());
-      
+
       final currentUser = state.value;
       if (currentUser != null) {
-        final updatedUser = currentUser.copyWith(lastActiveDate: DateTime.now());
+        final updatedUser =
+            currentUser.copyWith(lastActiveDate: DateTime.now());
         state = AsyncValue.data(updatedUser);
       }
-    } catch (error, stackTrace) {
+    } catch (error) {
       // Don't update state for this error to avoid disrupting the UI
       // Just log or handle silently
     }
@@ -154,7 +161,7 @@ class UserInfoNotifier extends AsyncNotifier<UserInfo> {
   /// Refresh user data
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    
+
     try {
       final user = await _repository.getCurrentUserInfo();
       if (user != null) {

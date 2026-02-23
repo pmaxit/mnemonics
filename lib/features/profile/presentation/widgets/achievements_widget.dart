@@ -14,18 +14,18 @@ class AchievementsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = isDarkMode 
-        ? MnemonicsColors.darkSurface 
-        : Colors.white;
-    final textColor = isDarkMode 
-        ? MnemonicsColors.darkTextPrimary 
+    final backgroundColor =
+        isDarkMode ? MnemonicsColors.darkSurface : Colors.white;
+    final textColor = isDarkMode
+        ? MnemonicsColors.darkTextPrimary
         : MnemonicsColors.textPrimary;
-    final secondaryTextColor = isDarkMode 
-        ? MnemonicsColors.darkTextSecondary 
+    final secondaryTextColor = isDarkMode
+        ? MnemonicsColors.darkTextSecondary
         : MnemonicsColors.textSecondary;
 
     final unlockedMilestones = milestones.where((m) => m.isUnlocked).toList();
-    final nextMilestones = milestones.where((m) => !m.isUnlocked).take(3).toList();
+    final nextMilestones =
+        milestones.where((m) => !m.isUnlocked).take(3).toList();
 
     return Container(
       margin: const EdgeInsets.symmetric(
@@ -36,10 +36,10 @@ class AchievementsWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-        boxShadow: isDarkMode 
-            ? MnemonicsColors.darkCardShadow 
+        boxShadow: isDarkMode
+            ? MnemonicsColors.darkCardShadow
             : MnemonicsColors.cardShadow,
-        border: isDarkMode 
+        border: isDarkMode
             ? Border.all(
                 color: MnemonicsColors.darkBorder.withOpacity(0.3),
                 width: 1,
@@ -80,7 +80,6 @@ class AchievementsWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: MnemonicsSpacing.m),
-          
           if (unlockedMilestones.isNotEmpty) ...[
             Text(
               'Recent Achievements',
@@ -108,7 +107,6 @@ class AchievementsWidget extends StatelessWidget {
             ),
             const SizedBox(height: MnemonicsSpacing.m),
           ],
-          
           if (nextMilestones.isNotEmpty) ...[
             Text(
               'Next Goals',
@@ -119,9 +117,10 @@ class AchievementsWidget extends StatelessWidget {
             ),
             const SizedBox(height: MnemonicsSpacing.s),
             Column(
-              children: nextMilestones.map((milestone) => 
-                _buildProgressMilestone(milestone, textColor, secondaryTextColor)
-              ).toList(),
+              children: nextMilestones
+                  .map((milestone) => _buildProgressMilestone(
+                      milestone, textColor, secondaryTextColor))
+                  .toList(),
             ),
           ],
         ],
@@ -180,7 +179,7 @@ class AchievementsWidget extends StatelessWidget {
           ),
           if (isUnlocked) ...[
             const SizedBox(height: MnemonicsSpacing.xs),
-            Icon(
+            const Icon(
               Icons.check_circle,
               color: Colors.white,
               size: 16,
@@ -203,7 +202,7 @@ class AchievementsWidget extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: MnemonicsSpacing.s),
       padding: const EdgeInsets.all(MnemonicsSpacing.s),
       decoration: BoxDecoration(
-        color: milestone.type.icon == '🔥' 
+        color: milestone.type.icon == '🔥'
             ? Colors.orange.withOpacity(0.1)
             : MnemonicsColors.primaryGreen.withOpacity(0.1),
         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
@@ -253,7 +252,7 @@ class AchievementsWidget extends StatelessWidget {
             value: progressClamped,
             backgroundColor: Colors.grey.withOpacity(0.2),
             valueColor: AlwaysStoppedAnimation<Color>(
-              milestone.type.icon == '🔥' 
+              milestone.type.icon == '🔥'
                   ? Colors.orange
                   : MnemonicsColors.primaryGreen,
             ),

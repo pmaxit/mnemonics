@@ -20,7 +20,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with TickerProviderStateMixin {
-
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _slideAnimation;
@@ -85,7 +84,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final now = DateTime.now();
     final hour = now.hour;
     String greeting;
-    
+
     if (hour < 12) {
       greeting = 'Good Morning';
     } else if (hour < 17) {
@@ -100,7 +99,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       decoration: BoxDecoration(
         color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-        boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+        boxShadow: isDarkMode
+            ? MnemonicsColors.darkCardShadow
+            : MnemonicsColors.cardShadow,
         border: isDarkMode
             ? Border.all(
                 color: MnemonicsColors.darkBorder.withOpacity(0.3),
@@ -114,15 +115,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(MnemonicsSpacing.s),
                 decoration: BoxDecoration(
-                  color: MnemonicsColors.primaryGreen.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                child: Icon(
-                  Icons.school,
-                  color: MnemonicsColors.primaryGreen,
-                  size: 24,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                  child: Image.asset(
+                    'assets/images/logo.jpg',
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
               const SizedBox(width: MnemonicsSpacing.m),
@@ -133,14 +143,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     Text(
                       'Vocabulary Learning',
                       style: MnemonicsTypography.headingMedium.copyWith(
-                        color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                        color: isDarkMode
+                            ? MnemonicsColors.darkTextPrimary
+                            : MnemonicsColors.textPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
                       'Master words through mnemonics',
                       style: MnemonicsTypography.bodyRegular.copyWith(
-                        color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                        color: isDarkMode
+                            ? MnemonicsColors.darkTextSecondary
+                            : MnemonicsColors.textSecondary,
                       ),
                     ),
                   ],
@@ -197,7 +211,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     padding: const EdgeInsets.all(MnemonicsSpacing.s),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+                      borderRadius:
+                          BorderRadius.circular(MnemonicsSpacing.radiusM),
                     ),
                     child: const Icon(
                       Icons.auto_awesome,
@@ -228,7 +243,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       decoration: BoxDecoration(
         color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-        boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+        boxShadow: isDarkMode
+            ? MnemonicsColors.darkCardShadow
+            : MnemonicsColors.cardShadow,
         border: isDarkMode
             ? Border.all(
                 color: MnemonicsColors.darkBorder.withOpacity(0.3),
@@ -261,7 +278,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         accent.withOpacity(0.7),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                    borderRadius:
+                        BorderRadius.circular(MnemonicsSpacing.radiusL),
                     boxShadow: [
                       BoxShadow(
                         color: accent.withOpacity(0.3),
@@ -285,7 +303,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       Text(
                         set.name,
                         style: MnemonicsTypography.headingMedium.copyWith(
-                          color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                          color: isDarkMode
+                              ? MnemonicsColors.darkTextPrimary
+                              : MnemonicsColors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -293,7 +313,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       Text(
                         set.description,
                         style: MnemonicsTypography.bodyRegular.copyWith(
-                          color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                          color: isDarkMode
+                              ? MnemonicsColors.darkTextSecondary
+                              : MnemonicsColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: MnemonicsSpacing.s),
@@ -305,7 +327,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         ),
                         decoration: BoxDecoration(
                           color: accent.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+                          borderRadius:
+                              BorderRadius.circular(MnemonicsSpacing.radiusM),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -335,7 +358,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   padding: const EdgeInsets.all(MnemonicsSpacing.xs),
                   decoration: BoxDecoration(
                     color: accent.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
+                    borderRadius:
+                        BorderRadius.circular(MnemonicsSpacing.radiusS),
                   ),
                   child: Icon(
                     Icons.arrow_forward_ios,
@@ -357,8 +381,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     final themeMode = ref.watch(themeNotifierProvider);
     final isDarkMode = themeMode == ThemeMode.dark ||
-        (themeMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
-    
+        (themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
+
     return Stack(
       children: [
         // Full-screen animated background
@@ -392,9 +417,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       ...sets.asMap().entries.map((entry) {
                         final index = entry.key;
                         final set = entry.value;
-                        final accent = accentColors[index % accentColors.length];
+                        final accent =
+                            accentColors[index % accentColors.length];
                         final icon = setIcons[index % setIcons.length];
-                        
+
                         return _buildAnimatedCard(
                           set: set,
                           accent: accent,
@@ -492,7 +518,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   Widget _buildDailyGoalProgress(int learnedToday, int dailyGoal) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: MnemonicsSpacing.m, horizontal: MnemonicsSpacing.m),
+      margin: const EdgeInsets.symmetric(
+          vertical: MnemonicsSpacing.m, horizontal: MnemonicsSpacing.m),
       padding: const EdgeInsets.all(MnemonicsSpacing.m),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -642,4 +669,4 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
     );
   }
-} 
+}

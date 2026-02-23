@@ -32,12 +32,12 @@ class AnimatedProgressUtils {
   ];
 
   static List<BoxShadow> achievementShadow(Color color) => [
-    BoxShadow(
-      color: color.withOpacity(0.3),
-      blurRadius: 16,
-      offset: const Offset(0, 8),
-    ),
-  ];
+        BoxShadow(
+          color: color.withOpacity(0.3),
+          blurRadius: 16,
+          offset: const Offset(0, 8),
+        ),
+      ];
 
   // Particle animation for celebrations
   static Widget buildParticleEffect({
@@ -129,8 +129,9 @@ class AnimatedProgressUtils {
     int totalItems = 1,
   }) {
     final itemDelay = (index / totalItems).clamp(0.0, 0.8); // Max delay of 0.8
-    final itemEnd = (itemDelay + 0.4).clamp(0.0, 1.0); // Ensure it doesn't exceed 1.0
-    
+    final itemEnd =
+        (itemDelay + 0.4).clamp(0.0, 1.0); // Ensure it doesn't exceed 1.0
+
     final staggeredAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -149,7 +150,7 @@ class AnimatedProgressUtils {
       animation: staggeredAnimation,
       builder: (context, _) {
         return Transform.translate(
-          offset: Offset(0, 50 * (1 - staggeredAnimation.value)),
+          offset: Offset.zero, // Disabled slide animation
           child: Opacity(
             opacity: staggeredAnimation.value,
             child: child,
@@ -198,25 +199,26 @@ class ParticlePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final random = math.Random(42); // Fixed seed for consistent animation
-    
+
     for (int i = 0; i < particleCount; i++) {
       final progress = animation.value;
-      final particleProgress = (progress * 2 - i / particleCount).clamp(0.0, 1.0);
-      
+      final particleProgress =
+          (progress * 2 - i / particleCount).clamp(0.0, 1.0);
+
       if (particleProgress <= 0) continue;
-      
+
       final startX = random.nextDouble() * size.width;
       final startY = random.nextDouble() * size.height;
-      
+
       final endX = startX + (random.nextDouble() - 0.5) * 100;
       final endY = startY - random.nextDouble() * 150;
-      
+
       final currentX = startX + (endX - startX) * particleProgress;
       final currentY = startY + (endY - startY) * particleProgress;
-      
+
       final opacity = (1.0 - particleProgress).clamp(0.0, 1.0);
       final particleSize = 3.0 * (1.0 - particleProgress);
-      
+
       paint.color = color.withOpacity(opacity * 0.7);
       canvas.drawCircle(
         Offset(currentX, currentY),

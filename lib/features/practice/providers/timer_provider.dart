@@ -8,7 +8,8 @@ import '../../home/providers.dart';
 import '../domain/user_progress_service.dart';
 import '../../profile/domain/user_statistics.dart';
 
-final timerSessionProvider = StateNotifierProvider<TimerSessionNotifier, TimerSessionState>((ref) {
+final timerSessionProvider =
+    StateNotifierProvider<TimerSessionNotifier, TimerSessionState>((ref) {
   return TimerSessionNotifier(
     vocabularyProvider: ref.watch(vocabularyListProvider),
     userWordDataProvider: ref.watch(allUserWordDataProvider),
@@ -18,7 +19,8 @@ final timerSessionProvider = StateNotifierProvider<TimerSessionNotifier, TimerSe
 
 final sessionTimeProvider = StateProvider<Duration>((ref) => Duration.zero);
 
-final wordUserDataProvider = FutureProvider.family<UserWordData?, String>((ref, word) async {
+final wordUserDataProvider =
+    FutureProvider.family<UserWordData?, String>((ref, word) async {
   final userDataList = await ref.watch(allUserWordDataProvider.future);
   try {
     return userDataList.firstWhere((data) => data.word == word);
@@ -31,7 +33,7 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
   final AsyncValue<List<VocabularyWord>> vocabularyProvider;
   final AsyncValue<List<UserWordData>> userWordDataProvider;
   final UserProgressService progressService;
-  
+
   Timer? _sessionTimer;
   Timer? _wordTimer;
   DateTime? _currentWordStartTime;
@@ -56,7 +58,7 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
 
   Future<void> startSession() async {
     await _prepareSessionWords();
-    
+
     if (state.sessionWords.isEmpty) {
       return; // No words to study
     }
@@ -71,7 +73,7 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
 
     // Start countdown, then begin session
     await Future.delayed(const Duration(seconds: 3));
-    
+
     state = state.copyWith(
       currentPhase: SessionPhase.active,
       isSessionActive: true,
@@ -84,7 +86,7 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
   Future<void> _prepareSessionWords() async {
     final vocabData = vocabularyProvider.asData?.value ?? [];
     final userDataList = userWordDataProvider.asData?.value ?? [];
-    
+
     List<VocabularyWord> selectedWords = [];
 
     switch (state.studyMode) {
@@ -97,7 +99,8 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
             (data) => data.word == word.word,
             orElse: () => UserWordData(word: word.word),
           );
-          return userData.accuracyRate < 0.7; // Difficult words have low accuracy
+          return userData.accuracyRate <
+              0.7; // Difficult words have low accuracy
         }).toList();
         break;
       case TimerMode.newWords:
@@ -118,9 +121,9 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
 
     // Shuffle words and limit based on time
     selectedWords.shuffle();
-    final estimatedWordsPerMinute = 2;
+    const estimatedWordsPerMinute = 2;
     final maxWords = state.selectedMinutes * estimatedWordsPerMinute;
-    
+
     if (selectedWords.length > maxWords) {
       selectedWords = selectedWords.take(maxWords).toList();
     }
@@ -133,7 +136,7 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
     _sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       final elapsed = DateTime.now().difference(state.sessionStartTime!);
       final totalDuration = Duration(minutes: state.selectedMinutes);
-      
+
       if (elapsed >= totalDuration) {
         _endSession();
       }
@@ -167,10 +170,10 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
     _recordProgress(currentWord.word, difficulty);
 
     final updatedReviews = [...state.completedReviews, review];
-    
+
     // Move to next random word - don't end session until timer runs out
     final nextIndex = _getNextRandomWordIndex();
-    
+
     state = state.copyWith(
       currentWordIndex: nextIndex,
       completedReviews: updatedReviews,
@@ -182,7 +185,7 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
   void _recordProgress(String word, ReviewDifficulty difficulty) {
     final isCorrect = difficulty == ReviewDifficulty.easy;
     progressService.recordWordLearned(word, isCorrect: isCorrect);
-    
+
     // Record review activity
     final rating = ReviewDifficultyRating.values[difficulty.index];
     progressService.recordReviewActivity(word, rating);
@@ -215,10 +218,10 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
     );
 
     final updatedReviews = [...state.completedReviews, review];
-    
+
     // Move to next random word - don't end session until timer runs out
     final nextIndex = _getNextRandomWordIndex();
-    
+
     state = state.copyWith(
       currentWordIndex: nextIndex,
       completedReviews: updatedReviews,
@@ -240,7 +243,7 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
   void _endSession() {
     _sessionTimer?.cancel();
     _wordTimer?.cancel();
-    
+
     state = state.copyWith(
       isSessionActive: false,
       currentPhase: SessionPhase.completed,
@@ -260,7 +263,7 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
     };
 
     for (final review in state.completedReviews) {
-      difficultyBreakdown[review.difficulty] = 
+      difficultyBreakdown[review.difficulty] =
           (difficultyBreakdown[review.difficulty] ?? 0) + 1;
     }
 
@@ -305,7 +308,7 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
   void resetSession() {
     _sessionTimer?.cancel();
     _wordTimer?.cancel();
-    
+
     state = const TimerSessionState();
   }
 
@@ -320,7 +323,7 @@ class TimerSessionNotifier extends StateNotifier<TimerSessionState> {
 // Helper provider for session time remaining
 final sessionTimeRemainingProvider = StreamProvider<Duration>((ref) async* {
   final sessionState = ref.watch(timerSessionProvider);
-  
+
   if (!sessionState.isSessionActive || sessionState.sessionStartTime == null) {
     yield Duration.zero;
     return;
@@ -330,7 +333,7 @@ final sessionTimeRemainingProvider = StreamProvider<Duration>((ref) async* {
     final elapsed = DateTime.now().difference(sessionState.sessionStartTime!);
     final totalDuration = Duration(minutes: sessionState.selectedMinutes);
     final remaining = totalDuration - elapsed;
-    
+
     return remaining.isNegative ? Duration.zero : remaining;
   });
 });

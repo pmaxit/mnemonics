@@ -29,26 +29,30 @@ final statisticsProvider = FutureProvider<StatisticsData>((ref) async {
 
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
-  
-  final learned = userData.where((d) => d.isLearned).toList();
+
+  final learned = userData.where((d) => d.hasBeenTested).toList();
   final totalLearned = learned.length;
-  
-  final learnedToday = userData.where((d) => 
-    d.firstLearnedAt != null && 
-    _isSameDay(d.firstLearnedAt!, today)
-  ).length;
-  
-  final newCount = userData.where((d) => d.learningStage == 'new').length;
-  final inProgressCount = userData.where((d) => d.isInProgress).length;
-  final masteredCount = userData.where((d) => d.isMastered).length;
-  
+
+  final learnedToday = userData
+      .where((d) =>
+          d.hasBeenTested &&
+          d.lastReviewedAt != null &&
+          _isSameDay(d.lastReviewedAt!, today))
+      .length;
+
+  final newCount = userData.where((d) => !d.hasBeenTested).length;
+  final inProgressCount =
+      userData.where((d) => d.hasBeenTested && d.isInProgress).length;
+  final masteredCount =
+      userData.where((d) => d.hasBeenTested && d.isMastered).length;
+
   final categoryBreakdown = <String, int>{};
   final difficultyBreakdown = <String, int>{};
-  
+
   for (final userWord in userData) {
     final vocabWord = vocab.firstWhere(
       (v) => v.word == userWord.word,
-      orElse: () => VocabularyWord(
+      orElse: () => const VocabularyWord(
         word: '',
         meaning: '',
         mnemonic: '',
@@ -59,22 +63,27 @@ final statisticsProvider = FutureProvider<StatisticsData>((ref) async {
         category: 'Unknown',
       ),
     );
-    
-    if (userWord.isLearned || userWord.isInProgress) {
-      categoryBreakdown[vocabWord.category] = (categoryBreakdown[vocabWord.category] ?? 0) + 1;
-      difficultyBreakdown[vocabWord.difficulty.name] = (difficultyBreakdown[vocabWord.difficulty.name] ?? 0) + 1;
+
+    if (userWord.hasBeenTested) {
+      categoryBreakdown[vocabWord.category] =
+          (categoryBreakdown[vocabWord.category] ?? 0) + 1;
+      difficultyBreakdown[vocabWord.difficulty.name] =
+          (difficultyBreakdown[vocabWord.difficulty.name] ?? 0) + 1;
     }
   }
-  
+
   final weeklyProgress = _calculateWeeklyProgress(userData, reviewActivities);
-  
-  final totalAnswers = userData.fold(0, (sum, d) => sum + d.totalAnswers);
-  final correctAnswers = userData.fold(0, (sum, d) => sum + d.correctAnswers);
-  final averageAccuracy = totalAnswers > 0 ? correctAnswers / totalAnswers : 0.0;
-  
+
+  final testedWords = userData.where((d) => d.hasBeenTested).toList();
+  final totalAnswers = testedWords.fold(0, (sum, d) => sum + d.totalAnswers);
+  final correctAnswers =
+      testedWords.fold(0, (sum, d) => sum + d.correctAnswers);
+  final averageAccuracy =
+      totalAnswers > 0 ? correctAnswers / totalAnswers : 0.0;
+
   final totalReviews = reviewActivities.length;
-  final streak = _calculateStreak(userData);
-  
+  final streak = _calculateStreak(userData, reviewActivities);
+
   return StatisticsData(
     totalLearned: totalLearned,
     learnedToday: learnedToday,
@@ -92,8 +101,8 @@ final statisticsProvider = FutureProvider<StatisticsData>((ref) async {
 
 bool _isSameDay(DateTime date1, DateTime date2) {
   return date1.year == date2.year &&
-         date1.month == date2.month &&
-         date1.day == date2.day;
+      date1.month == date2.month &&
+      date1.day == date2.day;
 }
 
 List<DailyProgress> _calculateWeeklyProgress(
@@ -102,44 +111,77 @@ List<DailyProgress> _calculateWeeklyProgress(
 ) {
   final now = DateTime.now();
   final weeklyProgress = <DailyProgress>[];
-  
+
   for (int i = 6; i >= 0; i--) {
     final date = DateTime(now.year, now.month, now.day - i);
-    
+
     final wordsLearned = userData
-        .where((d) => d.firstLearnedAt != null && _isSameDay(d.firstLearnedAt!, date))
+        .where((d) =>
+            d.hasBeenTested &&
+            d.lastReviewedAt != null &&
+            _isSameDay(d.lastReviewedAt!, date))
         .length;
-    
-    final reviewsCompleted = reviewActivities
-        .where((r) => _isSameDay(r.reviewedAt, date))
-        .length;
-    
+
+    final reviewsCompleted =
+        reviewActivities.where((r) => _isSameDay(r.reviewedAt, date)).length;
+
     weeklyProgress.add(DailyProgress(
       date: date,
       wordsLearned: wordsLearned,
       reviewsCompleted: reviewsCompleted,
     ));
   }
-  
+
   return weeklyProgress;
 }
 
-int _calculateStreak(List<UserWordData> userData) {
+int _calculateStreak(
+    List<UserWordData> userData, List<ReviewActivity> reviewActivities) {
+  if (userData.isEmpty && reviewActivities.isEmpty) return 0;
+
   final now = DateTime.now();
-  int streak = 0;
-  
-  for (int i = 0; i < 365; i++) {
-    final date = DateTime(now.year, now.month, now.day - i);
-    final hasActivity = userData.any((d) => 
-      d.firstLearnedAt != null && _isSameDay(d.firstLearnedAt!, date)
-    );
-    
-    if (hasActivity) {
-      streak++;
-    } else {
-      break;
+  final today = DateTime(now.year, now.month, now.day);
+
+  // Get all unique days with learning activity
+  final activeDays = <DateTime>{};
+
+  // Add days from user word data (only for actually tested words)
+  for (final data in userData) {
+    if (data.hasBeenTested && data.lastReviewedAt != null) {
+      final day = DateTime(
+        data.lastReviewedAt!.year,
+        data.lastReviewedAt!.month,
+        data.lastReviewedAt!.day,
+      );
+      activeDays.add(day);
     }
   }
-  
+
+  // Add days from review activities
+  for (final activity in reviewActivities) {
+    final day = DateTime(
+      activity.reviewedAt.year,
+      activity.reviewedAt.month,
+      activity.reviewedAt.day,
+    );
+    activeDays.add(day);
+  }
+
+  if (activeDays.isEmpty) return 0;
+
+  // Check if there's activity today or yesterday (to allow for different timezones)
+  final yesterday = today.subtract(const Duration(days: 1));
+  if (!activeDays.contains(today) && !activeDays.contains(yesterday)) {
+    return 0;
+  }
+
+  int streak = 0;
+  DateTime currentDay = activeDays.contains(today) ? today : yesterday;
+
+  while (activeDays.contains(currentDay)) {
+    streak++;
+    currentDay = currentDay.subtract(const Duration(days: 1));
+  }
+
   return streak;
 }

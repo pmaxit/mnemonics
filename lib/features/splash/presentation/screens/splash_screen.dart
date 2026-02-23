@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../common/design/design_system.dart';
-import '../../../../common/widgets/buttons.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -12,7 +11,8 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with TickerProviderStateMixin {
   late final AnimationController _flyInController;
   late final AnimationController _pulseController;
   late final Animation<double> _fadeInAnimation;
@@ -101,9 +101,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const SizedBox(height: 48),
+                      Center(child: _buildLogo()),
                       const Spacer(),
-                      _buildLogo(),
-                      const SizedBox(height: MnemonicsSpacing.xl),
                       // Text fly-in
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,50 +147,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
 
   Widget _buildLogo() {
     return Container(
-      width: 120,
-      height: 120,
+      width: 140,
+      height: 140,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
         boxShadow: MnemonicsColors.cardShadow,
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            left: 10,
-            bottom: 10,
-            child: _buildSpeechBubble(
-              "A",
-              MnemonicsColors.primaryGreen,
-            ),
-          ),
-          Positioned(
-            right: 10,
-            top: 10,
-            child: _buildSpeechBubble(
-              "文",
-              MnemonicsColors.secondaryOrange,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSpeechBubble(String text, Color color) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-      ),
-      child: Center(
-        child: Text(
-          text,
-          style: MnemonicsTypography.headingMedium.copyWith(
-            color: Colors.white,
-          ),
+        image: const DecorationImage(
+          image: AssetImage('assets/images/logo.jpg'),
+          fit: BoxFit.cover,
         ),
       ),
     );
@@ -207,7 +172,8 @@ class _Animated3DCTAButton extends StatefulWidget {
   State<_Animated3DCTAButton> createState() => _Animated3DCTAButtonState();
 }
 
-class _Animated3DCTAButtonState extends State<_Animated3DCTAButton> with SingleTickerProviderStateMixin {
+class _Animated3DCTAButtonState extends State<_Animated3DCTAButton>
+    with SingleTickerProviderStateMixin {
   double _scale = 1.0;
 
   void _onTapDown(TapDownDetails details) {
@@ -289,7 +255,7 @@ class _Animated3DCTAButtonState extends State<_Animated3DCTAButton> with SingleT
                   ),
                 ),
               ),
-              Icon(
+              const Icon(
                 Icons.arrow_forward,
                 color: Colors.white,
                 size: 36,
@@ -300,4 +266,4 @@ class _Animated3DCTAButtonState extends State<_Animated3DCTAButton> with SingleT
       ),
     );
   }
-} 
+}

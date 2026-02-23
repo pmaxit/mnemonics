@@ -1,20 +1,19 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../home/domain/vocabulary_word.dart';
-import '../../home/domain/user_word_data.dart';
 import '../../profile/domain/user_statistics.dart';
 
 part 'learning_session_models.freezed.dart';
 
-enum SessionDuration { 
-  fiveMinutes(5), 
-  tenMinutes(10), 
-  fifteenMinutes(15), 
+enum SessionDuration {
+  fiveMinutes(5),
+  tenMinutes(10),
+  fifteenMinutes(15),
   thirtyMinutes(30);
 
   const SessionDuration(this.minutes);
   final int minutes;
 
-  String get displayText => '${minutes} min';
+  String get displayText => '$minutes min';
   String get description {
     switch (this) {
       case SessionDuration.fiveMinutes:
@@ -50,7 +49,7 @@ enum SessionMode {
 
 enum FlashcardSide {
   front, // Shows word
-  back,  // Shows meaning and mnemonic
+  back, // Shows meaning and mnemonic
 }
 
 @freezed
@@ -71,9 +70,9 @@ class LearningSessionState with _$LearningSessionState {
 
   const LearningSessionState._();
 
-  VocabularyWord? get currentWord => 
-      sessionWords.isNotEmpty && currentWordIndex < sessionWords.length 
-          ? sessionWords[currentWordIndex] 
+  VocabularyWord? get currentWord =>
+      sessionWords.isNotEmpty && currentWordIndex < sessionWords.length
+          ? sessionWords[currentWordIndex]
           : null;
 
   bool get hasMoreWords => currentWordIndex < sessionWords.length - 1;
@@ -84,11 +83,11 @@ class LearningSessionState with _$LearningSessionState {
 
   int get wordsReviewed => completedReviews.length;
 
-  int get uniqueWordsReviewed => completedReviews.map((r) => r.word).toSet().length;
+  int get uniqueWordsReviewed =>
+      completedReviews.map((r) => r.word).toSet().length;
 
-  double get progress => sessionWords.isEmpty 
-      ? 0.0 
-      : (currentWordIndex + 1) / sessionWords.length;
+  double get progress =>
+      sessionWords.isEmpty ? 0.0 : (currentWordIndex + 1) / sessionWords.length;
 
   Map<String, int> get difficultyBreakdown {
     final breakdown = <String, int>{
@@ -96,11 +95,12 @@ class LearningSessionState with _$LearningSessionState {
       'medium': 0,
       'hard': 0,
     };
-    
+
     for (final review in completedReviews) {
-      breakdown[review.difficulty.name] = (breakdown[review.difficulty.name] ?? 0) + 1;
+      breakdown[review.difficulty.name] =
+          (breakdown[review.difficulty.name] ?? 0) + 1;
     }
-    
+
     return breakdown;
   }
 }
@@ -131,17 +131,18 @@ class LearningSessionSummary with _$LearningSessionSummary {
 
   const LearningSessionSummary._();
 
-  double get wordsPerMinute => sessionDuration.inMinutes > 0 
+  double get wordsPerMinute => sessionDuration.inMinutes > 0
       ? wordsReviewed / sessionDuration.inMinutes.toDouble()
       : 0.0;
 
   double get accuracyRate {
-    final total = difficultyBreakdown.values.fold(0, (sum, count) => sum + count);
+    final total =
+        difficultyBreakdown.values.fold(0, (sum, count) => sum + count);
     if (total == 0) return 0.0;
-    
+
     final easyCount = difficultyBreakdown['easy'] ?? 0;
     final mediumCount = difficultyBreakdown['medium'] ?? 0;
-    
+
     return (easyCount + (mediumCount * 0.5)) / total;
   }
 }

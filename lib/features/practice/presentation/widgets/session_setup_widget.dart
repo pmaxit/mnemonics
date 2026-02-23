@@ -6,8 +6,10 @@ class SessionSetupWidget extends StatelessWidget {
   final LearningSessionState sessionState;
   final Function(SessionDuration) onDurationChanged;
   final Function(SessionMode) onModeChanged;
-  final VoidCallback onStartSession;
+  final Future<void> Function() onStartSession;
   final bool isDarkMode;
+  final Animation<double>? fadeAnimation;
+  final Animation<double>? slideAnimation;
 
   const SessionSetupWidget({
     super.key,
@@ -16,6 +18,8 @@ class SessionSetupWidget extends StatelessWidget {
     required this.onModeChanged,
     required this.onStartSession,
     required this.isDarkMode,
+    this.fadeAnimation,
+    this.slideAnimation,
   });
 
   @override
@@ -26,22 +30,37 @@ class SessionSetupWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          _buildHeader(),
-          
+          if (slideAnimation != null && fadeAnimation != null)
+            AnimatedBuilder(
+              animation: slideAnimation!,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(0, slideAnimation!.value),
+                  child: FadeTransition(
+                    opacity: fadeAnimation!,
+                    child: child,
+                  ),
+                );
+              },
+              child: _buildHeader(),
+            )
+          else
+            _buildHeader(),
+
           const SizedBox(height: MnemonicsSpacing.xl),
-          
+
           // Duration Selection
           _buildDurationSelection(),
-          
+
           const SizedBox(height: MnemonicsSpacing.xl),
-          
+
           // Mode Selection
           _buildModeSelection(),
-          
+
           const SizedBox(height: MnemonicsSpacing.xl),
-          
+
           // Start Button
-          _buildStartButton(),
+          _buildStartButton(context),
         ],
       ),
     );
@@ -54,7 +73,9 @@ class SessionSetupWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-        boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+        boxShadow: isDarkMode
+            ? MnemonicsColors.darkCardShadow
+            : MnemonicsColors.cardShadow,
         border: isDarkMode
             ? Border.all(
                 color: MnemonicsColors.darkBorder.withOpacity(0.3),
@@ -99,7 +120,9 @@ class SessionSetupWidget extends StatelessWidget {
                 Text(
                   'Learning Session',
                   style: MnemonicsTypography.headingMedium.copyWith(
-                    color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                    color: isDarkMode
+                        ? MnemonicsColors.darkTextPrimary
+                        : MnemonicsColors.textPrimary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -107,7 +130,9 @@ class SessionSetupWidget extends StatelessWidget {
                 Text(
                   'Enhance your vocabulary with smart flashcards',
                   style: MnemonicsTypography.bodyRegular.copyWith(
-                    color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                    color: isDarkMode
+                        ? MnemonicsColors.darkTextSecondary
+                        : MnemonicsColors.textSecondary,
                   ),
                 ),
               ],
@@ -136,7 +161,7 @@ class SessionSetupWidget extends StatelessWidget {
           ),
         ),
         const SizedBox(height: MnemonicsSpacing.m),
-        
+
         // Duration options
         Row(
           children: SessionDuration.values.map((duration) {
@@ -144,7 +169,9 @@ class SessionSetupWidget extends StatelessWidget {
             return Expanded(
               child: Padding(
                 padding: EdgeInsets.only(
-                  right: duration != SessionDuration.values.last ? MnemonicsSpacing.s : 0,
+                  right: duration != SessionDuration.values.last
+                      ? MnemonicsSpacing.s
+                      : 0,
                 ),
                 child: GestureDetector(
                   onTap: () => onDurationChanged(duration),
@@ -154,35 +181,44 @@ class SessionSetupWidget extends StatelessWidget {
                       vertical: MnemonicsSpacing.m,
                     ),
                     decoration: BoxDecoration(
-                      color: isSelected 
+                      color: isSelected
                           ? MnemonicsColors.primaryGreen
-                          : (isDarkMode ? MnemonicsColors.darkSurface : Colors.white),
-                      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                          : (isDarkMode
+                              ? MnemonicsColors.darkSurface
+                              : Colors.white),
+                      borderRadius:
+                          BorderRadius.circular(MnemonicsSpacing.radiusL),
                       border: Border.all(
-                        color: isSelected 
+                        color: isSelected
                             ? MnemonicsColors.primaryGreen
-                            : (isDarkMode 
+                            : (isDarkMode
                                 ? MnemonicsColors.darkBorder.withOpacity(0.3)
-                                : MnemonicsColors.textSecondary.withOpacity(0.2)),
+                                : MnemonicsColors.textSecondary
+                                    .withOpacity(0.2)),
                       ),
-                      boxShadow: isSelected 
+                      boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: MnemonicsColors.primaryGreen.withOpacity(0.3),
+                                color: MnemonicsColors.primaryGreen
+                                    .withOpacity(0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
                             ]
-                          : (isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow),
+                          : (isDarkMode
+                              ? MnemonicsColors.darkCardShadow
+                              : MnemonicsColors.cardShadow),
                     ),
                     child: Column(
                       children: [
                         Text(
                           duration.displayText,
                           style: MnemonicsTypography.bodyLarge.copyWith(
-                            color: isSelected 
+                            color: isSelected
                                 ? Colors.white
-                                : (isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary),
+                                : (isDarkMode
+                                    ? MnemonicsColors.darkTextPrimary
+                                    : MnemonicsColors.textPrimary),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -190,7 +226,7 @@ class SessionSetupWidget extends StatelessWidget {
                         Text(
                           duration.description,
                           style: MnemonicsTypography.bodyRegular.copyWith(
-                            color: isSelected 
+                            color: isSelected
                                 ? Colors.white.withOpacity(0.8)
                                 : MnemonicsColors.textSecondary,
                             fontSize: 12,
@@ -227,7 +263,7 @@ class SessionSetupWidget extends StatelessWidget {
           ),
         ),
         const SizedBox(height: MnemonicsSpacing.m),
-        
+
         // Mode options
         ...SessionMode.values.map((mode) {
           final isSelected = sessionState.mode == mode;
@@ -239,24 +275,28 @@ class SessionSetupWidget extends StatelessWidget {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.all(MnemonicsSpacing.m),
                 decoration: BoxDecoration(
-                  color: isSelected 
+                  color: isSelected
                       ? MnemonicsColors.primaryGreen.withOpacity(0.1)
-                      : (isDarkMode ? MnemonicsColors.darkSurface : Colors.white),
+                      : (isDarkMode
+                          ? MnemonicsColors.darkSurface
+                          : Colors.white),
                   borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
                   border: Border.all(
-                    color: isSelected 
+                    color: isSelected
                         ? MnemonicsColors.primaryGreen
-                        : (isDarkMode 
+                        : (isDarkMode
                             ? MnemonicsColors.darkBorder.withOpacity(0.3)
                             : MnemonicsColors.textSecondary.withOpacity(0.2)),
                   ),
-                  boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+                  boxShadow: isDarkMode
+                      ? MnemonicsColors.darkCardShadow
+                      : MnemonicsColors.cardShadow,
                 ),
                 child: Row(
                   children: [
                     Icon(
                       _getModeIcon(mode),
-                      color: isSelected 
+                      color: isSelected
                           ? MnemonicsColors.primaryGreen
                           : MnemonicsColors.textSecondary,
                       size: 24,
@@ -269,7 +309,9 @@ class SessionSetupWidget extends StatelessWidget {
                           Text(
                             mode.title,
                             style: MnemonicsTypography.bodyLarge.copyWith(
-                              color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                              color: isDarkMode
+                                  ? MnemonicsColors.darkTextPrimary
+                                  : MnemonicsColors.textPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -284,7 +326,7 @@ class SessionSetupWidget extends StatelessWidget {
                       ),
                     ),
                     if (isSelected)
-                      Icon(
+                      const Icon(
                         Icons.check_circle,
                         color: MnemonicsColors.primaryGreen,
                         size: 20,
@@ -299,11 +341,37 @@ class SessionSetupWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildStartButton() {
+  Widget _buildStartButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: onStartSession,
+        onPressed: () async {
+          try {
+            await onStartSession();
+          } on StateError catch (e) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(e.message),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                margin: const EdgeInsets.all(MnemonicsSpacing.l),
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          } catch (e) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                    'An unexpected error occurred. Please try again.'),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                margin: EdgeInsets.all(MnemonicsSpacing.l),
+              ),
+            );
+          }
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: MnemonicsColors.primaryGreen,
           foregroundColor: Colors.white,

@@ -32,12 +32,8 @@ mixin _$VocabularyWord {
   String get category => throw _privateConstructorUsedError;
   List<String> get setIds => throw _privateConstructorUsedError;
 
-  /// Serializes this VocabularyWord to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of VocabularyWord
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $VocabularyWordCopyWith<VocabularyWord> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -72,8 +68,6 @@ class _$VocabularyWordCopyWithImpl<$Res, $Val extends VocabularyWord>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of VocabularyWord
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -168,8 +162,6 @@ class __$$VocabularyWordImplCopyWithImpl<$Res>
       _$VocabularyWordImpl _value, $Res Function(_$VocabularyWordImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of VocabularyWord
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -323,7 +315,7 @@ class _$VocabularyWordImpl implements _VocabularyWord {
             const DeepCollectionEquality().equals(other._setIds, _setIds));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -339,9 +331,7 @@ class _$VocabularyWordImpl implements _VocabularyWord {
       category,
       const DeepCollectionEquality().hash(_setIds));
 
-  /// Create a copy of VocabularyWord
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$VocabularyWordImplCopyWith<_$VocabularyWordImpl> get copyWith =>
@@ -395,11 +385,8 @@ abstract class _VocabularyWord implements VocabularyWord {
   String get category;
   @override
   List<String> get setIds;
-
-  /// Create a copy of VocabularyWord
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$VocabularyWordImplCopyWith<_$VocabularyWordImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/design/design_system.dart';
 import '../../../../common/widgets/buttons.dart';
 import '../../../home/providers.dart';
-import '../../../home/domain/user_settings.dart';
 
 class Language {
   final String code;
@@ -23,10 +22,12 @@ class LanguagePreferencesScreen extends ConsumerStatefulWidget {
   const LanguagePreferencesScreen({super.key});
 
   @override
-  ConsumerState<LanguagePreferencesScreen> createState() => _LanguagePreferencesScreenState();
+  ConsumerState<LanguagePreferencesScreen> createState() =>
+      _LanguagePreferencesScreenState();
 }
 
-class _LanguagePreferencesScreenState extends ConsumerState<LanguagePreferencesScreen> {
+class _LanguagePreferencesScreenState
+    extends ConsumerState<LanguagePreferencesScreen> {
   late List<Language> _languages;
 
   @override
@@ -132,8 +133,13 @@ class _LanguagePreferencesScreenState extends ConsumerState<LanguagePreferencesS
                     builder: (context, ref, _) => MnemonicsButton(
                       text: 'Save Preferences',
                       onPressed: () async {
-                        final selectedCodes = _languages.where((l) => l.isSelected).map((l) => l.code).toList();
-                        await ref.read(userSettingsProvider.notifier).updateLanguages(selectedCodes);
+                        final selectedCodes = _languages
+                            .where((l) => l.isSelected)
+                            .map((l) => l.code)
+                            .toList();
+                        await ref
+                            .read(userSettingsProvider.notifier)
+                            .updateLanguages(selectedCodes);
                         Navigator.pop(context);
                       },
                     ),
@@ -175,7 +181,7 @@ class _LanguagePreferencesScreenState extends ConsumerState<LanguagePreferencesS
             Switch(
               value: language.isSelected,
               onChanged: onToggle,
-              activeColor: MnemonicsColors.primaryGreen,
+              activeThumbColor: MnemonicsColors.primaryGreen,
             ),
             const Icon(Icons.drag_handle),
           ],
@@ -183,4 +189,4 @@ class _LanguagePreferencesScreenState extends ConsumerState<LanguagePreferencesS
       ),
     );
   }
-} 
+}

@@ -36,7 +36,7 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
   late AnimationController _entryController;
   late AnimationController _flipController;
   late AnimationController _ratingController;
-  
+
   late Animation<double> _entryAnimation;
   late Animation<double> _flipAnimation;
   late Animation<double> _ratingAnimation;
@@ -46,7 +46,7 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
   @override
   void initState() {
     super.initState();
-    
+
     _entryController = AnimationController(
       duration: AnimatedProgressUtils.dataAnimation,
       vsync: this,
@@ -96,7 +96,7 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
   @override
   void didUpdateWidget(AnimatedFlashCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     if (widget.isRevealed && !oldWidget.isRevealed) {
       _flipCard();
     } else if (!widget.isRevealed && oldWidget.isRevealed) {
@@ -109,7 +109,7 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
       _isFlipped = true;
     });
     _flipController.forward();
-    
+
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
         _ratingController.forward();
@@ -135,7 +135,7 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
 
   String _sanitizeString(String input) {
     if (input.isEmpty) return input;
-    
+
     // Remove any invalid UTF-16 characters
     return input.replaceAll(RegExp(r'[\uD800-\uDFFF]'), '');
   }
@@ -158,7 +158,7 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
                     child: _buildCard(),
                   ),
                 ),
-                
+
                 // Rating buttons
                 if (widget.isRevealed)
                   AnimatedBuilder(
@@ -186,7 +186,7 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
       animation: _flipAnimation,
       builder: (context, child) {
         final isShowingFront = _flipAnimation.value < 0.5;
-        
+
         return Transform(
           alignment: Alignment.center,
           transform: Matrix4.identity()
@@ -241,9 +241,9 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
             );
           },
         ),
-        
+
         const SizedBox(height: MnemonicsSpacing.xl),
-        
+
         // Category and difficulty
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -261,15 +261,14 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
             ),
           ],
         ),
-        
+
         const SizedBox(height: MnemonicsSpacing.l),
-        
+
         // Statistics if available
-        if (widget.userWordData != null)
-          _buildStatistics(),
-        
+        if (widget.userWordData != null) _buildStatistics(),
+
         const Spacer(),
-        
+
         // Tap instruction
         Container(
           padding: const EdgeInsets.all(MnemonicsSpacing.m),
@@ -281,7 +280,7 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
+              const Icon(
                 Icons.touch_app,
                 color: MnemonicsColors.primaryGreen,
                 size: 20,
@@ -309,115 +308,36 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-          // Word header with category/difficulty
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  _sanitizeString(widget.word.word.toUpperCase()),
-                  style: MnemonicsTypography.headingMedium.copyWith(
-                    color: MnemonicsColors.primaryGreen,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              _buildInfoChip(
-                'Category',
-                widget.word.category,
-                MnemonicsColors.primaryGreen,
-              ),
-            ],
-          ),
-          const SizedBox(height: MnemonicsSpacing.m),
-          
-          // Meaning - prominent position
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(MnemonicsSpacing.m),
-            decoration: BoxDecoration(
-              color: MnemonicsColors.primaryGreen.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-              border: Border.all(
-                color: MnemonicsColors.primaryGreen.withOpacity(0.3),
-                width: 2,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // Word header with category/difficulty
+            Row(
               children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.lightbulb_outline,
+                Expanded(
+                  child: Text(
+                    _sanitizeString(widget.word.word.toUpperCase()),
+                    style: MnemonicsTypography.headingMedium.copyWith(
                       color: MnemonicsColors.primaryGreen,
-                      size: 20,
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(width: MnemonicsSpacing.s),
-                    Text(
-                      'Meaning:',
-                      style: MnemonicsTypography.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: MnemonicsColors.primaryGreen,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: MnemonicsSpacing.s),
-                Text(
-                  _sanitizeString(widget.word.meaning),
-                  style: MnemonicsTypography.bodyLarge.copyWith(
-                    fontWeight: FontWeight.w500,
-                    height: 1.4,
                   ),
+                ),
+                _buildInfoChip(
+                  'Category',
+                  widget.word.category,
+                  MnemonicsColors.primaryGreen,
                 ),
               ],
             ),
-          ),
-          
-          const SizedBox(height: MnemonicsSpacing.m),
-          
-          // Example
-          Text(
-            'Example:',
-            style: MnemonicsTypography.bodyLarge.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: MnemonicsSpacing.xs),
-          Container(
-            padding: const EdgeInsets.all(MnemonicsSpacing.m),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-            ),
-            child: Text(
-              _sanitizeString(widget.word.example),
-              style: MnemonicsTypography.bodyRegular.copyWith(
-                fontStyle: FontStyle.italic,
-                height: 1.4,
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: MnemonicsSpacing.m),
-          
-          // Mnemonic - special attention with prominent styling
-          if (widget.word.mnemonic.isNotEmpty) ...[
+            const SizedBox(height: MnemonicsSpacing.m),
+
+            // Meaning - prominent position
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(MnemonicsSpacing.m),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    MnemonicsColors.secondaryOrange.withOpacity(0.15),
-                    MnemonicsColors.secondaryOrange.withOpacity(0.05),
-                  ],
-                ),
+                color: MnemonicsColors.primaryGreen.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
                 border: Border.all(
-                  color: MnemonicsColors.secondaryOrange.withOpacity(0.4),
+                  color: MnemonicsColors.primaryGreen.withOpacity(0.3),
                   width: 2,
                 ),
               ),
@@ -426,26 +346,25 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
                 children: [
                   Row(
                     children: [
-                      Icon(
-                        Icons.psychology,
-                        color: MnemonicsColors.secondaryOrange,
-                        size: 22,
+                      const Icon(
+                        Icons.lightbulb_outline,
+                        color: MnemonicsColors.primaryGreen,
+                        size: 20,
                       ),
                       const SizedBox(width: MnemonicsSpacing.s),
                       Text(
-                        'Memory Aid:',
+                        'Meaning:',
                         style: MnemonicsTypography.bodyLarge.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: MnemonicsColors.secondaryOrange,
+                          color: MnemonicsColors.primaryGreen,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: MnemonicsSpacing.s),
                   Text(
-                    _sanitizeString(widget.word.mnemonic),
+                    _sanitizeString(widget.word.meaning),
                     style: MnemonicsTypography.bodyLarge.copyWith(
-                      color: MnemonicsColors.secondaryOrange,
                       fontWeight: FontWeight.w500,
                       height: 1.4,
                     ),
@@ -453,134 +372,228 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
                 ],
               ),
             ),
-            const SizedBox(height: MnemonicsSpacing.s),
-          ],
-          
-          // Synonyms and Antonyms in a row if both exist  
-          if (widget.word.synonyms.isNotEmpty || widget.word.antonyms.isNotEmpty) ...[
-            Row(
-              children: [
-                if (widget.word.synonyms.isNotEmpty) ...[
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Synonyms:',
-                          style: MnemonicsTypography.bodyRegular.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: MnemonicsSpacing.xs),
-                        Wrap(
-                          spacing: MnemonicsSpacing.xs,
-                          runSpacing: MnemonicsSpacing.xs,
-                          children: widget.word.synonyms.take(3).map((synonym) => 
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: MnemonicsSpacing.s,
-                                vertical: MnemonicsSpacing.xs,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
-                                border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                              ),
-                              child: Text(
-                                _sanitizeString(synonym),
-                                style: MnemonicsTypography.bodyRegular.copyWith(
-                                  fontSize: 10,
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ).toList(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (widget.word.antonyms.isNotEmpty) const SizedBox(width: MnemonicsSpacing.s),
-                ],
-                if (widget.word.antonyms.isNotEmpty) ...[
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Antonyms:',
-                          style: MnemonicsTypography.bodyRegular.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: MnemonicsSpacing.xs),
-                        Wrap(
-                          spacing: MnemonicsSpacing.xs,
-                          runSpacing: MnemonicsSpacing.xs,
-                          children: widget.word.antonyms.take(3).map((antonym) => 
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: MnemonicsSpacing.s,
-                                vertical: MnemonicsSpacing.xs,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
-                                border: Border.all(color: Colors.red.withOpacity(0.3)),
-                              ),
-                              child: Text(
-                                _sanitizeString(antonym),
-                                style: MnemonicsTypography.bodyRegular.copyWith(
-                                  fontSize: 10,
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ).toList(),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
+
+            const SizedBox(height: MnemonicsSpacing.m),
+
+            // Example
+            Text(
+              'Example:',
+              style: MnemonicsTypography.bodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            const SizedBox(height: MnemonicsSpacing.s),
-          ],
-          
-          const SizedBox(height: MnemonicsSpacing.m),
-          
-          // Rate instruction
-          Container(
-            padding: const EdgeInsets.all(MnemonicsSpacing.m),
-            decoration: BoxDecoration(
-              color: MnemonicsColors.primaryGreen.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.rate_review,
-                  color: MnemonicsColors.primaryGreen,
-                  size: 20,
+            const SizedBox(height: MnemonicsSpacing.xs),
+            Container(
+              padding: const EdgeInsets.all(MnemonicsSpacing.m),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+              ),
+              child: Text(
+                _sanitizeString(widget.word.example),
+                style: MnemonicsTypography.bodyRegular.copyWith(
+                  fontStyle: FontStyle.italic,
+                  height: 1.4,
                 ),
-                const SizedBox(width: MnemonicsSpacing.s),
-                Text(
-                  'How difficult was this word?',
-                  style: MnemonicsTypography.bodyRegular.copyWith(
+              ),
+            ),
+
+            const SizedBox(height: MnemonicsSpacing.m),
+
+            // Mnemonic - special attention with prominent styling
+            if (widget.word.mnemonic.isNotEmpty) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(MnemonicsSpacing.m),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      MnemonicsColors.secondaryOrange.withOpacity(0.15),
+                      MnemonicsColors.secondaryOrange.withOpacity(0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                  border: Border.all(
+                    color: MnemonicsColors.secondaryOrange.withOpacity(0.4),
+                    width: 2,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.psychology,
+                          color: MnemonicsColors.secondaryOrange,
+                          size: 22,
+                        ),
+                        const SizedBox(width: MnemonicsSpacing.s),
+                        Text(
+                          'Memory Aid:',
+                          style: MnemonicsTypography.bodyLarge.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: MnemonicsColors.secondaryOrange,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: MnemonicsSpacing.s),
+                    Text(
+                      _sanitizeString(widget.word.mnemonic),
+                      style: MnemonicsTypography.bodyLarge.copyWith(
+                        color: MnemonicsColors.secondaryOrange,
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: MnemonicsSpacing.s),
+            ],
+
+            // Synonyms and Antonyms in a row if both exist
+            if (widget.word.synonyms.isNotEmpty ||
+                widget.word.antonyms.isNotEmpty) ...[
+              Row(
+                children: [
+                  if (widget.word.synonyms.isNotEmpty) ...[
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Synonyms:',
+                            style: MnemonicsTypography.bodyRegular.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: MnemonicsSpacing.xs),
+                          Wrap(
+                            spacing: MnemonicsSpacing.xs,
+                            runSpacing: MnemonicsSpacing.xs,
+                            children: widget.word.synonyms
+                                .take(3)
+                                .map(
+                                  (synonym) => Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: MnemonicsSpacing.s,
+                                      vertical: MnemonicsSpacing.xs,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(
+                                          MnemonicsSpacing.radiusS),
+                                      border: Border.all(
+                                          color: Colors.blue.withOpacity(0.3)),
+                                    ),
+                                    child: Text(
+                                      _sanitizeString(synonym),
+                                      style: MnemonicsTypography.bodyRegular
+                                          .copyWith(
+                                        fontSize: 10,
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (widget.word.antonyms.isNotEmpty)
+                      const SizedBox(width: MnemonicsSpacing.s),
+                  ],
+                  if (widget.word.antonyms.isNotEmpty) ...[
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Antonyms:',
+                            style: MnemonicsTypography.bodyRegular.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: MnemonicsSpacing.xs),
+                          Wrap(
+                            spacing: MnemonicsSpacing.xs,
+                            runSpacing: MnemonicsSpacing.xs,
+                            children: widget.word.antonyms
+                                .take(3)
+                                .map(
+                                  (antonym) => Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: MnemonicsSpacing.s,
+                                      vertical: MnemonicsSpacing.xs,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(
+                                          MnemonicsSpacing.radiusS),
+                                      border: Border.all(
+                                          color: Colors.red.withOpacity(0.3)),
+                                    ),
+                                    child: Text(
+                                      _sanitizeString(antonym),
+                                      style: MnemonicsTypography.bodyRegular
+                                          .copyWith(
+                                        fontSize: 10,
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: MnemonicsSpacing.s),
+            ],
+
+            const SizedBox(height: MnemonicsSpacing.m),
+
+            // Rate instruction
+            Container(
+              padding: const EdgeInsets.all(MnemonicsSpacing.m),
+              decoration: BoxDecoration(
+                color: MnemonicsColors.primaryGreen.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.rate_review,
                     color: MnemonicsColors.primaryGreen,
-                    fontWeight: FontWeight.w500,
+                    size: 20,
                   ),
-                ),
-              ],
+                  const SizedBox(width: MnemonicsSpacing.s),
+                  Text(
+                    'How difficult was this word?',
+                    style: MnemonicsTypography.bodyRegular.copyWith(
+                      color: MnemonicsColors.primaryGreen,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          
-          // Bottom padding for better scrolling
-          const SizedBox(height: MnemonicsSpacing.m),
+
+            // Bottom padding for better scrolling
+            const SizedBox(height: MnemonicsSpacing.m),
           ],
         ),
       ),
@@ -611,7 +624,7 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
 
   Widget _buildStatistics() {
     final userWordData = widget.userWordData!;
-    
+
     return Container(
       padding: const EdgeInsets.all(MnemonicsSpacing.m),
       decoration: BoxDecoration(
@@ -628,12 +641,12 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
             ),
           ),
           const SizedBox(height: MnemonicsSpacing.s),
-          
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildStatItem('Reviews', userWordData.reviewCount.toString()),
-              _buildStatItem('Accuracy', '${(userWordData.accuracyRate * 100).toStringAsFixed(0)}%'),
+              _buildStatItem('Accuracy',
+                  '${(userWordData.accuracyRate * 100).toStringAsFixed(0)}%'),
               _buildStatItem('Learned', userWordData.isLearned ? 'Yes' : 'No'),
             ],
           ),
@@ -695,7 +708,6 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
               ),
             ],
           ),
-          
           if (widget.onSkip != null) ...[
             const SizedBox(height: MnemonicsSpacing.s),
             TextButton(
@@ -713,7 +725,8 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
     );
   }
 
-  Widget _buildRatingButton(ReviewDifficulty difficulty, Color color, IconData icon) {
+  Widget _buildRatingButton(
+      ReviewDifficulty difficulty, Color color, IconData icon) {
     return TweenAnimationBuilder<double>(
       duration: AnimatedProgressUtils.microInteraction,
       tween: Tween<double>(begin: 1.0, end: 1.0),
@@ -756,7 +769,7 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    
+
     controller.forward().then((_) {
       controller.reverse().then((_) {
         controller.dispose();
