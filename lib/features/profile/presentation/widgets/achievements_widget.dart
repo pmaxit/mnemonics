@@ -5,11 +5,13 @@ import '../../domain/user_statistics.dart';
 class AchievementsWidget extends StatelessWidget {
   final List<Milestone> milestones;
   final bool isDarkMode;
+  final void Function(Milestone)? onGoalTap;
 
   const AchievementsWidget({
     super.key,
     required this.milestones,
     required this.isDarkMode,
+    this.onGoalTap,
   });
 
   @override
@@ -119,7 +121,11 @@ class AchievementsWidget extends StatelessWidget {
             Column(
               children: nextMilestones
                   .map((milestone) => _buildProgressMilestone(
-                      milestone, textColor, secondaryTextColor))
+                        context,
+                        milestone,
+                        textColor,
+                        secondaryTextColor,
+                      ))
                   .toList(),
             ),
           ],
@@ -191,73 +197,78 @@ class AchievementsWidget extends StatelessWidget {
   }
 
   Widget _buildProgressMilestone(
+    BuildContext context,
     Milestone milestone,
     Color textColor,
     Color secondaryTextColor,
   ) {
     final progress = milestone.currentValue / milestone.targetValue;
     final progressClamped = progress.clamp(0.0, 1.0);
+    final cardColor = milestone.type.icon == '🔥'
+        ? Colors.orange.withOpacity(0.1)
+        : MnemonicsColors.primaryGreen.withOpacity(0.1);
+    final progressColor = milestone.type.icon == '🔥'
+        ? Colors.orange
+        : MnemonicsColors.primaryGreen;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: MnemonicsSpacing.s),
-      padding: const EdgeInsets.all(MnemonicsSpacing.s),
-      decoration: BoxDecoration(
-        color: milestone.type.icon == '🔥'
-            ? Colors.orange.withOpacity(0.1)
-            : MnemonicsColors.primaryGreen.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                milestone.type.icon,
-                style: const TextStyle(fontSize: 20),
-              ),
-              const SizedBox(width: MnemonicsSpacing.s),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      milestone.title,
-                      style: MnemonicsTypography.bodyLarge.copyWith(
-                        color: textColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      milestone.description,
-                      style: MnemonicsTypography.bodyRegular.copyWith(
-                        color: secondaryTextColor,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+    return InkWell(
+      onTap: onGoalTap != null ? () => onGoalTap!(milestone) : null,
+      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: MnemonicsSpacing.s),
+        padding: const EdgeInsets.all(MnemonicsSpacing.s),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  milestone.type.icon,
+                  style: const TextStyle(fontSize: 20),
                 ),
-              ),
-              Text(
-                '${milestone.currentValue}/${milestone.targetValue}',
-                style: MnemonicsTypography.bodyRegular.copyWith(
-                  color: secondaryTextColor,
-                  fontWeight: FontWeight.w600,
+                const SizedBox(width: MnemonicsSpacing.s),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        milestone.title,
+                        style: MnemonicsTypography.bodyLarge.copyWith(
+                          color: textColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        milestone.description,
+                        style: MnemonicsTypography.bodyRegular.copyWith(
+                          color: secondaryTextColor,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: MnemonicsSpacing.s),
-          LinearProgressIndicator(
-            value: progressClamped,
-            backgroundColor: Colors.grey.withOpacity(0.2),
-            valueColor: AlwaysStoppedAnimation<Color>(
-              milestone.type.icon == '🔥'
-                  ? Colors.orange
-                  : MnemonicsColors.primaryGreen,
+                Text(
+                  '${milestone.currentValue}/${milestone.targetValue}',
+                  style: MnemonicsTypography.bodyRegular.copyWith(
+                    color: secondaryTextColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: MnemonicsSpacing.s),
+            LinearProgressIndicator(
+              value: progressClamped,
+              backgroundColor: Colors.grey.withOpacity(0.2),
+              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+            ),
+          ],
+        ),
       ),
     );
   }

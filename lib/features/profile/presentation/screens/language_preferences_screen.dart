@@ -181,7 +181,7 @@ class _LanguagePreferencesScreenState
             Switch(
               value: language.isSelected,
               onChanged: onToggle,
-              activeThumbColor: MnemonicsColors.primaryGreen,
+              activeColor: MnemonicsColors.primaryGreen,
             ),
             const Icon(Icons.drag_handle),
           ],

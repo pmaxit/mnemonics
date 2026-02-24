@@ -9,6 +9,8 @@ import '../widgets/profile_header_widget.dart';
 import '../widgets/statistics_overview_widget.dart';
 import '../widgets/achievements_widget.dart';
 import '../widgets/learning_insights_widget.dart';
+import 'goal_summary_screen.dart';
+import '../../domain/user_statistics.dart';
 import '../widgets/profile_settings_widget.dart';
 import '../widgets/difficulty_stats_widget.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
@@ -124,6 +126,14 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
                     child: AchievementsWidget(
                       milestones: profileStats.milestones,
                       isDarkMode: isDarkMode,
+                      onGoalTap: (Milestone milestone) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (context) =>
+                                GoalSummaryScreen(milestone: milestone),
+                          ),
+                        );
+                      },
                     ),
                   ),
 
