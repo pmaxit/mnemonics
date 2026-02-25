@@ -158,7 +158,7 @@ class _FilteredWordsProviderElement
 }
 
 String _$categoryDetailedStatsHash() =>
-    r'6f707ce216ba4f6a94d3b2c17bbc088a985c6a60';
+    r'5a798c83739faa7c43d0446616cad49fe7a0a536';
 
 /// See also [categoryDetailedStats].
 @ProviderFor(categoryDetailedStats)
@@ -176,7 +176,7 @@ final categoryDetailedStatsProvider =
 typedef CategoryDetailedStatsRef
     = AutoDisposeFutureProviderRef<Map<String, CategoryStats>>;
 String _$difficultyDetailedStatsHash() =>
-    r'e58fba5221ab50d215221475a7bc02c800b82b53';
+    r'63d986218ab69f6c7970ad2b300ad73bc5196beb';
 
 /// See also [difficultyDetailedStats].
 @ProviderFor(difficultyDetailedStats)

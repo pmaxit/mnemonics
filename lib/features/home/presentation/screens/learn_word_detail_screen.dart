@@ -11,6 +11,7 @@ import '../../../profile/domain/user_statistics.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
 import '../../../practice/domain/user_progress_service.dart';
 import '../../../home/providers.dart';
+import '../../../practice/providers/ai_mnemonic_provider.dart';
 
 class LearnWordDetailScreen extends ConsumerStatefulWidget {
   final List<VocabularyWord> words;
@@ -233,6 +234,135 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                               style: MnemonicsTypography.bodyLarge),
                           Text(word.example,
                               style: MnemonicsTypography.bodyRegular),
+                          const SizedBox(height: MnemonicsSpacing.l),
+                          // Mnemonic - special attention with prominent styling
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final aiMnemonicState =
+                                  ref.watch(aiMnemonicProvider(word.word));
+                              return Container(
+                                width: double.infinity,
+                                padding:
+                                    const EdgeInsets.all(MnemonicsSpacing.m),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      MnemonicsColors.secondaryOrange
+                                          .withOpacity(0.15),
+                                      MnemonicsColors.secondaryOrange
+                                          .withOpacity(0.05),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                      MnemonicsSpacing.radiusL),
+                                  border: Border.all(
+                                    color: MnemonicsColors.secondaryOrange
+                                        .withOpacity(0.4),
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.psychology,
+                                          color:
+                                              MnemonicsColors.secondaryOrange,
+                                          size: 22,
+                                        ),
+                                        const SizedBox(
+                                            width: MnemonicsSpacing.s),
+                                        Expanded(
+                                          child: Text(
+                                            'Memory Aid:',
+                                            style: MnemonicsTypography.bodyLarge
+                                                .copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              color: MnemonicsColors
+                                                  .secondaryOrange,
+                                            ),
+                                          ),
+                                        ),
+                                        if (_userWordData?.aiMnemonic == null &&
+                                            word.aiMnemonic == null &&
+                                            aiMnemonicState.valueOrNull ==
+                                                null &&
+                                            !aiMnemonicState.isLoading)
+                                          IconButton(
+                                            icon: const Icon(Icons.auto_awesome,
+                                                color: MnemonicsColors
+                                                    .secondaryOrange),
+                                            onPressed: () {
+                                              ref
+                                                  .read(aiMnemonicProvider(
+                                                          word.word)
+                                                      .notifier)
+                                                  .generateMnemonic(
+                                                      meaning: word.meaning);
+                                            },
+                                            tooltip: 'Generate Magic Mnemonic',
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: MnemonicsSpacing.s),
+                                    if (aiMnemonicState.isLoading)
+                                      const Center(
+                                        child: Padding(
+                                          padding: EdgeInsets.all(
+                                              MnemonicsSpacing.s),
+                                          child: CircularProgressIndicator(
+                                              color: MnemonicsColors
+                                                  .secondaryOrange),
+                                        ),
+                                      )
+                                    else if (aiMnemonicState.hasError)
+                                      Text(
+                                        'Oops! Magic spell failed. Try again.',
+                                        style: MnemonicsTypography.bodyRegular
+                                            .copyWith(
+                                          color: Colors.red,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      )
+                                    else if (_userWordData?.aiMnemonic !=
+                                            null ||
+                                        word.aiMnemonic != null ||
+                                        aiMnemonicState.valueOrNull != null ||
+                                        word.mnemonic.isNotEmpty)
+                                      Text(
+                                        _sanitizeString(
+                                            _userWordData?.aiMnemonic ??
+                                                word.aiMnemonic ??
+                                                aiMnemonicState.valueOrNull ??
+                                                word.mnemonic),
+                                        style: MnemonicsTypography.bodyLarge
+                                            .copyWith(
+                                          color:
+                                              MnemonicsColors.secondaryOrange,
+                                          fontWeight: FontWeight.w500,
+                                          height: 1.4,
+                                        ),
+                                      )
+                                    else
+                                      Text(
+                                        'No memory aid yet. Tap the magic wand above to generate a fun AI-powered mnemonic!',
+                                        style: MnemonicsTypography.bodyRegular
+                                            .copyWith(
+                                          color: MnemonicsColors.secondaryOrange
+                                              .withOpacity(0.8),
+                                          fontStyle: FontStyle.italic,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                           const SizedBox(height: MnemonicsSpacing.l),
                           // Image
                           if (word.image != null && word.image!.isNotEmpty)
@@ -596,6 +726,12 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
       // Track extended viewing duration for analytics (without affecting learning statistics)
       // This could be used for engagement metrics but doesn't count as "learned"
     }
+  }
+
+  String _sanitizeString(String text) {
+    if (text.isEmpty) return text;
+    // Replace markdown bold stars with nothing to make text normal string format
+    return text.replaceAll('**', "");
   }
 
   Future<void> _saveUserWordData() async {

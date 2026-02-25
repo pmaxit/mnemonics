@@ -30,7 +30,6 @@ class _AnimatedProgressChartState extends State<AnimatedProgressChart>
   late Animation<double> _pointsAnimation;
   late Animation<double> _gradientAnimation;
 
-  final int _hoveredIndex = -1;
   bool _isHovered = false;
 
   @override

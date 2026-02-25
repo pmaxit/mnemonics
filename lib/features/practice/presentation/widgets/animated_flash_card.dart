@@ -5,9 +5,12 @@ import '../../domain/timer_models.dart';
 import '../../../home/domain/vocabulary_word.dart';
 import '../../../home/domain/user_word_data.dart';
 import '../../../profile/domain/user_statistics.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/ai_mnemonic_provider.dart';
+
 import 'dart:math' as math;
 
-class AnimatedFlashCard extends StatefulWidget {
+class AnimatedFlashCard extends ConsumerStatefulWidget {
   final VocabularyWord word;
   final UserWordData? userWordData;
   final bool isRevealed;
@@ -28,10 +31,10 @@ class AnimatedFlashCard extends StatefulWidget {
   });
 
   @override
-  State<AnimatedFlashCard> createState() => _AnimatedFlashCardState();
+  ConsumerState<AnimatedFlashCard> createState() => _AnimatedFlashCardState();
 }
 
-class _AnimatedFlashCardState extends State<AnimatedFlashCard>
+class _AnimatedFlashCardState extends ConsumerState<AnimatedFlashCard>
     with TickerProviderStateMixin {
   late AnimationController _entryController;
   late AnimationController _flipController;
@@ -40,8 +43,6 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
   late Animation<double> _entryAnimation;
   late Animation<double> _flipAnimation;
   late Animation<double> _ratingAnimation;
-
-  bool _isFlipped = false;
 
   @override
   void initState() {
@@ -105,9 +106,6 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
   }
 
   void _flipCard() {
-    setState(() {
-      _isFlipped = true;
-    });
     _flipController.forward();
 
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -118,9 +116,6 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
   }
 
   void _resetCard() {
-    setState(() {
-      _isFlipped = false;
-    });
     _flipController.reset();
     _ratingController.reset();
   }
@@ -142,6 +137,8 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
 
   @override
   Widget build(BuildContext context) {
+    final aiMnemonicState = ref.watch(aiMnemonicProvider(widget.word.word));
+
     return AnimatedBuilder(
       animation: _entryAnimation,
       builder: (context, child) {
@@ -155,7 +152,7 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
                 Expanded(
                   child: GestureDetector(
                     onTap: widget.onTap,
-                    child: _buildCard(),
+                    child: _buildCard(aiMnemonicState),
                   ),
                 ),
 
@@ -181,7 +178,7 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
     );
   }
 
-  Widget _buildCard() {
+  Widget _buildCard(AsyncValue<String?> aiMnemonicState) {
     return AnimatedBuilder(
       animation: _flipAnimation,
       builder: (context, child) {
@@ -211,7 +208,9 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
                 width: 2,
               ),
             ),
-            child: isShowingFront ? _buildFrontContent() : _buildBackContent(),
+            child: isShowingFront
+                ? _buildFrontContent()
+                : _buildBackContent(aiMnemonicState),
           ),
         );
       },
@@ -300,7 +299,7 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
     );
   }
 
-  Widget _buildBackContent() {
+  Widget _buildBackContent(AsyncValue<String?> aiMnemonicState) {
     return Transform(
       alignment: Alignment.center,
       transform: Matrix4.identity()..rotateY(math.pi),
@@ -401,59 +400,104 @@ class _AnimatedFlashCardState extends State<AnimatedFlashCard>
             const SizedBox(height: MnemonicsSpacing.m),
 
             // Mnemonic - special attention with prominent styling
-            if (widget.word.mnemonic.isNotEmpty) ...[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(MnemonicsSpacing.m),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      MnemonicsColors.secondaryOrange.withOpacity(0.15),
-                      MnemonicsColors.secondaryOrange.withOpacity(0.05),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                  border: Border.all(
-                    color: MnemonicsColors.secondaryOrange.withOpacity(0.4),
-                    width: 2,
-                  ),
+            // Mnemonic - special attention with prominent styling
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(MnemonicsSpacing.m),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    MnemonicsColors.secondaryOrange.withOpacity(0.15),
+                    MnemonicsColors.secondaryOrange.withOpacity(0.05),
+                  ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.psychology,
-                          color: MnemonicsColors.secondaryOrange,
-                          size: 22,
-                        ),
-                        const SizedBox(width: MnemonicsSpacing.s),
-                        Text(
+                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                border: Border.all(
+                  color: MnemonicsColors.secondaryOrange.withOpacity(0.4),
+                  width: 2,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.psychology,
+                        color: MnemonicsColors.secondaryOrange,
+                        size: 22,
+                      ),
+                      const SizedBox(width: MnemonicsSpacing.s),
+                      Expanded(
+                        child: Text(
                           'Memory Aid:',
                           style: MnemonicsTypography.bodyLarge.copyWith(
                             fontWeight: FontWeight.w600,
                             color: MnemonicsColors.secondaryOrange,
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: MnemonicsSpacing.s),
+                      ),
+                      if (widget.word.aiMnemonic == null &&
+                          aiMnemonicState.valueOrNull == null &&
+                          !aiMnemonicState.isLoading)
+                        IconButton(
+                          icon: const Icon(Icons.auto_awesome,
+                              color: MnemonicsColors.secondaryOrange),
+                          onPressed: () {
+                            ref
+                                .read(aiMnemonicProvider(widget.word.word)
+                                    .notifier)
+                                .generateMnemonic(meaning: widget.word.meaning);
+                          },
+                          tooltip: 'Generate Magic Mnemonic',
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: MnemonicsSpacing.s),
+                  if (aiMnemonicState.isLoading)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(MnemonicsSpacing.s),
+                        child: CircularProgressIndicator(
+                            color: MnemonicsColors.secondaryOrange),
+                      ),
+                    )
+                  else if (aiMnemonicState.hasError)
                     Text(
-                      _sanitizeString(widget.word.mnemonic),
+                      'Oops! Magic spell failed. Try again.',
+                      style: MnemonicsTypography.bodyRegular.copyWith(
+                        color: Colors.red,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    )
+                  else if (widget.word.aiMnemonic != null ||
+                      aiMnemonicState.valueOrNull != null ||
+                      widget.word.mnemonic.isNotEmpty)
+                    Text(
+                      _sanitizeString(widget.word.aiMnemonic ??
+                          aiMnemonicState.valueOrNull ??
+                          widget.word.mnemonic),
                       style: MnemonicsTypography.bodyLarge.copyWith(
                         color: MnemonicsColors.secondaryOrange,
                         fontWeight: FontWeight.w500,
                         height: 1.4,
                       ),
+                    )
+                  else
+                    Text(
+                      'No memory aid yet. Tap the magic wand above to generate a fun AI-powered mnemonic!',
+                      style: MnemonicsTypography.bodyRegular.copyWith(
+                        color: MnemonicsColors.secondaryOrange.withOpacity(0.8),
+                        fontStyle: FontStyle.italic,
+                        height: 1.4,
+                      ),
                     ),
-                  ],
-                ),
+                ],
               ),
-              const SizedBox(height: MnemonicsSpacing.s),
-            ],
+            ),
+            const SizedBox(height: MnemonicsSpacing.s),
 
             // Synonyms and Antonyms in a row if both exist
             if (widget.word.synonyms.isNotEmpty ||

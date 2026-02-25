@@ -47,6 +47,9 @@ class UserWordData extends HiveObject {
   @HiveField(13, defaultValue: false)
   bool hasBeenTested;
 
+  @HiveField(14)
+  String? aiMnemonic;
+
   UserWordData({
     required this.word,
     this.notes = '',
@@ -62,6 +65,7 @@ class UserWordData extends HiveObject {
     this.interval = 0,
     this.repetitions = 0,
     this.hasBeenTested = false,
+    this.aiMnemonic,
   });
 
   double get accuracyRate =>
@@ -90,6 +94,7 @@ class UserWordData extends HiveObject {
         'interval': interval,
         'repetitions': repetitions,
         'hasBeenTested': hasBeenTested,
+        'aiMnemonic': aiMnemonic,
       };
 
   factory UserWordData.fromJson(Map<String, dynamic> json) => UserWordData(
@@ -117,6 +122,7 @@ class UserWordData extends HiveObject {
         interval: json['interval'] as int? ?? 0,
         repetitions: json['repetitions'] as int? ?? 0,
         hasBeenTested: json['hasBeenTested'] as bool? ?? false,
+        aiMnemonic: json['aiMnemonic'] as String?,
       );
 }
 

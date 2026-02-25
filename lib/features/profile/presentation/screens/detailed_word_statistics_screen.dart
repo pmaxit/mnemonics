@@ -851,22 +851,7 @@ class _DetailedWordStatisticsScreenState
     }
   }
 
-  double _calculateAverageAccuracy(List<WordWithUserData> words) {
-    final wordsWithData = words
-        .where((w) => w.userData != null && w.userData!.totalAnswers > 0)
-        .toList();
-    if (wordsWithData.isEmpty) return 0.0;
 
-    final totalAccuracy = wordsWithData.fold<double>(
-        0.0, (sum, w) => sum + w.userData!.accuracyRate);
-    return (totalAccuracy / wordsWithData.length) * 100;
-  }
-
-  int _countMastered(List<WordWithUserData> words) {
-    return words
-        .where((w) => w.userData?.learningStage == LearningStage.mastered)
-        .length;
-  }
 
   void _updateSort(String sortBy) {
     setState(() {

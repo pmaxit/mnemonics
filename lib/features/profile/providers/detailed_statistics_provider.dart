@@ -132,7 +132,7 @@ List<WordWithUserData> _filterByStatType(
   switch (statType) {
     case WordStatType.learned:
       return words.where((item) {
-        return item.userData?.learningStage == 'mastered' ||
+        return item.userData?.learningStage == LearningStage.mastered ||
             item.userData?.isLearned == true;
       }).toList();
 
@@ -146,7 +146,7 @@ List<WordWithUserData> _filterByStatType(
     case WordStatType.newWords:
       return words.where((item) {
         return item.userData == null ||
-            item.userData!.learningStage == 'new' ||
+            item.userData!.learningStage == LearningStage.newWord ||
             item.userData!.reviewCount == 0;
       }).toList();
 
@@ -251,7 +251,8 @@ Future<Map<String, CategoryStats>> categoryDetailedStats(
       for (final word in words) {
         final userData = userDataMap[word.word];
         if (userData != null) {
-          if (userData.learningStage == 'mastered' || userData.isLearned) {
+          if (userData.learningStage == LearningStage.mastered ||
+              userData.isLearned) {
             learnedWords++;
           }
           if (userData.totalAnswers > 0) {
@@ -340,7 +341,8 @@ Future<Map<String, DifficultyStats>> difficultyDetailedStats(
       for (final word in words) {
         final userData = userDataMap[word.word];
         if (userData != null) {
-          if (userData.learningStage == 'mastered' || userData.isLearned) {
+          if (userData.learningStage == LearningStage.mastered ||
+              userData.isLearned) {
             learnedWords++;
           }
           if (userData.totalAnswers > 0) {

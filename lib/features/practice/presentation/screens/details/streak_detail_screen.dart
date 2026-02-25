@@ -302,7 +302,6 @@ class _StreakDetailScreenState extends ConsumerState<StreakDetailScreen>
               // Calculate the date for this day of the week
               final dayOfWeek = now.weekday - 1; // Monday = 0
               final dayOffset = index - dayOfWeek;
-              final dayDate = now.add(Duration(days: dayOffset));
               
               // Check if there's activity for this day (simplified logic)
               final hasActivity = index <= dayOfWeek; // Show activity for past/current days

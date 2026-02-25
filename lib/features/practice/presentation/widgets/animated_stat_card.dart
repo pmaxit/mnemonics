@@ -307,7 +307,6 @@ class StreakCard extends StatefulWidget {
 class _StreakCardState extends State<StreakCard>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late AnimationController _fireController;
-  late Animation<double> _fireAnimation;
 
   @override
   bool get wantKeepAlive => true;
@@ -320,14 +319,6 @@ class _StreakCardState extends State<StreakCard>
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
-
-    _fireAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fireController,
-      curve: Curves.easeInOut,
-    ));
 
     // Start fire animation if streak is active
     if (widget.streakCount > 0) {
@@ -391,7 +382,6 @@ class ProgressPercentageCard extends StatefulWidget {
 class _ProgressPercentageCardState extends State<ProgressPercentageCard>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late AnimationController _progressController;
-  late Animation<double> _progressAnimation;
 
   @override
   bool get wantKeepAlive => true;
@@ -404,14 +394,6 @@ class _ProgressPercentageCardState extends State<ProgressPercentageCard>
       duration: AnimatedProgressUtils.dataAnimation,
       vsync: this,
     );
-
-    _progressAnimation = Tween<double>(
-      begin: 0.0,
-      end: widget.percentage / 100,
-    ).animate(CurvedAnimation(
-      parent: _progressController,
-      curve: Curves.easeOut,
-    ));
 
     Future.delayed(Duration(milliseconds: widget.animationDelay + 400), () {
       if (mounted) {

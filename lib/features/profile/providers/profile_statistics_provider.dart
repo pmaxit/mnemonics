@@ -177,7 +177,7 @@ ProfileStatistics calculateProfileStatistics(
 
   // Difficulty breakdown
   final difficultyStats = <String, DifficultyStats>{};
-  for (final difficulty in ['easy', 'medium', 'hard']) {
+  for (final difficultyEnum in stats.WordDifficulty.values) {
     final difficultyWords = userData.where((d) {
       final vocabWord = vocab.firstWhere(
         (v) => v.word == d.word,
@@ -192,7 +192,7 @@ ProfileStatistics calculateProfileStatistics(
           category: 'general',
         ),
       );
-      return vocabWord.difficulty == difficulty && d.hasBeenTested;
+      return vocabWord.difficulty == difficultyEnum && d.hasBeenTested;
     });
 
     final difficultyUserData = userData.where((d) {
@@ -209,7 +209,7 @@ ProfileStatistics calculateProfileStatistics(
           category: 'general',
         ),
       );
-      return vocabWord.difficulty == difficulty && d.hasBeenTested;
+      return vocabWord.difficulty == difficultyEnum && d.hasBeenTested;
     });
 
     final difficultyTotalAnswers =
@@ -220,10 +220,10 @@ ProfileStatistics calculateProfileStatistics(
         ? difficultyCorrectAnswers / difficultyTotalAnswers
         : 0.0;
 
-    difficultyStats[difficulty] = DifficultyStats(
-      difficulty: difficulty,
+    difficultyStats[difficultyEnum.displayName] = DifficultyStats(
+      difficulty: difficultyEnum.displayName,
       wordsLearned: difficultyWords.length,
-      totalWords: vocab.where((v) => v.difficulty == difficulty).length,
+      totalWords: vocab.where((v) => v.difficulty == difficultyEnum).length,
       averageAccuracy: difficultyAccuracy,
     );
   }
@@ -283,8 +283,6 @@ int _calculateCurrentStreak(
 
   if (activeDays.isEmpty) return 0;
 
-  final sortedDays = activeDays.toList()..sort((a, b) => b.compareTo(a));
-
   // Check if there's activity today or yesterday (to allow for different timezones)
   final yesterday = today.subtract(const Duration(days: 1));
   if (!activeDays.contains(today) && !activeDays.contains(yesterday)) {
@@ -338,11 +336,12 @@ int _calculateLongestStreak(
 
   for (int i = 1; i < sortedDays.length; i++) {
     final difference = sortedDays[i].difference(sortedDays[i - 1]).inDays;
+
     if (difference == 1) {
       currentStreak++;
       longestStreak =
           longestStreak > currentStreak ? longestStreak : currentStreak;
-    } else {
+    } else if (difference > 1) {
       currentStreak = 1;
     }
   }

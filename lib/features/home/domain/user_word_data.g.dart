@@ -31,13 +31,14 @@ class UserWordDataAdapter extends TypeAdapter<UserWordData> {
       interval: fields[11] == null ? 0 : fields[11] as int,
       repetitions: fields[12] == null ? 0 : fields[12] as int,
       hasBeenTested: fields[13] == null ? false : fields[13] as bool,
+      aiMnemonic: fields[14] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserWordData obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(15)
       ..writeByte(0)
       ..write(obj.word)
       ..writeByte(1)
@@ -65,7 +66,9 @@ class UserWordDataAdapter extends TypeAdapter<UserWordData> {
       ..writeByte(12)
       ..write(obj.repetitions)
       ..writeByte(13)
-      ..write(obj.hasBeenTested);
+      ..write(obj.hasBeenTested)
+      ..writeByte(14)
+      ..write(obj.aiMnemonic);
   }
 
   @override

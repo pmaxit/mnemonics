@@ -10,6 +10,7 @@ class VocabularyWord with _$VocabularyWord {
     required String word,
     required String meaning,
     required String mnemonic,
+    String? aiMnemonic,
     String? image,
     String? video,
     required String example,
@@ -20,5 +21,6 @@ class VocabularyWord with _$VocabularyWord {
     @Default(<String>[]) List<String> setIds,
   }) = _VocabularyWord;
 
-  factory VocabularyWord.fromJson(Map<String, dynamic> json) => _$VocabularyWordFromJson(json);
-} 
+  factory VocabularyWord.fromJson(Map<String, dynamic> json) =>
+      _$VocabularyWordFromJson(json);
+}
