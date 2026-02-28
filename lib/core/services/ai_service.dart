@@ -14,7 +14,7 @@ class AIService {
     if (apiKey == null || apiKey.isEmpty) {
       throw Exception('GEMINI_API_KEY is not set in .env file');
     }
-    _model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: apiKey);
+    _model = GenerativeModel(model: 'gemini-2.5-flash-lite', apiKey: apiKey);
   }
 
   Future<String> generateMnemonic({
@@ -49,6 +49,37 @@ Instructions:
     } catch (e) {
       log('Error generating mnemonic: $e');
       throw Exception('Failed to generate magic mnemonic. Please try again.');
+    }
+  }
+
+  Future<String> generateWordInsights({
+    required String word,
+  }) async {
+    final prompt = '''
+You are an expert etymologist, linguist, and pop-culture enthusiast.
+Provide deep, fascinating insights about the English vocabulary word: "$word"
+
+Return EXACTLY a valid JSON object with NO OTHER markdown or formatting (DO NOT wrap it in ```json) using the following structure:
+{
+  "origin": "Briefly describe the etymology and history of the word.",
+  "usage_contexts": "Describe typical scenarios or professional contexts where this word is commonly used.",
+  "pop_culture": "Provide 1 or 2 famous quotes, book titles, movie references, or pop-culture moments where this word is notable.",
+  "fun_fact": "One surprising or fun fact about this word."
+}
+''';
+
+    try {
+      final content = [Content.text(prompt)];
+      final response = await _model.generateContent(
+        content,
+        generationConfig:
+            GenerationConfig(responseMimeType: 'application/json'),
+      );
+
+      return response.text?.trim() ?? '{}';
+    } catch (e) {
+      log('Error generating word insights: $e');
+      throw Exception('Failed to generate word insights. Please try again.');
     }
   }
 }

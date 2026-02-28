@@ -35,6 +35,7 @@ void main() {
         UserWordData(
             word: 'dog',
             isLearned: true,
+            hasBeenTested: true,
             firstLearnedAt: now,
             lastReviewedAt: now,
             totalAnswers: 10,
@@ -42,8 +43,9 @@ void main() {
         UserWordData(
             word: 'cat',
             isLearned: true,
+            hasBeenTested: true,
             firstLearnedAt: now.subtract(const Duration(days: 1)),
-            lastReviewedAt: now,
+            lastReviewedAt: now.subtract(const Duration(days: 1)),
             totalAnswers: 5,
             correctAnswers: 5),
       ];
@@ -76,3 +78,4 @@ void main() {
     });
   });
 }
+// trigger reload

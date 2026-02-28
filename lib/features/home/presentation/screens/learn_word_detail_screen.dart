@@ -12,6 +12,7 @@ import '../../../../common/widgets/animated_wave_background.dart';
 import '../../../practice/domain/user_progress_service.dart';
 import '../../../home/providers.dart';
 import '../../../practice/providers/ai_mnemonic_provider.dart';
+import '../../../practice/providers/ai_word_insights_provider.dart';
 
 class LearnWordDetailScreen extends ConsumerStatefulWidget {
   final List<VocabularyWord> words;
@@ -456,6 +457,213 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                             ),
                           ],
                           const SizedBox(height: MnemonicsSpacing.l),
+
+                          // AI Insights Section
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final insightsState =
+                                  ref.watch(aiWordInsightsProvider(word.word));
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.explore,
+                                          color: MnemonicsColors.primaryGreen,
+                                          size: 24),
+                                      const SizedBox(width: MnemonicsSpacing.s),
+                                      Text(
+                                        'Word Explorer',
+                                        style: MnemonicsTypography.headingMedium
+                                            .copyWith(
+                                          color: MnemonicsColors.primaryGreen,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: MnemonicsSpacing.m),
+                                  if (insightsState.isLoading)
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(
+                                          MnemonicsSpacing.l),
+                                      decoration: BoxDecoration(
+                                        color: MnemonicsColors.surface,
+                                        borderRadius: BorderRadius.circular(
+                                            MnemonicsSpacing.radiusL),
+                                        border: Border.all(
+                                            color: MnemonicsColors.primaryGreen
+                                                .withOpacity(0.3)),
+                                      ),
+                                      child: const Center(
+                                        child: Column(
+                                          children: [
+                                            CircularProgressIndicator(
+                                                color: MnemonicsColors
+                                                    .primaryGreen),
+                                            SizedBox(
+                                                height: MnemonicsSpacing.m),
+                                            Text(
+                                              'Unearthing word secrets...',
+                                              style: MnemonicsTypography
+                                                  .bodyRegular,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  else if (insightsState.hasError)
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(
+                                          MnemonicsSpacing.m),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(
+                                            MnemonicsSpacing.radiusL),
+                                        border: Border.all(
+                                            color: Colors.red.withOpacity(0.3)),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.error_outline,
+                                              color: Colors
+                                                  .red), // fixed typo to Colors.red
+                                          const SizedBox(
+                                              width: MnemonicsSpacing.s),
+                                          Expanded(
+                                            child: Text(
+                                              'Failed to load insights. Tap to try again.',
+                                              style: MnemonicsTypography
+                                                  .bodyRegular
+                                                  .copyWith(color: Colors.red),
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.refresh,
+                                                color: Colors.red),
+                                            onPressed: () => ref
+                                                .read(aiWordInsightsProvider(
+                                                        word.word)
+                                                    .notifier)
+                                                .loadOrGenerateInsights(),
+                                          )
+                                        ],
+                                      ),
+                                    )
+                                  else if (insightsState.value != null)
+                                    Column(
+                                      children: [
+                                        _buildInsightCard(
+                                          icon: Icons.history_edu,
+                                          title: 'Origin & History',
+                                          content: insightsState.value!.origin,
+                                          color: Colors.amber.shade700,
+                                        ),
+                                        const SizedBox(
+                                            height: MnemonicsSpacing.m),
+                                        _buildInsightCard(
+                                          icon: Icons.chat_bubble_outline,
+                                          title: 'Usage in Context',
+                                          content: insightsState
+                                              .value!.usageContexts,
+                                          color: Colors.blue.shade600,
+                                        ),
+                                        const SizedBox(
+                                            height: MnemonicsSpacing.m),
+                                        _buildInsightCard(
+                                          icon: Icons.movie_filter_outlined,
+                                          title: 'Pop Culture',
+                                          content:
+                                              insightsState.value!.popCulture,
+                                          color: Colors.purple.shade500,
+                                        ),
+                                        const SizedBox(
+                                            height: MnemonicsSpacing.m),
+                                        _buildInsightCard(
+                                          icon: Icons.lightbulb_outline,
+                                          title: 'Fun Fact',
+                                          content: insightsState.value!.funFact,
+                                          color: Colors.teal.shade500,
+                                        ),
+                                      ],
+                                    )
+                                  else
+                                    InkWell(
+                                      onTap: () => ref
+                                          .read(
+                                              aiWordInsightsProvider(word.word)
+                                                  .notifier)
+                                          .loadOrGenerateInsights(),
+                                      borderRadius: BorderRadius.circular(
+                                          MnemonicsSpacing.radiusL),
+                                      child: Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.all(
+                                            MnemonicsSpacing.l),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              MnemonicsColors.primaryGreen
+                                                  .withOpacity(0.15),
+                                              MnemonicsColors.primaryGreen
+                                                  .withOpacity(0.05),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                              MnemonicsSpacing.radiusL),
+                                          border: Border.all(
+                                              color: MnemonicsColors
+                                                  .primaryGreen
+                                                  .withOpacity(0.5),
+                                              width: 1.5),
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            const Icon(
+                                              Icons.auto_awesome,
+                                              size: 32,
+                                              color:
+                                                  MnemonicsColors.primaryGreen,
+                                            ),
+                                            const SizedBox(
+                                                height: MnemonicsSpacing.s),
+                                            Text(
+                                              'Generate Word Insights',
+                                              style: MnemonicsTypography
+                                                  .bodyLarge
+                                                  .copyWith(
+                                                color: MnemonicsColors
+                                                    .primaryGreen,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                                height: MnemonicsSpacing.xs),
+                                            Text(
+                                              'Discover origins, pop culture references, and fun facts!',
+                                              style: MnemonicsTypography
+                                                  .bodyRegular
+                                                  .copyWith(
+                                                color: MnemonicsColors
+                                                    .primaryGreen
+                                                    .withOpacity(0.8),
+                                                fontSize: 13,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+                          const SizedBox(height: MnemonicsSpacing.l),
                           const Text('Your Notes:',
                               style: MnemonicsTypography.bodyLarge),
                           TextField(
@@ -726,6 +934,63 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
       // Track extended viewing duration for analytics (without affecting learning statistics)
       // This could be used for engagement metrics but doesn't count as "learned"
     }
+  }
+
+  Widget _buildInsightCard({
+    required IconData icon,
+    required String title,
+    required String content,
+    required Color color,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(MnemonicsSpacing.m),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
+        border: Border.all(color: color.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 18, color: color),
+              ),
+              const SizedBox(width: MnemonicsSpacing.s),
+              Text(
+                title,
+                style: MnemonicsTypography.bodyLarge.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: color.withAlpha(220),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: MnemonicsSpacing.s),
+          Text(
+            content,
+            style: MnemonicsTypography.bodyRegular.copyWith(
+              height: 1.5,
+              color: MnemonicsColors.textPrimary.withOpacity(0.85),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   String _sanitizeString(String text) {

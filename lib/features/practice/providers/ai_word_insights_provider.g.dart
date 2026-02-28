@@ -1,12 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'ai_mnemonic_provider.dart';
+part of 'ai_word_insights_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$aiMnemonicHash() => r'7264ee765c3ddd663578c1a21b89185871952099';
+String _$aiWordInsightsHash() => r'43825bc559f90314e00aff41c6da33db8425fe9f';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -29,36 +29,36 @@ class _SystemHash {
   }
 }
 
-abstract class _$AiMnemonic
-    extends BuildlessAutoDisposeNotifier<AsyncValue<String?>> {
+abstract class _$AiWordInsights
+    extends BuildlessAutoDisposeNotifier<AsyncValue<WordInsights?>> {
   late final String word;
 
-  AsyncValue<String?> build(
+  AsyncValue<WordInsights?> build(
     String word,
   );
 }
 
-/// See also [AiMnemonic].
-@ProviderFor(AiMnemonic)
-const aiMnemonicProvider = AiMnemonicFamily();
+/// See also [AiWordInsights].
+@ProviderFor(AiWordInsights)
+const aiWordInsightsProvider = AiWordInsightsFamily();
 
-/// See also [AiMnemonic].
-class AiMnemonicFamily extends Family<AsyncValue<String?>> {
-  /// See also [AiMnemonic].
-  const AiMnemonicFamily();
+/// See also [AiWordInsights].
+class AiWordInsightsFamily extends Family<AsyncValue<WordInsights?>> {
+  /// See also [AiWordInsights].
+  const AiWordInsightsFamily();
 
-  /// See also [AiMnemonic].
-  AiMnemonicProvider call(
+  /// See also [AiWordInsights].
+  AiWordInsightsProvider call(
     String word,
   ) {
-    return AiMnemonicProvider(
+    return AiWordInsightsProvider(
       word,
     );
   }
 
   @override
-  AiMnemonicProvider getProviderOverride(
-    covariant AiMnemonicProvider provider,
+  AiWordInsightsProvider getProviderOverride(
+    covariant AiWordInsightsProvider provider,
   ) {
     return call(
       provider.word,
@@ -77,30 +77,30 @@ class AiMnemonicFamily extends Family<AsyncValue<String?>> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'aiMnemonicProvider';
+  String? get name => r'aiWordInsightsProvider';
 }
 
-/// See also [AiMnemonic].
-class AiMnemonicProvider
-    extends AutoDisposeNotifierProviderImpl<AiMnemonic, AsyncValue<String?>> {
-  /// See also [AiMnemonic].
-  AiMnemonicProvider(
+/// See also [AiWordInsights].
+class AiWordInsightsProvider extends AutoDisposeNotifierProviderImpl<
+    AiWordInsights, AsyncValue<WordInsights?>> {
+  /// See also [AiWordInsights].
+  AiWordInsightsProvider(
     String word,
   ) : this._internal(
-          () => AiMnemonic()..word = word,
-          from: aiMnemonicProvider,
-          name: r'aiMnemonicProvider',
+          () => AiWordInsights()..word = word,
+          from: aiWordInsightsProvider,
+          name: r'aiWordInsightsProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$aiMnemonicHash,
-          dependencies: AiMnemonicFamily._dependencies,
+                  : _$aiWordInsightsHash,
+          dependencies: AiWordInsightsFamily._dependencies,
           allTransitiveDependencies:
-              AiMnemonicFamily._allTransitiveDependencies,
+              AiWordInsightsFamily._allTransitiveDependencies,
           word: word,
         );
 
-  AiMnemonicProvider._internal(
+  AiWordInsightsProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -113,8 +113,8 @@ class AiMnemonicProvider
   final String word;
 
   @override
-  AsyncValue<String?> runNotifierBuild(
-    covariant AiMnemonic notifier,
+  AsyncValue<WordInsights?> runNotifierBuild(
+    covariant AiWordInsights notifier,
   ) {
     return notifier.build(
       word,
@@ -122,10 +122,10 @@ class AiMnemonicProvider
   }
 
   @override
-  Override overrideWith(AiMnemonic Function() create) {
+  Override overrideWith(AiWordInsights Function() create) {
     return ProviderOverride(
       origin: this,
-      override: AiMnemonicProvider._internal(
+      override: AiWordInsightsProvider._internal(
         () => create()..word = word,
         from: from,
         name: null,
@@ -138,14 +138,14 @@ class AiMnemonicProvider
   }
 
   @override
-  AutoDisposeNotifierProviderElement<AiMnemonic, AsyncValue<String?>>
+  AutoDisposeNotifierProviderElement<AiWordInsights, AsyncValue<WordInsights?>>
       createElement() {
-    return _AiMnemonicProviderElement(this);
+    return _AiWordInsightsProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is AiMnemonicProvider && other.word == word;
+    return other is AiWordInsightsProvider && other.word == word;
   }
 
   @override
@@ -157,18 +157,18 @@ class AiMnemonicProvider
   }
 }
 
-mixin AiMnemonicRef on AutoDisposeNotifierProviderRef<AsyncValue<String?>> {
+mixin AiWordInsightsRef
+    on AutoDisposeNotifierProviderRef<AsyncValue<WordInsights?>> {
   /// The parameter `word` of this provider.
   String get word;
 }
 
-class _AiMnemonicProviderElement
-    extends AutoDisposeNotifierProviderElement<AiMnemonic, AsyncValue<String?>>
-    with AiMnemonicRef {
-  _AiMnemonicProviderElement(super.provider);
+class _AiWordInsightsProviderElement extends AutoDisposeNotifierProviderElement<
+    AiWordInsights, AsyncValue<WordInsights?>> with AiWordInsightsRef {
+  _AiWordInsightsProviderElement(super.provider);
 
   @override
-  String get word => (origin as AiMnemonicProvider).word;
+  String get word => (origin as AiWordInsightsProvider).word;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
