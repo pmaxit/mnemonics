@@ -30,6 +30,10 @@ _$ProfileStatisticsImpl _$$ProfileStatisticsImplFromJson(
       joinDate: json['joinDate'] == null
           ? null
           : DateTime.parse(json['joinDate'] as String),
+      lastStudyDate: json['lastStudyDate'] == null
+          ? null
+          : DateTime.parse(json['lastStudyDate'] as String),
+      masteredCategories: (json['masteredCategories'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$$ProfileStatisticsImplToJson(
@@ -48,6 +52,8 @@ Map<String, dynamic> _$$ProfileStatisticsImplToJson(
       'difficultyStats': instance.difficultyStats,
       'milestones': instance.milestones,
       'joinDate': instance.joinDate?.toIso8601String(),
+      'lastStudyDate': instance.lastStudyDate?.toIso8601String(),
+      'masteredCategories': instance.masteredCategories,
     };
 
 _$CategoryStatsImpl _$$CategoryStatsImplFromJson(Map<String, dynamic> json) =>

@@ -34,6 +34,8 @@ mixin _$ProfileStatistics {
       throw _privateConstructorUsedError;
   List<Milestone> get milestones => throw _privateConstructorUsedError;
   DateTime? get joinDate => throw _privateConstructorUsedError;
+  DateTime? get lastStudyDate => throw _privateConstructorUsedError;
+  int get masteredCategories => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -60,7 +62,9 @@ abstract class $ProfileStatisticsCopyWith<$Res> {
       List<CategoryStats> categoryStats,
       List<DifficultyStats> difficultyStats,
       List<Milestone> milestones,
-      DateTime? joinDate});
+      DateTime? joinDate,
+      DateTime? lastStudyDate,
+      int masteredCategories});
 }
 
 /// @nodoc
@@ -89,6 +93,8 @@ class _$ProfileStatisticsCopyWithImpl<$Res, $Val extends ProfileStatistics>
     Object? difficultyStats = null,
     Object? milestones = null,
     Object? joinDate = freezed,
+    Object? lastStudyDate = freezed,
+    Object? masteredCategories = null,
   }) {
     return _then(_value.copyWith(
       totalWordsLearned: null == totalWordsLearned
@@ -143,6 +149,14 @@ class _$ProfileStatisticsCopyWithImpl<$Res, $Val extends ProfileStatistics>
           ? _value.joinDate
           : joinDate // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      lastStudyDate: freezed == lastStudyDate
+          ? _value.lastStudyDate
+          : lastStudyDate // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      masteredCategories: null == masteredCategories
+          ? _value.masteredCategories
+          : masteredCategories // ignore: cast_nullable_to_non_nullable
+              as int,
     ) as $Val);
   }
 }
@@ -168,7 +182,9 @@ abstract class _$$ProfileStatisticsImplCopyWith<$Res>
       List<CategoryStats> categoryStats,
       List<DifficultyStats> difficultyStats,
       List<Milestone> milestones,
-      DateTime? joinDate});
+      DateTime? joinDate,
+      DateTime? lastStudyDate,
+      int masteredCategories});
 }
 
 /// @nodoc
@@ -195,6 +211,8 @@ class __$$ProfileStatisticsImplCopyWithImpl<$Res>
     Object? difficultyStats = null,
     Object? milestones = null,
     Object? joinDate = freezed,
+    Object? lastStudyDate = freezed,
+    Object? masteredCategories = null,
   }) {
     return _then(_$ProfileStatisticsImpl(
       totalWordsLearned: null == totalWordsLearned
@@ -249,6 +267,14 @@ class __$$ProfileStatisticsImplCopyWithImpl<$Res>
           ? _value.joinDate
           : joinDate // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      lastStudyDate: freezed == lastStudyDate
+          ? _value.lastStudyDate
+          : lastStudyDate // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      masteredCategories: null == masteredCategories
+          ? _value.masteredCategories
+          : masteredCategories // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -269,7 +295,9 @@ class _$ProfileStatisticsImpl implements _ProfileStatistics {
       required final List<CategoryStats> categoryStats,
       required final List<DifficultyStats> difficultyStats,
       required final List<Milestone> milestones,
-      this.joinDate})
+      this.joinDate,
+      this.lastStudyDate,
+      this.masteredCategories = 0})
       : _categoryStats = categoryStats,
         _difficultyStats = difficultyStats,
         _milestones = milestones;
@@ -321,10 +349,15 @@ class _$ProfileStatisticsImpl implements _ProfileStatistics {
 
   @override
   final DateTime? joinDate;
+  @override
+  final DateTime? lastStudyDate;
+  @override
+  @JsonKey()
+  final int masteredCategories;
 
   @override
   String toString() {
-    return 'ProfileStatistics(totalWordsLearned: $totalWordsLearned, wordsLearnedToday: $wordsLearnedToday, wordsLearnedThisWeek: $wordsLearnedThisWeek, currentStreak: $currentStreak, longestStreak: $longestStreak, totalStudyTimeMinutes: $totalStudyTimeMinutes, averageAccuracy: $averageAccuracy, studySessionsThisWeek: $studySessionsThisWeek, learningVelocity: $learningVelocity, categoryStats: $categoryStats, difficultyStats: $difficultyStats, milestones: $milestones, joinDate: $joinDate)';
+    return 'ProfileStatistics(totalWordsLearned: $totalWordsLearned, wordsLearnedToday: $wordsLearnedToday, wordsLearnedThisWeek: $wordsLearnedThisWeek, currentStreak: $currentStreak, longestStreak: $longestStreak, totalStudyTimeMinutes: $totalStudyTimeMinutes, averageAccuracy: $averageAccuracy, studySessionsThisWeek: $studySessionsThisWeek, learningVelocity: $learningVelocity, categoryStats: $categoryStats, difficultyStats: $difficultyStats, milestones: $milestones, joinDate: $joinDate, lastStudyDate: $lastStudyDate, masteredCategories: $masteredCategories)';
   }
 
   @override
@@ -357,7 +390,11 @@ class _$ProfileStatisticsImpl implements _ProfileStatistics {
             const DeepCollectionEquality()
                 .equals(other._milestones, _milestones) &&
             (identical(other.joinDate, joinDate) ||
-                other.joinDate == joinDate));
+                other.joinDate == joinDate) &&
+            (identical(other.lastStudyDate, lastStudyDate) ||
+                other.lastStudyDate == lastStudyDate) &&
+            (identical(other.masteredCategories, masteredCategories) ||
+                other.masteredCategories == masteredCategories));
   }
 
   @JsonKey(ignore: true)
@@ -376,7 +413,9 @@ class _$ProfileStatisticsImpl implements _ProfileStatistics {
       const DeepCollectionEquality().hash(_categoryStats),
       const DeepCollectionEquality().hash(_difficultyStats),
       const DeepCollectionEquality().hash(_milestones),
-      joinDate);
+      joinDate,
+      lastStudyDate,
+      masteredCategories);
 
   @JsonKey(ignore: true)
   @override
@@ -407,7 +446,9 @@ abstract class _ProfileStatistics implements ProfileStatistics {
       required final List<CategoryStats> categoryStats,
       required final List<DifficultyStats> difficultyStats,
       required final List<Milestone> milestones,
-      final DateTime? joinDate}) = _$ProfileStatisticsImpl;
+      final DateTime? joinDate,
+      final DateTime? lastStudyDate,
+      final int masteredCategories}) = _$ProfileStatisticsImpl;
 
   factory _ProfileStatistics.fromJson(Map<String, dynamic> json) =
       _$ProfileStatisticsImpl.fromJson;
@@ -438,6 +479,10 @@ abstract class _ProfileStatistics implements ProfileStatistics {
   List<Milestone> get milestones;
   @override
   DateTime? get joinDate;
+  @override
+  DateTime? get lastStudyDate;
+  @override
+  int get masteredCategories;
   @override
   @JsonKey(ignore: true)
   _$$ProfileStatisticsImplCopyWith<_$ProfileStatisticsImpl> get copyWith =>

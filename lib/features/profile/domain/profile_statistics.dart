@@ -19,9 +19,12 @@ class ProfileStatistics with _$ProfileStatistics {
     required List<DifficultyStats> difficultyStats,
     required List<Milestone> milestones,
     DateTime? joinDate,
+    DateTime? lastStudyDate,
+    @Default(0) int masteredCategories,
   }) = _ProfileStatistics;
 
-  factory ProfileStatistics.fromJson(Map<String, dynamic> json) => _$ProfileStatisticsFromJson(json);
+  factory ProfileStatistics.fromJson(Map<String, dynamic> json) =>
+      _$ProfileStatisticsFromJson(json);
 }
 
 @freezed
@@ -33,7 +36,8 @@ class CategoryStats with _$CategoryStats {
     required double averageAccuracy,
   }) = _CategoryStats;
 
-  factory CategoryStats.fromJson(Map<String, dynamic> json) => _$CategoryStatsFromJson(json);
+  factory CategoryStats.fromJson(Map<String, dynamic> json) =>
+      _$CategoryStatsFromJson(json);
 }
 
 @freezed
@@ -45,7 +49,8 @@ class DifficultyStats with _$DifficultyStats {
     required double averageAccuracy,
   }) = _DifficultyStats;
 
-  factory DifficultyStats.fromJson(Map<String, dynamic> json) => _$DifficultyStatsFromJson(json);
+  factory DifficultyStats.fromJson(Map<String, dynamic> json) =>
+      _$DifficultyStatsFromJson(json);
 }
 
 @freezed
@@ -61,7 +66,8 @@ class Milestone with _$Milestone {
     DateTime? unlockedAt,
   }) = _Milestone;
 
-  factory Milestone.fromJson(Map<String, dynamic> json) => _$MilestoneFromJson(json);
+  factory Milestone.fromJson(Map<String, dynamic> json) =>
+      _$MilestoneFromJson(json);
 }
 
 enum MilestoneType {

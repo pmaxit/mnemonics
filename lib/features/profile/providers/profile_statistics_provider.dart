@@ -56,7 +56,10 @@ ProfileStatistics calculateProfileStatistics(
   final today = DateTime(now.year, now.month, now.day);
 
   // Basic Statistics
-  final totalWordsLearned = userData.where((d) => d.hasBeenTested).length;
+  // A word is considered "learned" if the user has tested it, explicitly marked it learned, or reviewed it at least once.
+  final totalWordsLearned = userData
+      .where((d) => d.hasBeenTested || d.isLearned || d.reviewCount > 0)
+      .length;
   final wordsLearnedToday = userData
       .where((d) =>
           d.hasBeenTested &&
@@ -111,7 +114,8 @@ ProfileStatistics calculateProfileStatistics(
 
   // Category breakdown
   final categoryStats = <String, CategoryStats>{};
-  for (final userWord in userData.where((d) => d.hasBeenTested)) {
+  for (final userWord in userData
+      .where((d) => d.hasBeenTested || d.isLearned || d.reviewCount > 0)) {
     final vocabWord = vocab.firstWhere(
       (v) => v.word == userWord.word,
       orElse: () => VocabularyWord(
@@ -157,7 +161,8 @@ ProfileStatistics calculateProfileStatistics(
           category: 'general',
         ),
       );
-      return vocabWord.category == category && d.hasBeenTested;
+      return vocabWord.category == category &&
+          (d.hasBeenTested || d.isLearned || d.reviewCount > 0);
     });
 
     if (categoryUserData.isNotEmpty) {
@@ -192,7 +197,8 @@ ProfileStatistics calculateProfileStatistics(
           category: 'general',
         ),
       );
-      return vocabWord.difficulty == difficultyEnum && d.hasBeenTested;
+      return vocabWord.difficulty == difficultyEnum &&
+          (d.hasBeenTested || d.isLearned || d.reviewCount > 0);
     });
 
     final difficultyUserData = userData.where((d) {
@@ -209,7 +215,8 @@ ProfileStatistics calculateProfileStatistics(
           category: 'general',
         ),
       );
-      return vocabWord.difficulty == difficultyEnum && d.hasBeenTested;
+      return vocabWord.difficulty == difficultyEnum &&
+          (d.hasBeenTested || d.isLearned || d.reviewCount > 0);
     });
 
     final difficultyTotalAnswers =
@@ -232,6 +239,30 @@ ProfileStatistics calculateProfileStatistics(
   final milestones = _calculateMilestones(
       totalWordsLearned, currentStreak, totalStudyTimeMinutes);
 
+  // Calculate lastStudyDate
+  DateTime? lastStudyDate;
+  final allStudyDates = userData
+      .where((d) => d.hasBeenTested && d.lastReviewedAt != null)
+      .map((d) => d.lastReviewedAt!)
+      .toList();
+
+  if (reviewActivities.isNotEmpty) {
+    allStudyDates.addAll(reviewActivities.map((a) => a.reviewedAt));
+  }
+
+  if (allStudyDates.isNotEmpty) {
+    allStudyDates.sort((a, b) => b.compareTo(a));
+    lastStudyDate = allStudyDates.first;
+  }
+
+  // Calculate mastered categories
+  int masteredCategories = 0;
+  for (final stat in categoryStats.values) {
+    if (stat.totalWords > 0 && stat.wordsLearned >= stat.totalWords) {
+      masteredCategories++;
+    }
+  }
+
   return ProfileStatistics(
     totalWordsLearned: totalWordsLearned,
     wordsLearnedToday: wordsLearnedToday,
@@ -246,6 +277,8 @@ ProfileStatistics calculateProfileStatistics(
     difficultyStats: difficultyStats.values.toList(),
     milestones: milestones,
     joinDate: userInfo?.joinedDate ?? _calculateJoinDate(userData),
+    lastStudyDate: lastStudyDate,
+    masteredCategories: masteredCategories,
   );
 }
 

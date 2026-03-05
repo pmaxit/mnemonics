@@ -82,6 +82,35 @@ Return EXACTLY a valid JSON object with NO OTHER markdown or formatting (DO NOT 
       throw Exception('Failed to generate word insights. Please try again.');
     }
   }
+
+  Future<String> generateTreeWisdom({
+    required int totalLearned,
+    required double accuracy,
+    required int streak,
+  }) async {
+    final prompt = '''
+You are the ancient, wise "Tree Spirit of Knowledge". A student is growing a virtual Knowledge Tree by learning vocabulary words.
+
+Their current stats:
+- Words Learned: $totalLearned
+- Accuracy: ${(accuracy * 100).toStringAsFixed(1)}%
+- Current Streak: $streak days
+
+Write a SINGLE, mystical, encouraging sentence (max 20 words) as if the Tree itself is speaking to them. 
+Acknowledge their effort or their stats, but keep it poetic and magical.
+Return ONLY the sentence, nothing else.
+''';
+
+    try {
+      final content = [Content.text(prompt)];
+      final response = await _model.generateContent(content);
+      return response.text?.replaceAll('"', '').trim() ??
+          'The roots run deep, but your potential reaches higher.';
+    } catch (e) {
+      log('Error generating tree wisdom: $e');
+      return 'The wind rustles the leaves, whispering of untold words yet to be learned.';
+    }
+  }
 }
 
 @riverpod

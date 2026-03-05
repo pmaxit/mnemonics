@@ -6,6 +6,7 @@ import 'features/home/presentation/screens/learn_word_detail_screen.dart';
 import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/home/presentation/screens/main_scaffold.dart';
 import 'features/home/presentation/screens/home_screen.dart';
+import 'features/home/presentation/screens/knowledge_tree_detail_screen.dart';
 import 'features/practice/presentation/screens/practice_screen.dart';
 import 'features/practice/presentation/screens/learning_session_screen.dart';
 import 'features/practice/presentation/screens/details/streak_detail_screen.dart';
@@ -24,6 +25,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/knowledge-tree',
+        builder: (context, state) => const KnowledgeTreeDetailScreen(),
       ),
       GoRoute(
         path: '/word-list/:setId',
@@ -65,7 +70,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           final extra = state.extra as Map<String, dynamic>?;
           final words = extra?['words'] as List<VocabularyWord>? ?? [];
           final initialIndex = extra?['initialIndex'] as int? ?? 0;
-          return LearnWordDetailScreen(words: words, initialIndex: initialIndex);
+          return LearnWordDetailScreen(
+              words: words, initialIndex: initialIndex);
         },
       ),
       // Practice detail screens
@@ -104,9 +110,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final type = state.pathParameters['type']!;
           final filter = state.pathParameters['filter']!;
-          return BreakdownDetailScreen(breakdownType: type, filterValue: filter);
+          return BreakdownDetailScreen(
+              breakdownType: type, filterValue: filter);
         },
       ),
     ],
   );
-}); 
+});

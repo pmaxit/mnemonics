@@ -10,6 +10,8 @@ import 'dart:math';
 import '../../../../common/widgets/animated_wave_background.dart';
 import '../../../profile/providers/user_info_provider.dart';
 import '../../../profile/domain/user_info.dart';
+import '../widgets/knowledge_tree_widget.dart';
+import '../../../profile/providers/profile_statistics_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -378,6 +380,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final wordSetsAsync = ref.watch(wordSetListProvider);
+    final statsAsync = ref
+        .watch(profileStatisticsProvider); // Fetch real user stats for the Tree
     final screenHeight = MediaQuery.of(context).size.height;
     final themeMode = ref.watch(themeNotifierProvider);
     final isDarkMode = themeMode == ThemeMode.dark ||
@@ -411,9 +415,128 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 error: (e, _) => Center(child: Text('Error: $e')),
                 data: (sets) {
                   return ListView(
-                    padding: const EdgeInsets.all(MnemonicsSpacing.m),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: MnemonicsSpacing.m),
                     children: [
-                      const SizedBox(height: MnemonicsSpacing.s),
+                      // Knowledge Tree Header Widget
+                      statsAsync.when(
+                        data: (stats) {
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                                bottom: MnemonicsSpacing.l),
+                            child: KnowledgeTreeWidget(
+                              totalLearned: stats.totalWordsLearned,
+                              daysSinceLastPractice: stats.lastStudyDate != null
+                                  ? DateTime.now()
+                                      .difference(stats.lastStudyDate!)
+                                      .inDays
+                                  : 0,
+                              masteredCategoriesCount: stats.masteredCategories,
+                              onTreeTapped: () {
+                                // Will trigger Tree Whisperer AI insight modal
+                              },
+                            ),
+                          );
+                        },
+                        loading: () => const SizedBox(
+                            height: 250,
+                            child: Center(child: CircularProgressIndicator())),
+                        error: (_, __) => const SizedBox.shrink(),
+                      ),
+
+                      // Smart Pathfinding (Next Category Suggestion)
+                      statsAsync.when(
+                        data: (stats) {
+                          if (stats.categoryStats.isEmpty)
+                            return const SizedBox.shrink();
+
+                          // Find category with lowest accuracy or least learned words
+                          var suggestedCategory = stats.categoryStats.first;
+                          for (var cat in stats.categoryStats) {
+                            if (cat.wordsLearned < cat.totalWords &&
+                                (cat.averageAccuracy <
+                                        suggestedCategory.averageAccuracy ||
+                                    suggestedCategory.wordsLearned >=
+                                        suggestedCategory.totalWords)) {
+                              suggestedCategory = cat;
+                            }
+                          }
+
+                          if (suggestedCategory.wordsLearned >=
+                              suggestedCategory.totalWords) {
+                            return const SizedBox.shrink(); // All mastered!
+                          }
+
+                          return Container(
+                            margin: const EdgeInsets.only(
+                                bottom: MnemonicsSpacing.xl),
+                            padding: const EdgeInsets.all(MnemonicsSpacing.m),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  MnemonicsColors.primaryGreen.withOpacity(0.1),
+                                  Colors.transparent,
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(
+                                  MnemonicsSpacing.radiusL),
+                              border: Border.all(
+                                  color: MnemonicsColors.primaryGreen
+                                      .withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.assistant_direction,
+                                    color: MnemonicsColors.primaryGreen,
+                                    size: 32),
+                                const SizedBox(width: MnemonicsSpacing.m),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Tree Needs Nutrients!',
+                                        style: MnemonicsTypography.bodyLarge
+                                            .copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: MnemonicsColors
+                                                    .primaryGreen),
+                                      ),
+                                      Text(
+                                        'Let\'s conquer "${suggestedCategory.categoryName}" next.',
+                                        style: MnemonicsTypography.bodyRegular,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    // Normally navigate to practice with this category filter
+                                    GoRouter.of(context).push('/learn');
+                                  },
+                                  icon: const Icon(Icons.arrow_forward_ios,
+                                      color: MnemonicsColors.primaryGreen,
+                                      size: 16),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
+                      ),
+
+                      Text(
+                        'Your Vocab Sets',
+                        style: MnemonicsTypography.headingMedium.copyWith(
+                          color: isDarkMode
+                              ? Colors.white
+                              : MnemonicsColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: MnemonicsSpacing.m),
+
                       ...sets.asMap().entries.map((entry) {
                         final index = entry.key;
                         final set = entry.value;
@@ -429,6 +552,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           index: index,
                         );
                       }),
+                      const SizedBox(height: MnemonicsSpacing.xl),
                     ],
                   );
                 },
