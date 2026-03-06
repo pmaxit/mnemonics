@@ -26,21 +26,24 @@ def generate_image_for_word(word):
     
     try:
         # Construct a prompt for a vocabulary word
-        prompt = f"A beautiful, artistic illustration that clearly represents the vocabulary word '{word}'. The image should be memorable, vibrant, and help someone remember the meaning of the word without containing any text."
+        prompt = (
+            f"Create a 4-panel comic strip (four rectangular panels in a grid) that tells a short, realistic "
+            f"story to explain the vocabulary word '{word}'. The comic should visually depict a scene and realistic "
+            f"usage of the word '{word}' to help someone remember its meaning. Use a clear, engaging comic book style. "
+            f"Do not include any text or speech bubbles in the images."
+        )
         
         # Use the nano banana model (gemini-2.5-flash-image)
-        result = client.models.generate_images(
+        # Note: gemini-2.5 models use generate_content, not generate_images
+        result = client.models.generate_content(
             model='gemini-2.5-flash-image',
-            prompt=prompt,
-            config=types.GenerateImagesConfig(
-                number_of_images=1,
-                aspect_ratio="1:1",
-                output_mime_type="image/jpeg",
-                person_generation="ALLOW_ADULT"
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_modalities=["IMAGE"],
             )
         )
         
-        if not result.generated_images:
+        if not result.candidates or not result.candidates[0].content.parts:
             print("No image was generated.")
             return
 
@@ -51,13 +54,14 @@ def generate_image_for_word(word):
         output_file = os.path.join(output_dir, f"{word.lower().replace(' ', '_')}.jpg")
         
         # Save the image
-        for generated_image in result.generated_images:
-            image = generated_image.image
-            
+        part = result.candidates[0].content.parts[0]
+        if hasattr(part, 'inline_data') and part.inline_data:
+            image_bytes = part.inline_data.data
             with open(output_file, 'wb') as f:
-                f.write(image.image_bytes)
-                
+                f.write(image_bytes)
             print(f"Successfully saved image for '{word}' to: {output_file}")
+        else:
+            print("No image data found in response parts.")
             
     except Exception as e:
         print(f"Error generating image: {e}")

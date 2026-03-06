@@ -436,9 +436,8 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                   MnemonicsSpacing.radiusL),
                               child: Image.network(
                                 word.image!,
-                                height: 160,
                                 width: double.infinity,
-                                fit: BoxFit.cover,
+                                fit: BoxFit.fitWidth,
                                 errorBuilder: (context, error, stackTrace) =>
                                     Container(
                                   height: 160,
@@ -468,6 +467,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                             ),
                           const SizedBox(height: MnemonicsSpacing.m),
                           // Video Player
+                          /*
                           if (word.video != null &&
                               word.video!.isNotEmpty &&
                               _chewieController != null)
@@ -499,6 +499,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                             ),
                           if (word.video != null && word.video!.isNotEmpty)
                             const SizedBox(height: MnemonicsSpacing.m),
+                          */
                           if (word.synonyms.isNotEmpty) ...[
                             const Text('Synonyms:',
                                 style: MnemonicsTypography.bodyLarge),

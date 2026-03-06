@@ -25,7 +25,9 @@ mixin _$VocabularyWord {
   String get mnemonic => throw _privateConstructorUsedError;
   String? get aiMnemonic => throw _privateConstructorUsedError;
   String? get aiInsights => throw _privateConstructorUsedError;
+  @JsonKey(name: 'imageUrl')
   String? get image => throw _privateConstructorUsedError;
+  @JsonKey(name: 'videoUrl')
   String? get video => throw _privateConstructorUsedError;
   String get example => throw _privateConstructorUsedError;
   List<String> get synonyms => throw _privateConstructorUsedError;
@@ -52,8 +54,8 @@ abstract class $VocabularyWordCopyWith<$Res> {
       String mnemonic,
       String? aiMnemonic,
       String? aiInsights,
-      String? image,
-      String? video,
+      @JsonKey(name: 'imageUrl') String? image,
+      @JsonKey(name: 'videoUrl') String? video,
       String example,
       List<String> synonyms,
       List<String> antonyms,
@@ -160,8 +162,8 @@ abstract class _$$VocabularyWordImplCopyWith<$Res>
       String mnemonic,
       String? aiMnemonic,
       String? aiInsights,
-      String? image,
-      String? video,
+      @JsonKey(name: 'imageUrl') String? image,
+      @JsonKey(name: 'videoUrl') String? video,
       String example,
       List<String> synonyms,
       List<String> antonyms,
@@ -261,8 +263,8 @@ class _$VocabularyWordImpl implements _VocabularyWord {
       required this.mnemonic,
       this.aiMnemonic,
       this.aiInsights,
-      this.image,
-      this.video,
+      @JsonKey(name: 'imageUrl') this.image,
+      @JsonKey(name: 'videoUrl') this.video,
       required this.example,
       required final List<String> synonyms,
       required final List<String> antonyms,
@@ -287,8 +289,10 @@ class _$VocabularyWordImpl implements _VocabularyWord {
   @override
   final String? aiInsights;
   @override
+  @JsonKey(name: 'imageUrl')
   final String? image;
   @override
+  @JsonKey(name: 'videoUrl')
   final String? video;
   @override
   final String example;
@@ -391,8 +395,8 @@ abstract class _VocabularyWord implements VocabularyWord {
       required final String mnemonic,
       final String? aiMnemonic,
       final String? aiInsights,
-      final String? image,
-      final String? video,
+      @JsonKey(name: 'imageUrl') final String? image,
+      @JsonKey(name: 'videoUrl') final String? video,
       required final String example,
       required final List<String> synonyms,
       required final List<String> antonyms,
@@ -414,8 +418,10 @@ abstract class _VocabularyWord implements VocabularyWord {
   @override
   String? get aiInsights;
   @override
+  @JsonKey(name: 'imageUrl')
   String? get image;
   @override
+  @JsonKey(name: 'videoUrl')
   String? get video;
   @override
   String get example;
