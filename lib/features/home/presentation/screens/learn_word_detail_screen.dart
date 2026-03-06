@@ -170,6 +170,41 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     }
   }
 
+  Future<void> _fetchCloudLearnedStatus(String word) async {
+    try {
+      final response = await http.get(Uri.parse(
+          'https://mnemonics-api-1078980357394.us-central1.run.app/learned_status/default/$word'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (mounted) {
+          setState(() {
+            _isLearned = data['is_learned'] as bool? ?? false;
+          });
+        }
+      }
+    } catch (e) {
+      print('Failed to fetch learned status: $e');
+    }
+  }
+
+  Future<void> _saveCloudLearnedStatus(bool learned) async {
+    final word = widget.words[_currentIndex].word;
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'https://mnemonics-api-1078980357394.us-central1.run.app/learned_status/default/$word'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'is_learned': learned}),
+      );
+      if (response.statusCode != 200) {
+        print(
+            'Failed to save learned status to cloud. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Failed to save cloud learned status: $e');
+    }
+  }
+
   Future<void> _loadHindiMeaning(String englishMeaning) async {
     setState(() {
       _hindiMeaning = null;
@@ -210,6 +245,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     });
 
     _fetchCloudNotes(word);
+    _fetchCloudLearnedStatus(word);
 
     // Initialize video player if video URL exists
     await _initializeVideo();
@@ -318,6 +354,18 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          LearnedSlider(
+                            isLearned: _isLearned,
+                            onChanged: (val) {
+                              setState(() {
+                                _isLearned = val;
+                              });
+                              _saveUserWordData(); // save locally and continue workflow
+                              _saveCloudLearnedStatus(
+                                  val); // save to mysql cloud db
+                            },
+                          ),
+                          const SizedBox(height: MnemonicsSpacing.l),
                           Text(word.word,
                               style: MnemonicsTypography.headingLarge),
                           const SizedBox(height: MnemonicsSpacing.m),
@@ -684,20 +732,6 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                             ),
                           ],
                           const SizedBox(height: MnemonicsSpacing.m),
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: _isLearned,
-                                onChanged: (val) {
-                                  setState(() {
-                                    _isLearned = val ?? false;
-                                  });
-                                  _saveUserWordData();
-                                },
-                              ),
-                              const Text('Mark as Learned'),
-                            ],
-                          ),
                           const SizedBox(height: MnemonicsSpacing.m),
                           _buildProgressInfo(),
                           const SizedBox(height: MnemonicsSpacing.m),
@@ -1218,6 +1252,102 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
           ),
         );
       },
+    );
+  }
+}
+
+class LearnedSlider extends StatelessWidget {
+  final bool isLearned;
+  final ValueChanged<bool> onChanged;
+
+  const LearnedSlider(
+      {Key? key, required this.isLearned, required this.onChanged})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onChanged(!isLearned),
+      onHorizontalDragEnd: (details) {
+        if (details.primaryVelocity! > 0 && !isLearned) {
+          onChanged(true);
+        } else if (details.primaryVelocity! < 0 && isLearned) {
+          onChanged(false);
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        width: double.infinity,
+        height: 60,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          gradient: LinearGradient(
+            colors: isLearned
+                ? [
+                    MnemonicsColors.primaryGreen,
+                    MnemonicsColors.primaryGreen.withOpacity(0.7)
+                  ]
+                : [Colors.grey.shade300, Colors.grey.shade400],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isLearned
+                  ? MnemonicsColors.primaryGreen.withOpacity(0.4)
+                  : Colors.black12,
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Align(
+              alignment:
+                  isLearned ? Alignment.centerLeft : Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Text(
+                  isLearned ? 'LEARNED' : 'UNLEARNED',
+                  style: MnemonicsTypography.headingMedium.copyWith(
+                    color: isLearned ? Colors.white : Colors.grey.shade600,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+            ),
+            AnimatedAlign(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              alignment:
+                  isLearned ? Alignment.centerRight : Alignment.centerLeft,
+              child: Container(
+                margin: const EdgeInsets.all(4),
+                width: 52,
+                height: 52,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  isLearned ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: isLearned
+                      ? MnemonicsColors.primaryGreen
+                      : Colors.grey.shade500,
+                  size: 32,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

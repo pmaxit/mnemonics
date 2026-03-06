@@ -81,6 +81,39 @@ def save_notes(word):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/learned_status/<user_id>/<word>', methods=['GET'])
+def get_learned_status(user_id, word):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT is_learned FROM UserLearnedWords WHERE user_id = %s AND word = %s", (user_id, word))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if row:
+            return jsonify({"is_learned": bool(row['is_learned'])})
+        return jsonify({"is_learned": False})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/learned_status/<user_id>/<word>', methods=['POST'])
+def save_learned_status(user_id, word):
+    data = request.json
+    is_learned = data.get('is_learned', False)
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+        INSERT INTO UserLearnedWords (user_id, word, is_learned) VALUES (%s, %s, %s)
+        ON DUPLICATE KEY UPDATE is_learned = %s
+        ''', (user_id, word, is_learned, is_learned))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     # Run locally on a specified port
     port = int(os.environ.get("PORT", 8080))
