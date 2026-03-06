@@ -9,6 +9,17 @@ import '../../../profile/domain/user_statistics.dart';
 import 'package:go_router/go_router.dart';
 import '../../infrastructure/word_set_repository.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+enum SortOption {
+  alphabeticalAsc,
+  alphabeticalDesc,
+  difficultyEasyFirst,
+  difficultyHardFirst,
+  learnedFirst,
+  unlearnedFirst,
+}
 
 class LearnWordListScreen extends ConsumerStatefulWidget {
   final String setId;
@@ -24,6 +35,8 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
   String _search = '';
   String? _difficulty;
   String? _category;
+  SortOption _sortOption = SortOption.alphabeticalAsc;
+  Set<String> _learnedWords = {};
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -51,6 +64,24 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
       curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
     ));
     _animationController.forward();
+    _fetchLearnedWords();
+  }
+
+  Future<void> _fetchLearnedWords() async {
+    try {
+      final response = await http.get(Uri.parse(
+          'https://mnemonics-api-1078980357394.us-central1.run.app/learned_status/default'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (mounted) {
+          setState(() {
+            _learnedWords = Set<String>.from(data['learned_words'] ?? []);
+          });
+        }
+      }
+    } catch (e) {
+      print('Failed to fetch learned status for sorting: $e');
+    }
   }
 
   @override
@@ -81,6 +112,30 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
           matchesDifficulty &&
           matchesCategory;
     }).toList();
+
+    // Apply sorting
+    filtered.sort((a, b) {
+      switch (_sortOption) {
+        case SortOption.alphabeticalAsc:
+          return a.word.toLowerCase().compareTo(b.word.toLowerCase());
+        case SortOption.alphabeticalDesc:
+          return b.word.toLowerCase().compareTo(a.word.toLowerCase());
+        case SortOption.difficultyEasyFirst:
+          return a.difficulty.index.compareTo(b.difficulty.index);
+        case SortOption.difficultyHardFirst:
+          return b.difficulty.index.compareTo(a.difficulty.index);
+        case SortOption.learnedFirst:
+          final aLearned = _learnedWords.contains(a.word) ? 0 : 1;
+          final bLearned = _learnedWords.contains(b.word) ? 0 : 1;
+          if (aLearned != bLearned) return aLearned.compareTo(bLearned);
+          return a.word.toLowerCase().compareTo(b.word.toLowerCase());
+        case SortOption.unlearnedFirst:
+          final aLearned = _learnedWords.contains(a.word) ? 1 : 0;
+          final bLearned = _learnedWords.contains(b.word) ? 1 : 0;
+          if (aLearned != bLearned) return aLearned.compareTo(bLearned);
+          return a.word.toLowerCase().compareTo(b.word.toLowerCase());
+      }
+    });
     final difficulties = vocabList.map((w) => w.difficulty).toSet().toList();
     final categories = vocabList.map((w) => w.category).toSet().toList();
     final accentColors = [
@@ -177,6 +232,66 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
                       ),
                     ),
                     onChanged: (value) => setState(() => _search = value),
+                  ),
+                ),
+
+                // Sorting UI
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: MnemonicsSpacing.m),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${filtered.length} words',
+                        style: MnemonicsTypography.bodyRegular.copyWith(
+                          color: isDarkMode
+                              ? MnemonicsColors.darkTextSecondary
+                              : MnemonicsColors.textSecondary,
+                        ),
+                      ),
+                      PopupMenuButton<SortOption>(
+                        initialValue: _sortOption,
+                        icon: Icon(
+                          Icons.sort,
+                          color: isDarkMode
+                              ? MnemonicsColors.darkTextPrimary
+                              : MnemonicsColors.textPrimary,
+                        ),
+                        onSelected: (SortOption result) {
+                          setState(() {
+                            _sortOption = result;
+                          });
+                        },
+                        itemBuilder: (BuildContext context) =>
+                            <PopupMenuEntry<SortOption>>[
+                          const PopupMenuItem<SortOption>(
+                            value: SortOption.alphabeticalAsc,
+                            child: Text('A to Z'),
+                          ),
+                          const PopupMenuItem<SortOption>(
+                            value: SortOption.alphabeticalDesc,
+                            child: Text('Z to A'),
+                          ),
+                          const PopupMenuItem<SortOption>(
+                            value: SortOption.unlearnedFirst,
+                            child: Text('Unlearned First'),
+                          ),
+                          const PopupMenuItem<SortOption>(
+                            value: SortOption.learnedFirst,
+                            child: Text('Learned First'),
+                          ),
+                          const PopupMenuItem<SortOption>(
+                            value: SortOption.difficultyEasyFirst,
+                            child: Text('Easiest First'),
+                          ),
+                          const PopupMenuItem<SortOption>(
+                            value: SortOption.difficultyHardFirst,
+                            child: Text('Hardest First'),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(
@@ -358,12 +473,13 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-              onTap: () {
+              onTap: () async {
                 HapticFeedback.lightImpact();
-                context.push('/flashcards', extra: {
+                await context.push('/flashcards', extra: {
                   'words': filtered,
                   'initialIndex': index,
                 });
+                _fetchLearnedWords();
               },
               child: Container(
                 padding: const EdgeInsets.all(MnemonicsSpacing.m),

@@ -114,6 +114,20 @@ def save_learned_status(user_id, word):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/learned_status/<user_id>', methods=['GET'])
+def get_all_learned_status(user_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT word FROM UserLearnedWords WHERE user_id = %s AND is_learned = TRUE", (user_id,))
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        learned_words = [row['word'] for row in rows]
+        return jsonify({"learned_words": learned_words})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     # Run locally on a specified port
     port = int(os.environ.get("PORT", 8080))
