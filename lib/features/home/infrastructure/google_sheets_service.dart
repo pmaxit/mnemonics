@@ -7,10 +7,12 @@ import '../../profile/services/data_migration_service.dart';
 
 class GoogleSheetsService {
   static const String _credentialsPath = 'assets/credentials.json';
-  static const String _spreadsheetId = '1DkfyiJh5P9Zcq5L7LimYGrHZzKHVHjM-uBmsdFkkTHM';
-  static const String _range = 'Sheet1!A:L'; // Columns A through L based on the sheet structure
+  static const String _spreadsheetId =
+      '1DkfyiJh5P9Zcq5L7LimYGrHZzKHVHjM-uBmsdFkkTHM';
+  static const String _range =
+      'Sheet1!A:N'; // Columns A through N based on the sheet structure
   static const List<String> _scopes = [SheetsApi.spreadsheetsReadonlyScope];
-  
+
   SheetsApi? _sheetsApi;
   DateTime? _lastFetchTime;
   List<VocabularyWord>? _cachedWords;
@@ -28,7 +30,7 @@ class GoogleSheetsService {
 
       // Create authenticated HTTP client
       final httpClient = await clientViaServiceAccount(credentials, _scopes);
-      
+
       // Initialize Sheets API
       _sheetsApi = SheetsApi(httpClient);
       return _sheetsApi!;
@@ -37,10 +39,11 @@ class GoogleSheetsService {
     }
   }
 
-  Future<List<VocabularyWord>> fetchVocabulary({bool forceRefresh = false}) async {
+  Future<List<VocabularyWord>> fetchVocabulary(
+      {bool forceRefresh = false}) async {
     // Check cache first
-    if (!forceRefresh && 
-        _cachedWords != null && 
+    if (!forceRefresh &&
+        _cachedWords != null &&
         _lastFetchTime != null &&
         DateTime.now().difference(_lastFetchTime!) < _cacheTimeout) {
       return _cachedWords!;
@@ -48,7 +51,7 @@ class GoogleSheetsService {
 
     try {
       final sheetsApi = await _getSheetsApi();
-      
+
       // Fetch data from Google Sheets
       final response = await sheetsApi.spreadsheets.values.get(
         _spreadsheetId,
@@ -88,7 +91,7 @@ class GoogleSheetsService {
         print('Network error, returning cached data: $e');
         return _cachedWords!;
       }
-      
+
       throw Exception('Failed to fetch vocabulary from Google Sheets: $e');
     }
   }
@@ -96,7 +99,7 @@ class GoogleSheetsService {
   VocabularyWord? _parseRowToVocabularyWord(List<Object?> row) {
     try {
       // Ensure we have enough columns based on your sheet structure
-      while (row.length < 12) {
+      while (row.length < 14) {
         row.add('');
       }
 
@@ -109,23 +112,30 @@ class GoogleSheetsService {
       // Helper function to parse list from comma-separated string
       List<String> parseList(String value) {
         if (value.isEmpty) return [];
-        return value.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        return value
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
       }
 
       // Parse the row based on your Google Sheets column structure:
-      // A=word, B=meaning, C=mnemonic, D=image, E=video, F=example, 
+      // A=word, B=meaning, C=mnemonic, D=image, E=video, F=example,
       // G=synonyms, H=antonyms, I=difficulty, J=category, K=setIds
       final word = getValue(0).trim(); // Column A
       final meaning = getValue(1).trim(); // Column B
       final mnemonic = getValue(2).trim(); // Column C
       final imageUrl = getValue(3).trim(); // Column D
-      final videoUrl = getValue(4).trim(); // Column E (not used in current model)
+      final videoUrl =
+          getValue(4).trim(); // Column E (not used in current model)
       final example = getValue(5).trim(); // Column F
       final synonyms = parseList(getValue(6)); // Column G
       final antonyms = parseList(getValue(7)); // Column H
       final difficulty = getValue(8).trim(); // Column I
       final category = getValue(9).trim(); // Column J
       final setIds = parseList(getValue(10)); // Column K
+      final aiMnemonic = getValue(11).trim(); // Column L
+      final aiInsights = getValue(12).trim(); // Column M
 
       // Validate required fields
       if (word.isEmpty || meaning.isEmpty) {
@@ -138,11 +148,14 @@ class GoogleSheetsService {
         mnemonic: mnemonic.isEmpty ? 'No mnemonic available' : mnemonic,
         example: example.isEmpty ? 'No example available' : example,
         category: category.isEmpty ? 'General' : category,
-        difficulty: DataMigrationService.migrateDifficultyFromString(difficulty.isNotEmpty ? difficulty : 'medium'),
+        difficulty: DataMigrationService.migrateDifficultyFromString(
+            difficulty.isNotEmpty ? difficulty : 'medium'),
         synonyms: synonyms,
         antonyms: antonyms,
         image: imageUrl.isEmpty ? null : imageUrl,
         video: videoUrl.isEmpty ? null : videoUrl,
+        aiMnemonic: aiMnemonic.isEmpty ? null : aiMnemonic,
+        aiInsights: aiInsights.isEmpty ? null : aiInsights,
         setIds: setIds,
       );
     } catch (e) {
@@ -175,8 +188,8 @@ class GoogleSheetsService {
   }
 
   bool get hasCachedData => _cachedWords != null;
-  
+
   DateTime? get lastFetchTime => _lastFetchTime;
-  
+
   int get cachedWordsCount => _cachedWords?.length ?? 0;
 }

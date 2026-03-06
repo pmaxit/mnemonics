@@ -24,6 +24,7 @@ mixin _$VocabularyWord {
   String get meaning => throw _privateConstructorUsedError;
   String get mnemonic => throw _privateConstructorUsedError;
   String? get aiMnemonic => throw _privateConstructorUsedError;
+  String? get aiInsights => throw _privateConstructorUsedError;
   String? get image => throw _privateConstructorUsedError;
   String? get video => throw _privateConstructorUsedError;
   String get example => throw _privateConstructorUsedError;
@@ -50,6 +51,7 @@ abstract class $VocabularyWordCopyWith<$Res> {
       String meaning,
       String mnemonic,
       String? aiMnemonic,
+      String? aiInsights,
       String? image,
       String? video,
       String example,
@@ -77,6 +79,7 @@ class _$VocabularyWordCopyWithImpl<$Res, $Val extends VocabularyWord>
     Object? meaning = null,
     Object? mnemonic = null,
     Object? aiMnemonic = freezed,
+    Object? aiInsights = freezed,
     Object? image = freezed,
     Object? video = freezed,
     Object? example = null,
@@ -102,6 +105,10 @@ class _$VocabularyWordCopyWithImpl<$Res, $Val extends VocabularyWord>
       aiMnemonic: freezed == aiMnemonic
           ? _value.aiMnemonic
           : aiMnemonic // ignore: cast_nullable_to_non_nullable
+              as String?,
+      aiInsights: freezed == aiInsights
+          ? _value.aiInsights
+          : aiInsights // ignore: cast_nullable_to_non_nullable
               as String?,
       image: freezed == image
           ? _value.image
@@ -152,6 +159,7 @@ abstract class _$$VocabularyWordImplCopyWith<$Res>
       String meaning,
       String mnemonic,
       String? aiMnemonic,
+      String? aiInsights,
       String? image,
       String? video,
       String example,
@@ -177,6 +185,7 @@ class __$$VocabularyWordImplCopyWithImpl<$Res>
     Object? meaning = null,
     Object? mnemonic = null,
     Object? aiMnemonic = freezed,
+    Object? aiInsights = freezed,
     Object? image = freezed,
     Object? video = freezed,
     Object? example = null,
@@ -202,6 +211,10 @@ class __$$VocabularyWordImplCopyWithImpl<$Res>
       aiMnemonic: freezed == aiMnemonic
           ? _value.aiMnemonic
           : aiMnemonic // ignore: cast_nullable_to_non_nullable
+              as String?,
+      aiInsights: freezed == aiInsights
+          ? _value.aiInsights
+          : aiInsights // ignore: cast_nullable_to_non_nullable
               as String?,
       image: freezed == image
           ? _value.image
@@ -247,6 +260,7 @@ class _$VocabularyWordImpl implements _VocabularyWord {
       required this.meaning,
       required this.mnemonic,
       this.aiMnemonic,
+      this.aiInsights,
       this.image,
       this.video,
       required this.example,
@@ -270,6 +284,8 @@ class _$VocabularyWordImpl implements _VocabularyWord {
   final String mnemonic;
   @override
   final String? aiMnemonic;
+  @override
+  final String? aiInsights;
   @override
   final String? image;
   @override
@@ -307,7 +323,7 @@ class _$VocabularyWordImpl implements _VocabularyWord {
 
   @override
   String toString() {
-    return 'VocabularyWord(word: $word, meaning: $meaning, mnemonic: $mnemonic, aiMnemonic: $aiMnemonic, image: $image, video: $video, example: $example, synonyms: $synonyms, antonyms: $antonyms, difficulty: $difficulty, category: $category, setIds: $setIds)';
+    return 'VocabularyWord(word: $word, meaning: $meaning, mnemonic: $mnemonic, aiMnemonic: $aiMnemonic, aiInsights: $aiInsights, image: $image, video: $video, example: $example, synonyms: $synonyms, antonyms: $antonyms, difficulty: $difficulty, category: $category, setIds: $setIds)';
   }
 
   @override
@@ -321,6 +337,8 @@ class _$VocabularyWordImpl implements _VocabularyWord {
                 other.mnemonic == mnemonic) &&
             (identical(other.aiMnemonic, aiMnemonic) ||
                 other.aiMnemonic == aiMnemonic) &&
+            (identical(other.aiInsights, aiInsights) ||
+                other.aiInsights == aiInsights) &&
             (identical(other.image, image) || other.image == image) &&
             (identical(other.video, video) || other.video == video) &&
             (identical(other.example, example) || other.example == example) &&
@@ -341,6 +359,7 @@ class _$VocabularyWordImpl implements _VocabularyWord {
       meaning,
       mnemonic,
       aiMnemonic,
+      aiInsights,
       image,
       video,
       example,
@@ -371,6 +390,7 @@ abstract class _VocabularyWord implements VocabularyWord {
       required final String meaning,
       required final String mnemonic,
       final String? aiMnemonic,
+      final String? aiInsights,
       final String? image,
       final String? video,
       required final String example,
@@ -391,6 +411,8 @@ abstract class _VocabularyWord implements VocabularyWord {
   String get mnemonic;
   @override
   String? get aiMnemonic;
+  @override
+  String? get aiInsights;
   @override
   String? get image;
   @override

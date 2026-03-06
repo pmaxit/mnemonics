@@ -11,6 +11,7 @@ class VocabularyWord with _$VocabularyWord {
     required String meaning,
     required String mnemonic,
     String? aiMnemonic,
+    String? aiInsights,
     String? image,
     String? video,
     required String example,

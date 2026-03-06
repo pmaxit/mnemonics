@@ -137,8 +137,6 @@ class _AnimatedFlashCardState extends ConsumerState<AnimatedFlashCard>
 
   @override
   Widget build(BuildContext context) {
-    final aiMnemonicState = ref.watch(aiMnemonicProvider(widget.word.word));
-
     return AnimatedBuilder(
       animation: _entryAnimation,
       builder: (context, child) {
@@ -152,7 +150,7 @@ class _AnimatedFlashCardState extends ConsumerState<AnimatedFlashCard>
                 Expanded(
                   child: GestureDetector(
                     onTap: widget.onTap,
-                    child: _buildCard(aiMnemonicState),
+                    child: _buildCard(),
                   ),
                 ),
 
@@ -178,7 +176,7 @@ class _AnimatedFlashCardState extends ConsumerState<AnimatedFlashCard>
     );
   }
 
-  Widget _buildCard(AsyncValue<String?> aiMnemonicState) {
+  Widget _buildCard() {
     return AnimatedBuilder(
       animation: _flipAnimation,
       builder: (context, child) {
@@ -208,9 +206,7 @@ class _AnimatedFlashCardState extends ConsumerState<AnimatedFlashCard>
                 width: 2,
               ),
             ),
-            child: isShowingFront
-                ? _buildFrontContent()
-                : _buildBackContent(aiMnemonicState),
+            child: isShowingFront ? _buildFrontContent() : _buildBackContent(),
           ),
         );
       },
@@ -299,7 +295,7 @@ class _AnimatedFlashCardState extends ConsumerState<AnimatedFlashCard>
     );
   }
 
-  Widget _buildBackContent(AsyncValue<String?> aiMnemonicState) {
+  Widget _buildBackContent() {
     return Transform(
       alignment: Alignment.center,
       transform: Matrix4.identity()..rotateY(math.pi),
@@ -439,46 +435,14 @@ class _AnimatedFlashCardState extends ConsumerState<AnimatedFlashCard>
                           ),
                         ),
                       ),
-                      if (widget.word.aiMnemonic == null &&
-                          aiMnemonicState.valueOrNull == null &&
-                          !aiMnemonicState.isLoading)
-                        IconButton(
-                          icon: const Icon(Icons.auto_awesome,
-                              color: MnemonicsColors.secondaryOrange),
-                          onPressed: () {
-                            ref
-                                .read(aiMnemonicProvider(widget.word.word)
-                                    .notifier)
-                                .generateMnemonic(meaning: widget.word.meaning);
-                          },
-                          tooltip: 'Generate Magic Mnemonic',
-                        ),
                     ],
                   ),
                   const SizedBox(height: MnemonicsSpacing.s),
-                  if (aiMnemonicState.isLoading)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(MnemonicsSpacing.s),
-                        child: CircularProgressIndicator(
-                            color: MnemonicsColors.secondaryOrange),
-                      ),
-                    )
-                  else if (aiMnemonicState.hasError)
-                    Text(
-                      'Oops! Magic spell failed. Try again.',
-                      style: MnemonicsTypography.bodyRegular.copyWith(
-                        color: Colors.red,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    )
-                  else if (widget.word.aiMnemonic != null ||
-                      aiMnemonicState.valueOrNull != null ||
+                  if (widget.word.aiMnemonic != null ||
                       widget.word.mnemonic.isNotEmpty)
                     Text(
-                      _sanitizeString(widget.word.aiMnemonic ??
-                          aiMnemonicState.valueOrNull ??
-                          widget.word.mnemonic),
+                      _sanitizeString(
+                          widget.word.aiMnemonic ?? widget.word.mnemonic),
                       style: MnemonicsTypography.bodyLarge.copyWith(
                         color: MnemonicsColors.secondaryOrange,
                         fontWeight: FontWeight.w500,
@@ -487,7 +451,7 @@ class _AnimatedFlashCardState extends ConsumerState<AnimatedFlashCard>
                     )
                   else
                     Text(
-                      'No memory aid yet. Tap the magic wand above to generate a fun AI-powered mnemonic!',
+                      'No memory aid available.',
                       style: MnemonicsTypography.bodyRegular.copyWith(
                         color: MnemonicsColors.secondaryOrange.withOpacity(0.8),
                         fontStyle: FontStyle.italic,

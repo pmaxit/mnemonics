@@ -382,6 +382,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final wordSetsAsync = ref.watch(wordSetListProvider);
     final statsAsync = ref
         .watch(profileStatisticsProvider); // Fetch real user stats for the Tree
+    final vocabAsync = ref.watch(vocabularyListProvider);
     final screenHeight = MediaQuery.of(context).size.height;
     final themeMode = ref.watch(themeNotifierProvider);
     final isDarkMode = themeMode == ThemeMode.dark ||
@@ -512,8 +513,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 ),
                                 IconButton(
                                   onPressed: () {
-                                    // Normally navigate to practice with this category filter
-                                    GoRouter.of(context).push('/learn');
+                                    final vocab = vocabAsync.value ?? [];
+                                    final categoryWords = vocab
+                                        .where((w) =>
+                                            w.category ==
+                                            suggestedCategory.categoryName)
+                                        .toList();
+
+                                    if (categoryWords.isNotEmpty) {
+                                      context.push('/flashcards', extra: {
+                                        'words': categoryWords,
+                                        'initialIndex': 0,
+                                      });
+                                    } else {
+                                      // Fallback to the main learning setup
+                                      context.go('/main/timer');
+                                    }
                                   },
                                   icon: const Icon(Icons.arrow_forward_ios,
                                       color: MnemonicsColors.primaryGreen,

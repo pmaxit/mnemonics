@@ -13,6 +13,10 @@ import '../../../practice/domain/user_progress_service.dart';
 import '../../../home/providers.dart';
 import '../../../practice/providers/ai_mnemonic_provider.dart';
 import '../../../practice/providers/ai_word_insights_provider.dart';
+import '../../../practice/domain/word_insights.dart';
+import 'package:translator/translator.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class LearnWordDetailScreen extends ConsumerStatefulWidget {
   final List<VocabularyWord> words;
@@ -41,6 +45,12 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
   bool _loading = true;
   DateTime? _viewStartTime;
   bool _wordViewed = false;
+
+  final _translator = GoogleTranslator();
+  String? _hindiMeaning;
+  bool _loadingHindi = false;
+  bool _isNotesDirty = false;
+  bool _isSavingNotes = false;
 
   late AnimationController _pageAnimationController;
   late AnimationController _contentAnimationController;
@@ -95,6 +105,92 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
 
     _loadUserWordData();
     _trackWordView();
+    _loadHindiMeaning(widget.words[_currentIndex].meaning);
+  }
+
+  Future<void> _fetchCloudNotes(String word) async {
+    try {
+      final response = await http.get(Uri.parse(
+          'https://mnemonics-api-1078980357394.us-central1.run.app/notes/$word'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['notes'] != null && data['notes'].toString().isNotEmpty) {
+          if (mounted) {
+            setState(() {
+              _notesController?.text = data['notes'];
+              _isNotesDirty = false;
+            });
+            // We should also sync it locally, but the prompt only focuses on DB sync.
+          }
+        }
+      }
+    } catch (e) {
+      print('Failed to fetch cloud notes: $e');
+    }
+  }
+
+  Future<void> _saveCloudNotes() async {
+    final word = widget.words[_currentIndex].word;
+    final notes = _notesController?.text ?? '';
+
+    setState(() {
+      _isSavingNotes = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'https://mnemonics-api-1078980357394.us-central1.run.app/notes/$word'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'notes': notes}),
+      );
+      if (response.statusCode == 200 && mounted) {
+        setState(() {
+          _isNotesDirty = false;
+          _isSavingNotes = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Notes saved to cloud!'),
+              duration: Duration(seconds: 2)),
+        );
+      }
+    } catch (e) {
+      print('Failed to save cloud notes: $e');
+      if (mounted) {
+        setState(() {
+          _isSavingNotes = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Failed to save notes.'),
+              duration: Duration(seconds: 2)),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadHindiMeaning(String englishMeaning) async {
+    setState(() {
+      _hindiMeaning = null;
+      _loadingHindi = true;
+    });
+    try {
+      final translation = await _translator.translate(englishMeaning, to: 'hi');
+      if (mounted) {
+        setState(() {
+          _hindiMeaning = translation.text;
+          _loadingHindi = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _hindiMeaning = 'Translation failed';
+          _loadingHindi = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadUserWordData() async {
@@ -112,6 +208,8 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
       _repetitions = data?.repetitions ?? 0;
       _loading = false;
     });
+
+    _fetchCloudNotes(word);
 
     // Initialize video player if video URL exists
     await _initializeVideo();
@@ -180,6 +278,8 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
       _viewStartTime = DateTime.now();
     });
 
+    _loadHindiMeaning(widget.words[index].meaning);
+
     await _loadUserWordData();
     await _trackWordView();
 
@@ -228,8 +328,15 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                           const SizedBox(height: MnemonicsSpacing.m),
                           const Text('Meaning (Hindi):',
                               style: MnemonicsTypography.bodyLarge),
-                          const Text('हिंदी अर्थ यहाँ आएगा',
-                              style: MnemonicsTypography.bodyRegular),
+                          _loadingHindi
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Text(_hindiMeaning ?? '',
+                                  style: MnemonicsTypography.bodyRegular),
                           const SizedBox(height: MnemonicsSpacing.m),
                           const Text('Use in English sentence:',
                               style: MnemonicsTypography.bodyLarge),
@@ -237,10 +344,8 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                               style: MnemonicsTypography.bodyRegular),
                           const SizedBox(height: MnemonicsSpacing.l),
                           // Mnemonic - special attention with prominent styling
-                          Consumer(
-                            builder: (context, ref, child) {
-                              final aiMnemonicState =
-                                  ref.watch(aiMnemonicProvider(word.word));
+                          Builder(
+                            builder: (context) {
                               return Container(
                                 width: double.infinity,
                                 padding:
@@ -288,57 +393,16 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                             ),
                                           ),
                                         ),
-                                        if (_userWordData?.aiMnemonic == null &&
-                                            word.aiMnemonic == null &&
-                                            aiMnemonicState.valueOrNull ==
-                                                null &&
-                                            !aiMnemonicState.isLoading)
-                                          IconButton(
-                                            icon: const Icon(Icons.auto_awesome,
-                                                color: MnemonicsColors
-                                                    .secondaryOrange),
-                                            onPressed: () {
-                                              ref
-                                                  .read(aiMnemonicProvider(
-                                                          word.word)
-                                                      .notifier)
-                                                  .generateMnemonic(
-                                                      meaning: word.meaning);
-                                            },
-                                            tooltip: 'Generate Magic Mnemonic',
-                                          ),
                                       ],
                                     ),
                                     const SizedBox(height: MnemonicsSpacing.s),
-                                    if (aiMnemonicState.isLoading)
-                                      const Center(
-                                        child: Padding(
-                                          padding: EdgeInsets.all(
-                                              MnemonicsSpacing.s),
-                                          child: CircularProgressIndicator(
-                                              color: MnemonicsColors
-                                                  .secondaryOrange),
-                                        ),
-                                      )
-                                    else if (aiMnemonicState.hasError)
-                                      Text(
-                                        'Oops! Magic spell failed. Try again.',
-                                        style: MnemonicsTypography.bodyRegular
-                                            .copyWith(
-                                          color: Colors.red,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      )
-                                    else if (_userWordData?.aiMnemonic !=
-                                            null ||
-                                        word.aiMnemonic != null ||
-                                        aiMnemonicState.valueOrNull != null ||
+                                    if ((_userWordData?.aiMnemonic != null) ||
+                                        (word.aiMnemonic != null) ||
                                         word.mnemonic.isNotEmpty)
                                       Text(
                                         _sanitizeString(
                                             _userWordData?.aiMnemonic ??
                                                 word.aiMnemonic ??
-                                                aiMnemonicState.valueOrNull ??
                                                 word.mnemonic),
                                         style: MnemonicsTypography.bodyLarge
                                             .copyWith(
@@ -350,7 +414,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                       )
                                     else
                                       Text(
-                                        'No memory aid yet. Tap the magic wand above to generate a fun AI-powered mnemonic!',
+                                        'No memory aid available.',
                                         style: MnemonicsTypography.bodyRegular
                                             .copyWith(
                                           color: MnemonicsColors.secondaryOrange
@@ -459,11 +523,16 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                           const SizedBox(height: MnemonicsSpacing.l),
 
                           // AI Insights Section
-                          Consumer(
-                            builder: (context, ref, child) {
-                              final insightsState =
-                                  ref.watch(aiWordInsightsProvider(word.word));
-
+                          Builder(
+                            builder: (context) {
+                              WordInsights? insights;
+                              if (word.aiInsights != null &&
+                                  word.aiInsights!.isNotEmpty) {
+                                try {
+                                  insights =
+                                      WordInsights.fromJson(word.aiInsights!);
+                                } catch (_) {}
+                              }
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -483,82 +552,13 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                     ],
                                   ),
                                   const SizedBox(height: MnemonicsSpacing.m),
-                                  if (insightsState.isLoading)
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.all(
-                                          MnemonicsSpacing.l),
-                                      decoration: BoxDecoration(
-                                        color: MnemonicsColors.surface,
-                                        borderRadius: BorderRadius.circular(
-                                            MnemonicsSpacing.radiusL),
-                                        border: Border.all(
-                                            color: MnemonicsColors.primaryGreen
-                                                .withOpacity(0.3)),
-                                      ),
-                                      child: const Center(
-                                        child: Column(
-                                          children: [
-                                            CircularProgressIndicator(
-                                                color: MnemonicsColors
-                                                    .primaryGreen),
-                                            SizedBox(
-                                                height: MnemonicsSpacing.m),
-                                            Text(
-                                              'Unearthing word secrets...',
-                                              style: MnemonicsTypography
-                                                  .bodyRegular,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                  else if (insightsState.hasError)
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.all(
-                                          MnemonicsSpacing.m),
-                                      decoration: BoxDecoration(
-                                        color: Colors.red.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(
-                                            MnemonicsSpacing.radiusL),
-                                        border: Border.all(
-                                            color: Colors.red.withOpacity(0.3)),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.error_outline,
-                                              color: Colors
-                                                  .red), // fixed typo to Colors.red
-                                          const SizedBox(
-                                              width: MnemonicsSpacing.s),
-                                          Expanded(
-                                            child: Text(
-                                              'Failed to load insights. Tap to try again.',
-                                              style: MnemonicsTypography
-                                                  .bodyRegular
-                                                  .copyWith(color: Colors.red),
-                                            ),
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(Icons.refresh,
-                                                color: Colors.red),
-                                            onPressed: () => ref
-                                                .read(aiWordInsightsProvider(
-                                                        word.word)
-                                                    .notifier)
-                                                .loadOrGenerateInsights(),
-                                          )
-                                        ],
-                                      ),
-                                    )
-                                  else if (insightsState.value != null)
+                                  if (insights != null)
                                     Column(
                                       children: [
                                         _buildInsightCard(
                                           icon: Icons.history_edu,
                                           title: 'Origin & History',
-                                          content: insightsState.value!.origin,
+                                          content: insights.origin,
                                           color: Colors.amber.shade700,
                                         ),
                                         const SizedBox(
@@ -566,8 +566,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                         _buildInsightCard(
                                           icon: Icons.chat_bubble_outline,
                                           title: 'Usage in Context',
-                                          content: insightsState
-                                              .value!.usageContexts,
+                                          content: insights.usageContexts,
                                           color: Colors.blue.shade600,
                                         ),
                                         const SizedBox(
@@ -575,8 +574,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                         _buildInsightCard(
                                           icon: Icons.movie_filter_outlined,
                                           title: 'Pop Culture',
-                                          content:
-                                              insightsState.value!.popCulture,
+                                          content: insights.popCulture,
                                           color: Colors.purple.shade500,
                                         ),
                                         const SizedBox(
@@ -584,79 +582,65 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                         _buildInsightCard(
                                           icon: Icons.lightbulb_outline,
                                           title: 'Fun Fact',
-                                          content: insightsState.value!.funFact,
+                                          content: insights.funFact,
                                           color: Colors.teal.shade500,
                                         ),
                                       ],
                                     )
                                   else
-                                    InkWell(
-                                      onTap: () => ref
-                                          .read(
-                                              aiWordInsightsProvider(word.word)
-                                                  .notifier)
-                                          .loadOrGenerateInsights(),
-                                      borderRadius: BorderRadius.circular(
-                                          MnemonicsSpacing.radiusL),
-                                      child: Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.all(
-                                            MnemonicsSpacing.l),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [
-                                              MnemonicsColors.primaryGreen
-                                                  .withOpacity(0.15),
-                                              MnemonicsColors.primaryGreen
-                                                  .withOpacity(0.05),
-                                            ],
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                              MnemonicsSpacing.radiusL),
-                                          border: Border.all(
-                                              color: MnemonicsColors
-                                                  .primaryGreen
-                                                  .withOpacity(0.5),
-                                              width: 1.5),
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(
+                                          MnemonicsSpacing.l),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            MnemonicsColors.primaryGreen
+                                                .withOpacity(0.15),
+                                            MnemonicsColors.primaryGreen
+                                                .withOpacity(0.05),
+                                          ],
                                         ),
-                                        child: Column(
-                                          children: [
-                                            const Icon(
-                                              Icons.auto_awesome,
-                                              size: 32,
+                                        borderRadius: BorderRadius.circular(
+                                            MnemonicsSpacing.radiusL),
+                                        border: Border.all(
+                                            color: MnemonicsColors.primaryGreen
+                                                .withOpacity(0.5),
+                                            width: 1.5),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          const Icon(
+                                            Icons.auto_awesome,
+                                            size: 32,
+                                            color: MnemonicsColors.primaryGreen,
+                                          ),
+                                          const SizedBox(
+                                              height: MnemonicsSpacing.s),
+                                          Text(
+                                            'Word Insights Unavailable',
+                                            style: MnemonicsTypography.bodyLarge
+                                                .copyWith(
+                                              color:
+                                                  MnemonicsColors.primaryGreen,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                              height: MnemonicsSpacing.xs),
+                                          Text(
+                                            'Insights were not pre-generated for this word.',
+                                            style: MnemonicsTypography
+                                                .bodyRegular
+                                                .copyWith(
                                               color:
                                                   MnemonicsColors.primaryGreen,
                                             ),
-                                            const SizedBox(
-                                                height: MnemonicsSpacing.s),
-                                            Text(
-                                              'Generate Word Insights',
-                                              style: MnemonicsTypography
-                                                  .bodyLarge
-                                                  .copyWith(
-                                                color: MnemonicsColors
-                                                    .primaryGreen,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                            const SizedBox(
-                                                height: MnemonicsSpacing.xs),
-                                            Text(
-                                              'Discover origins, pop culture references, and fun facts!',
-                                              style: MnemonicsTypography
-                                                  .bodyRegular
-                                                  .copyWith(
-                                                color: MnemonicsColors
-                                                    .primaryGreen
-                                                    .withOpacity(0.8),
-                                                fontSize: 13,
-                                              ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ],
-                                        ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
                                       ),
                                     ),
                                 ],
@@ -673,8 +657,31 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                               hintText: 'Add your notes or mnemonic...',
                               border: OutlineInputBorder(),
                             ),
-                            onChanged: (_) => _saveUserWordData(),
+                            onChanged: (_) {
+                              setState(() {
+                                _isNotesDirty = true;
+                              });
+                              _saveUserWordData();
+                            },
                           ),
+                          if (_isNotesDirty) ...[
+                            const SizedBox(height: MnemonicsSpacing.s),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: ElevatedButton.icon(
+                                onPressed:
+                                    _isSavingNotes ? null : _saveCloudNotes,
+                                icon: _isSavingNotes
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2))
+                                    : const Icon(Icons.cloud_upload),
+                                label: const Text('Save to Cloud'),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: MnemonicsSpacing.m),
                           Row(
                             children: [
