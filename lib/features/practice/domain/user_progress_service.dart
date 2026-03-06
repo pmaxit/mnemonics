@@ -91,11 +91,17 @@ class UserProgressService {
         lastReviewedAt: now,
         correctAnswers: 1,
         totalAnswers: 1,
+        hasBeenTested: true,
       );
     } else {
       userData.isLearned = true;
+      userData.hasBeenTested = true;
       userData.learningStage = LearningStage.mastered;
       userData.firstLearnedAt ??= now;
+      if (userData.totalAnswers == 0) {
+        userData.totalAnswers = 1;
+        userData.correctAnswers = 1;
+      }
     }
 
     await userWordDataRepository.saveUserWordData(userData);

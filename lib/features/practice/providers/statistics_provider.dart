@@ -30,21 +30,25 @@ final statisticsProvider = FutureProvider<StatisticsData>((ref) async {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
 
-  final learned = userData.where((d) => d.hasBeenTested).toList();
+  final learned =
+      userData.where((d) => d.hasBeenTested || d.isLearned).toList();
   final totalLearned = learned.length;
 
   final learnedToday = userData
       .where((d) =>
-          d.hasBeenTested &&
+          (d.hasBeenTested || d.isLearned) &&
           d.lastReviewedAt != null &&
           _isSameDay(d.lastReviewedAt!, today))
       .length;
 
-  final newCount = userData.where((d) => !d.hasBeenTested).length;
-  final inProgressCount =
-      userData.where((d) => d.hasBeenTested && d.isInProgress).length;
-  final masteredCount =
-      userData.where((d) => d.hasBeenTested && d.isMastered).length;
+  final newCount =
+      userData.where((d) => !d.hasBeenTested && !d.isLearned).length;
+  final inProgressCount = userData
+      .where((d) => (d.hasBeenTested || d.isLearned) && d.isInProgress)
+      .length;
+  final masteredCount = userData
+      .where((d) => (d.hasBeenTested || d.isLearned) && d.isMastered)
+      .length;
 
   final categoryBreakdown = <String, int>{};
   final difficultyBreakdown = <String, int>{};
@@ -64,7 +68,7 @@ final statisticsProvider = FutureProvider<StatisticsData>((ref) async {
       ),
     );
 
-    if (userWord.hasBeenTested) {
+    if (userWord.hasBeenTested || userWord.isLearned) {
       categoryBreakdown[vocabWord.category] =
           (categoryBreakdown[vocabWord.category] ?? 0) + 1;
       difficultyBreakdown[vocabWord.difficulty.name] =
@@ -74,7 +78,8 @@ final statisticsProvider = FutureProvider<StatisticsData>((ref) async {
 
   final weeklyProgress = _calculateWeeklyProgress(userData, reviewActivities);
 
-  final testedWords = userData.where((d) => d.hasBeenTested).toList();
+  final testedWords =
+      userData.where((d) => d.hasBeenTested || d.isLearned).toList();
   final totalAnswers = testedWords.fold(0, (sum, d) => sum + d.totalAnswers);
   final correctAnswers =
       testedWords.fold(0, (sum, d) => sum + d.correctAnswers);
@@ -117,7 +122,7 @@ List<DailyProgress> _calculateWeeklyProgress(
 
     final wordsLearned = userData
         .where((d) =>
-            d.hasBeenTested &&
+            (d.hasBeenTested || d.isLearned) &&
             d.lastReviewedAt != null &&
             _isSameDay(d.lastReviewedAt!, date))
         .length;
@@ -145,9 +150,9 @@ int _calculateStreak(
   // Get all unique days with learning activity
   final activeDays = <DateTime>{};
 
-  // Add days from user word data (only for actually tested words)
+  // Add days from user word data (only for actually tested/learned words)
   for (final data in userData) {
-    if (data.hasBeenTested && data.lastReviewedAt != null) {
+    if ((data.hasBeenTested || data.isLearned) && data.lastReviewedAt != null) {
       final day = DateTime(
         data.lastReviewedAt!.year,
         data.lastReviewedAt!.month,

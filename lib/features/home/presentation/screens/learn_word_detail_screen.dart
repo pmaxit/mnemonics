@@ -13,7 +13,7 @@ import '../../../practice/domain/user_progress_service.dart';
 import '../../../home/providers.dart';
 import '../../../practice/providers/ai_mnemonic_provider.dart';
 import '../../../practice/providers/ai_word_insights_provider.dart';
-import '../../../practice/domain/word_insights.dart';
+
 import 'package:translator/translator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -391,93 +391,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                           Text(word.example,
                               style: MnemonicsTypography.bodyRegular),
                           const SizedBox(height: MnemonicsSpacing.l),
-                          // Mnemonic - special attention with prominent styling
-                          Builder(
-                            builder: (context) {
-                              return Container(
-                                width: double.infinity,
-                                padding:
-                                    const EdgeInsets.all(MnemonicsSpacing.m),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      MnemonicsColors.secondaryOrange
-                                          .withOpacity(0.15),
-                                      MnemonicsColors.secondaryOrange
-                                          .withOpacity(0.05),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(
-                                      MnemonicsSpacing.radiusL),
-                                  border: Border.all(
-                                    color: MnemonicsColors.secondaryOrange
-                                        .withOpacity(0.4),
-                                    width: 2,
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.psychology,
-                                          color:
-                                              MnemonicsColors.secondaryOrange,
-                                          size: 22,
-                                        ),
-                                        const SizedBox(
-                                            width: MnemonicsSpacing.s),
-                                        Expanded(
-                                          child: Text(
-                                            'Memory Aid:',
-                                            style: MnemonicsTypography.bodyLarge
-                                                .copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              color: MnemonicsColors
-                                                  .secondaryOrange,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: MnemonicsSpacing.s),
-                                    if ((_userWordData?.aiMnemonic != null) ||
-                                        (word.aiMnemonic != null) ||
-                                        word.mnemonic.isNotEmpty)
-                                      Text(
-                                        _sanitizeString(
-                                            _userWordData?.aiMnemonic ??
-                                                word.aiMnemonic ??
-                                                word.mnemonic),
-                                        style: MnemonicsTypography.bodyLarge
-                                            .copyWith(
-                                          color:
-                                              MnemonicsColors.secondaryOrange,
-                                          fontWeight: FontWeight.w500,
-                                          height: 1.4,
-                                        ),
-                                      )
-                                    else
-                                      Text(
-                                        'No memory aid available.',
-                                        style: MnemonicsTypography.bodyRegular
-                                            .copyWith(
-                                          color: MnemonicsColors.secondaryOrange
-                                              .withOpacity(0.8),
-                                          fontStyle: FontStyle.italic,
-                                          height: 1.4,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: MnemonicsSpacing.l),
-                          // Image
+
                           if (word.image != null && word.image!.isNotEmpty)
                             ClipRRect(
                               borderRadius: BorderRadius.circular(
@@ -574,14 +488,20 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                           // AI Insights Section
                           Builder(
                             builder: (context) {
-                              WordInsights? insights;
-                              if (word.aiInsights != null &&
-                                  word.aiInsights!.isNotEmpty) {
-                                try {
-                                  insights =
-                                      WordInsights.fromJson(word.aiInsights!);
-                                } catch (_) {}
-                              }
+                              final definitionText = word.definition != null &&
+                                      word.definition!.isNotEmpty
+                                  ? word.definition!
+                                  : word.meaning;
+
+                              final phrasesList = word.phrases;
+                              final examplesLists = word.exampleSentences;
+
+                              final String memoryTipText =
+                                  (word.aiMnemonic != null &&
+                                          word.aiMnemonic!.isNotEmpty)
+                                      ? word.aiMnemonic!
+                                      : word.mnemonic;
+
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -601,97 +521,113 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                     ],
                                   ),
                                   const SizedBox(height: MnemonicsSpacing.m),
-                                  if (insights != null)
-                                    Column(
-                                      children: [
-                                        _buildInsightCard(
-                                          icon: Icons.history_edu,
-                                          title: 'Origin & History',
-                                          content: insights.origin,
-                                          color: Colors.amber.shade700,
-                                        ),
+                                  Column(
+                                    children: [
+                                      _buildCollapsibleCard(
+                                        icon: Icons.menu_book,
+                                        title: 'Definition',
+                                        contentWidget: Text(definitionText,
+                                            style: MnemonicsTypography
+                                                .bodyRegular),
+                                        color: Colors.amber.shade700,
+                                      ),
+                                      if (phrasesList.isNotEmpty) ...[
                                         const SizedBox(
                                             height: MnemonicsSpacing.m),
-                                        _buildInsightCard(
-                                          icon: Icons.chat_bubble_outline,
-                                          title: 'Usage in Context',
-                                          content: insights.usageContexts,
+                                        _buildCollapsibleCard(
+                                          icon: Icons.chat,
+                                          title: 'Common Phrases in Context',
+                                          contentWidget: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: phrasesList
+                                                .asMap()
+                                                .entries
+                                                .map((entry) {
+                                              final int index = entry.key;
+                                              final String phrase = entry.value;
+                                              final List<String>
+                                                  correspondingExamples =
+                                                  (examplesLists.length > index)
+                                                      ? examplesLists[index]
+                                                      : [];
+
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                    bottom: 12),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Icon(Icons.star,
+                                                            size: 16,
+                                                            color: Colors.blue),
+                                                        const SizedBox(
+                                                            width: 8),
+                                                        Expanded(
+                                                            child: Text(phrase,
+                                                                style: MnemonicsTypography
+                                                                    .bodyLarge
+                                                                    .copyWith(
+                                                                        fontWeight:
+                                                                            FontWeight.bold))),
+                                                      ],
+                                                    ),
+                                                    if (correspondingExamples
+                                                        .isNotEmpty)
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .only(
+                                                                left: 24,
+                                                                top: 4),
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children:
+                                                              correspondingExamples
+                                                                  .map((example) =>
+                                                                      Padding(
+                                                                        padding: const EdgeInsets
+                                                                            .only(
+                                                                            bottom:
+                                                                                4),
+                                                                        child: Text(
+                                                                            '• "$example"',
+                                                                            style:
+                                                                                MnemonicsTypography.bodyRegular.copyWith(fontStyle: FontStyle.italic)),
+                                                                      ))
+                                                                  .toList(),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              );
+                                            }).toList(),
+                                          ),
                                           color: Colors.blue.shade600,
                                         ),
+                                      ],
+                                      if (memoryTipText.isNotEmpty) ...[
                                         const SizedBox(
                                             height: MnemonicsSpacing.m),
-                                        _buildInsightCard(
-                                          icon: Icons.movie_filter_outlined,
-                                          title: 'Pop Culture',
-                                          content: insights.popCulture,
-                                          color: Colors.purple.shade500,
-                                        ),
-                                        const SizedBox(
-                                            height: MnemonicsSpacing.m),
-                                        _buildInsightCard(
-                                          icon: Icons.lightbulb_outline,
-                                          title: 'Fun Fact',
-                                          content: insights.funFact,
-                                          color: Colors.teal.shade500,
+                                        _buildCollapsibleCard(
+                                          icon: Icons.psychology,
+                                          title: 'Memory Tip',
+                                          contentWidget: Text(memoryTipText,
+                                              style: MnemonicsTypography
+                                                  .bodyRegular),
+                                          color: Colors.orange.shade700,
                                         ),
                                       ],
-                                    )
-                                  else
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.all(
-                                          MnemonicsSpacing.l),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            MnemonicsColors.primaryGreen
-                                                .withOpacity(0.15),
-                                            MnemonicsColors.primaryGreen
-                                                .withOpacity(0.05),
-                                          ],
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                            MnemonicsSpacing.radiusL),
-                                        border: Border.all(
-                                            color: MnemonicsColors.primaryGreen
-                                                .withOpacity(0.5),
-                                            width: 1.5),
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          const Icon(
-                                            Icons.auto_awesome,
-                                            size: 32,
-                                            color: MnemonicsColors.primaryGreen,
-                                          ),
-                                          const SizedBox(
-                                              height: MnemonicsSpacing.s),
-                                          Text(
-                                            'Word Insights Unavailable',
-                                            style: MnemonicsTypography.bodyLarge
-                                                .copyWith(
-                                              color:
-                                                  MnemonicsColors.primaryGreen,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                              height: MnemonicsSpacing.xs),
-                                          Text(
-                                            'Insights were not pre-generated for this word.',
-                                            style: MnemonicsTypography
-                                                .bodyRegular
-                                                .copyWith(
-                                              color:
-                                                  MnemonicsColors.primaryGreen,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                    ],
+                                  ),
                                 ],
                               );
                             },
@@ -813,22 +749,24 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                 .copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: MnemonicsSpacing.s),
-          Row(
+          Wrap(
+            spacing: MnemonicsSpacing.s,
+            runSpacing: MnemonicsSpacing.s,
             children: [
               _buildInfoChip(
                   'Category', word.category, MnemonicsColors.primaryGreen),
-              const SizedBox(width: MnemonicsSpacing.s),
               _buildInfoChip('Difficulty', word.difficulty.displayName,
                   _getDifficultyColor(word.difficulty)),
             ],
           ),
           if (_userWordData != null) ...[
             const SizedBox(height: MnemonicsSpacing.s),
-            Row(
+            Wrap(
+              spacing: MnemonicsSpacing.s,
+              runSpacing: MnemonicsSpacing.s,
               children: [
                 _buildInfoChip('Reviews', '${_userWordData!.reviewCount}',
                     MnemonicsColors.secondaryOrange),
-                const SizedBox(width: MnemonicsSpacing.s),
                 _buildInfoChip(
                     'Accuracy',
                     '${(_userWordData!.accuracyRate * 100).toStringAsFixed(0)}%',
@@ -978,15 +916,14 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     }
   }
 
-  Widget _buildInsightCard({
+  Widget _buildCollapsibleCard({
     required IconData icon,
     required String title,
-    required String content,
+    required Widget contentWidget,
     required Color color,
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(MnemonicsSpacing.m),
       decoration: BoxDecoration(
         color: color.withOpacity(0.05),
         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
@@ -999,10 +936,16 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(
+              horizontal: MnemonicsSpacing.m, vertical: 0),
+          childrenPadding: const EdgeInsets.only(
+              left: MnemonicsSpacing.m,
+              right: MnemonicsSpacing.m,
+              bottom: MnemonicsSpacing.m),
+          title: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
@@ -1013,24 +956,24 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                 child: Icon(icon, size: 18, color: color),
               ),
               const SizedBox(width: MnemonicsSpacing.s),
-              Text(
-                title,
-                style: MnemonicsTypography.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: color.withAlpha(220),
+              Expanded(
+                child: Text(
+                  title,
+                  style: MnemonicsTypography.bodyLarge.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: color.withAlpha(220),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: MnemonicsSpacing.s),
-          Text(
-            content,
-            style: MnemonicsTypography.bodyRegular.copyWith(
-              height: 1.5,
-              color: MnemonicsColors.textPrimary.withOpacity(0.85),
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: contentWidget,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

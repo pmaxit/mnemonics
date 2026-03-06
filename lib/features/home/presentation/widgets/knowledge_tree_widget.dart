@@ -96,23 +96,26 @@ class _KnowledgeTreeWidgetState extends ConsumerState<KnowledgeTreeWidget>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Your Knowledge Tree',
-                      style: MnemonicsTypography.headingMedium,
-                    ),
-                    const SizedBox(height: MnemonicsSpacing.xs),
-                    Text(
-                      _getTreeStatusMessage(),
-                      style: MnemonicsTypography.bodyRegular.copyWith(
-                        color: _getHealthThemeColor(),
-                        fontWeight: FontWeight.w500,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Your Knowledge Tree',
+                        style: MnemonicsTypography.headingMedium,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: MnemonicsSpacing.xs),
+                      Text(
+                        _getTreeStatusMessage(),
+                        style: MnemonicsTypography.bodyRegular.copyWith(
+                          color: _getHealthThemeColor(),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: MnemonicsSpacing.m),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [

@@ -1,35 +1,37 @@
 import 'dart:convert';
 
 class WordInsights {
-  final String origin;
-  final String usageContexts;
-  final String popCulture;
-  final String funFact;
+  final String definition;
+  final List<String> commonPhrases;
+  final List<String> exampleSentences;
+  final List<String> synonyms;
+  final String memoryTip;
 
   WordInsights({
-    required this.origin,
-    required this.usageContexts,
-    required this.popCulture,
-    required this.funFact,
+    required this.definition,
+    required this.commonPhrases,
+    required this.exampleSentences,
+    required this.synonyms,
+    required this.memoryTip,
   });
 
   Map<String, dynamic> toMap() {
     return {
-      'origin': origin,
-      'usage_contexts': usageContexts,
-      'pop_culture': popCulture,
-      'fun_fact': funFact,
+      'definition': definition,
+      'common_phrases': commonPhrases,
+      'example_sentences': exampleSentences,
+      'synonyms': synonyms,
+      'memory_tip': memoryTip,
     };
   }
 
   factory WordInsights.fromMap(Map<String, dynamic> map) {
     return WordInsights(
-      origin: map['origin'] as String? ?? 'No origin information available.',
-      usageContexts:
-          map['usage_contexts'] as String? ?? 'No usage context available.',
-      popCulture: map['pop_culture'] as String? ??
-          'No pop culture references available.',
-      funFact: map['fun_fact'] as String? ?? 'No fun facts available.',
+      definition: map['definition'] as String? ?? 'No definition available.',
+      commonPhrases: List<String>.from(map['common_phrases'] ?? []),
+      exampleSentences: List<String>.from(map['example_sentences'] ?? []),
+      synonyms: List<String>.from(map['synonyms'] ?? []),
+      memoryTip: map['memory_tip'] as String? ?? 'No memory tip available.',
     );
   }
 

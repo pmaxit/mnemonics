@@ -56,15 +56,29 @@ Instructions:
     required String word,
   }) async {
     final prompt = '''
-You are an expert etymologist, linguist, and pop-culture enthusiast.
-Provide deep, fascinating insights about the English vocabulary word: "$word"
+For the word detail screen can you add more information about the word.
+
+Act as a GRE vocabulary tutor.
+
+For the given word, help me learn it through association and context.
+
+For the word: "$word"
+
+1. Give a short, simple definition suitable for GRE preparation.
+2. Generate 12-15 short phrases where the word is naturally used.
+   Do NOT write full sentences here — only short phrases (2-4 words).
+   The phrases should cover different contexts such as behavior, science, society, emotions, academic writing, etc.
+3. Write 3 example sentences using the word naturally in different contexts.
+4. Give 3 synonyms commonly tested on GRE.
+5. Give 1 quick memory tip or association to remember the word.
 
 Return EXACTLY a valid JSON object with NO OTHER markdown or formatting (DO NOT wrap it in ```json) using the following structure:
 {
-  "origin": "Briefly describe the etymology and history of the word.",
-  "usage_contexts": "Describe typical scenarios or professional contexts where this word is commonly used.",
-  "pop_culture": "Provide 1 or 2 famous quotes, book titles, movie references, or pop-culture moments where this word is notable.",
-  "fun_fact": "One surprising or fun fact about this word."
+  "definition": "definition here",
+  "common_phrases": ["phrase 1", "phrase 2", "phrase 3"],
+  "example_sentences": ["sentence 1", "sentence 2", "sentence 3"],
+  "synonyms": ["synonym 1", "synonym 2", "synonym 3"],
+  "memory_tip": "memory tip here"
 }
 ''';
 

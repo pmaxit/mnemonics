@@ -64,6 +64,13 @@ class DataMigrationService {
           json['difficulty'] as String? ?? 'medium'),
       category: json['category'] as String,
       setIds: (json['setIds'] as List<dynamic>?)?.cast<String>() ?? [],
+      definition: json['definition'] as String?,
+      phrases:
+          (json['phrases'] as List<dynamic>?)?.cast<String>() ?? <String>[],
+      exampleSentences: (json['exampleSentences'] as List<dynamic>?)
+              ?.map((e) => (e as List<dynamic>).cast<String>())
+              .toList() ??
+          <List<String>>[],
     );
   }
 

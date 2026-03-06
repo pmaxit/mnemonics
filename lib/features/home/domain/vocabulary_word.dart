@@ -20,6 +20,9 @@ class VocabularyWord with _$VocabularyWord {
     required WordDifficulty difficulty,
     required String category,
     @Default(<String>[]) List<String> setIds,
+    String? definition,
+    @Default(<String>[]) List<String> phrases,
+    @Default(<List<String>>[]) List<List<String>> exampleSentences,
   }) = _VocabularyWord;
 
   factory VocabularyWord.fromJson(Map<String, dynamic> json) =>

@@ -57,6 +57,29 @@ class MysqlDatabaseService {
           final setIds = parseList(row['setIds']?.toString());
           final aiMnemonic = row['aiMnemonic']?.toString().trim() ?? '';
           final aiInsights = row['aiInsights']?.toString().trim() ?? '';
+          final definition = row['definition']?.toString().trim();
+
+          List<String> parsedPhrases = [];
+          try {
+            if (row['phrases'] != null &&
+                row['phrases'].toString().isNotEmpty) {
+              parsedPhrases = List<String>.from(json.decode(row['phrases']));
+            }
+          } catch (e) {
+            print('Error parsing phrases: $e');
+          }
+
+          List<List<String>> parsedExampleSentences = [];
+          try {
+            if (row['example_sentences'] != null &&
+                row['example_sentences'].toString().isNotEmpty) {
+              final decodedList = json.decode(row['example_sentences']) as List;
+              parsedExampleSentences =
+                  decodedList.map((inner) => List<String>.from(inner)).toList();
+            }
+          } catch (e) {
+            print('Error parsing example_sentences: $e');
+          }
 
           final vocabWord = VocabularyWord(
             word: word,
@@ -73,6 +96,9 @@ class MysqlDatabaseService {
             aiMnemonic: aiMnemonic.isEmpty ? null : aiMnemonic,
             aiInsights: aiInsights.isEmpty ? null : aiInsights,
             setIds: setIds,
+            definition: definition?.isEmpty ?? true ? null : definition,
+            phrases: parsedPhrases,
+            exampleSentences: parsedExampleSentences,
           );
           words.add(vocabWord);
         } catch (e) {

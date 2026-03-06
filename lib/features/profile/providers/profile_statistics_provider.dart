@@ -62,7 +62,7 @@ ProfileStatistics calculateProfileStatistics(
       .length;
   final wordsLearnedToday = userData
       .where((d) =>
-          d.hasBeenTested &&
+          (d.hasBeenTested || d.isLearned) &&
           d.lastReviewedAt != null &&
           _isSameDay(d.lastReviewedAt!, today))
       .length;
@@ -76,7 +76,8 @@ ProfileStatistics calculateProfileStatistics(
   final totalStudyTimeMinutes = reviewActivities.length;
 
   // Calculate average accuracy
-  final testedWords = userData.where((d) => d.hasBeenTested).toList();
+  final testedWords =
+      userData.where((d) => d.hasBeenTested || d.isLearned).toList();
   final totalAnswers =
       testedWords.fold<int>(0, (sum, d) => sum + d.totalAnswers);
   final correctAnswers =
@@ -106,7 +107,7 @@ ProfileStatistics calculateProfileStatistics(
   final fourWeeksAgo = today.subtract(const Duration(days: 28));
   final recentWords = userData
       .where((d) =>
-          d.hasBeenTested &&
+          (d.hasBeenTested || d.isLearned) &&
           d.lastReviewedAt != null &&
           d.lastReviewedAt!.isAfter(fourWeeksAgo))
       .length;
@@ -242,7 +243,8 @@ ProfileStatistics calculateProfileStatistics(
   // Calculate lastStudyDate
   DateTime? lastStudyDate;
   final allStudyDates = userData
-      .where((d) => d.hasBeenTested && d.lastReviewedAt != null)
+      .where(
+          (d) => (d.hasBeenTested || d.isLearned) && d.lastReviewedAt != null)
       .map((d) => d.lastReviewedAt!)
       .toList();
 
@@ -294,7 +296,7 @@ int _calculateCurrentStreak(
 
   // Add days from user word data (only for actually learned words)
   for (final data in userData) {
-    if (data.hasBeenTested && data.lastReviewedAt != null) {
+    if ((data.hasBeenTested || data.isLearned) && data.lastReviewedAt != null) {
       final day = DateTime(
         data.lastReviewedAt!.year,
         data.lastReviewedAt!.month,
@@ -341,7 +343,7 @@ int _calculateLongestStreak(
   final activeDays = <DateTime>{};
 
   for (final data in userData) {
-    if (data.hasBeenTested && data.lastReviewedAt != null) {
+    if ((data.hasBeenTested || data.isLearned) && data.lastReviewedAt != null) {
       final day = DateTime(
         data.lastReviewedAt!.year,
         data.lastReviewedAt!.month,

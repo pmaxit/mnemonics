@@ -12,6 +12,7 @@ import '../../../profile/providers/user_info_provider.dart';
 import '../../../profile/domain/user_info.dart';
 import '../widgets/knowledge_tree_widget.dart';
 import '../../../profile/providers/profile_statistics_provider.dart';
+import '../../infrastructure/user_word_data_repository.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -471,7 +472,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           return Container(
                             margin: const EdgeInsets.only(
                                 bottom: MnemonicsSpacing.xl),
-                            padding: const EdgeInsets.all(MnemonicsSpacing.m),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
@@ -485,56 +485,92 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                   color: MnemonicsColors.primaryGreen
                                       .withOpacity(0.3)),
                             ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.assistant_direction,
-                                    color: MnemonicsColors.primaryGreen,
-                                    size: 32),
-                                const SizedBox(width: MnemonicsSpacing.m),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(
+                                    MnemonicsSpacing.radiusL),
+                                onTap: () async {
+                                  final vocab = vocabAsync.value ?? [];
+                                  final categoryWords = vocab
+                                      .where((w) =>
+                                          w.category ==
+                                          suggestedCategory.categoryName)
+                                      .toList();
+
+                                  if (categoryWords.isNotEmpty) {
+                                    final repo = ref
+                                        .read(userWordDataRepositoryProvider);
+                                    final allData =
+                                        await repo.getAllUserWordData();
+                                    final learnedWords = allData
+                                        .where((u) => u.isLearned)
+                                        .map((u) => u.word)
+                                        .toSet();
+
+                                    final unlearnedWords = categoryWords
+                                        .where((w) =>
+                                            !learnedWords.contains(w.word))
+                                        .toList();
+
+                                    int initialIndex = 0;
+                                    if (unlearnedWords.isNotEmpty) {
+                                      final randomWord = unlearnedWords[Random()
+                                          .nextInt(unlearnedWords.length)];
+                                      initialIndex =
+                                          categoryWords.indexOf(randomWord);
+                                    }
+
+                                    if (context.mounted) {
+                                      context.push('/flashcards', extra: {
+                                        'words': categoryWords,
+                                        'initialIndex': initialIndex,
+                                      });
+                                    }
+                                  } else {
+                                    // Fallback to the main learning setup
+                                    context.go('/main/timer');
+                                  }
+                                },
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.all(MnemonicsSpacing.m),
+                                  child: Row(
                                     children: [
-                                      Text(
-                                        'Tree Needs Nutrients!',
-                                        style: MnemonicsTypography.bodyLarge
-                                            .copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: MnemonicsColors
-                                                    .primaryGreen),
+                                      const Icon(Icons.assistant_direction,
+                                          color: MnemonicsColors.primaryGreen,
+                                          size: 32),
+                                      const SizedBox(width: MnemonicsSpacing.m),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Tree Needs Nutrients!',
+                                              style: MnemonicsTypography
+                                                  .bodyLarge
+                                                  .copyWith(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: MnemonicsColors
+                                                          .primaryGreen),
+                                            ),
+                                            Text(
+                                              'Let\'s conquer "${suggestedCategory.categoryName}" next.',
+                                              style: MnemonicsTypography
+                                                  .bodyRegular,
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                      Text(
-                                        'Let\'s conquer "${suggestedCategory.categoryName}" next.',
-                                        style: MnemonicsTypography.bodyRegular,
-                                      ),
+                                      const Icon(Icons.arrow_forward_ios,
+                                          color: MnemonicsColors.primaryGreen,
+                                          size: 16),
                                     ],
                                   ),
                                 ),
-                                IconButton(
-                                  onPressed: () {
-                                    final vocab = vocabAsync.value ?? [];
-                                    final categoryWords = vocab
-                                        .where((w) =>
-                                            w.category ==
-                                            suggestedCategory.categoryName)
-                                        .toList();
-
-                                    if (categoryWords.isNotEmpty) {
-                                      context.push('/flashcards', extra: {
-                                        'words': categoryWords,
-                                        'initialIndex': 0,
-                                      });
-                                    } else {
-                                      // Fallback to the main learning setup
-                                      context.go('/main/timer');
-                                    }
-                                  },
-                                  icon: const Icon(Icons.arrow_forward_ios,
-                                      color: MnemonicsColors.primaryGreen,
-                                      size: 16),
-                                ),
-                              ],
+                              ),
                             ),
                           );
                         },
