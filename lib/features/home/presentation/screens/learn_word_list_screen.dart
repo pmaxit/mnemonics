@@ -136,13 +136,7 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
           return a.word.toLowerCase().compareTo(b.word.toLowerCase());
       }
     });
-    final difficulties = vocabList.map((w) => w.difficulty).toSet().toList();
     final categories = vocabList.map((w) => w.category).toSet().toList();
-    final accentColors = [
-      MnemonicsColors.primaryGreen,
-      MnemonicsColors.secondaryOrange,
-      MnemonicsColors.progressPink
-    ];
 
     final wordSetsAsync = ref.watch(wordSetListProvider);
     String? setName;
@@ -299,23 +293,43 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
                     error: (e, _) => Center(child: Text('Error: $e')),
-                    data: (_) => filtered.isEmpty
-                        ? _buildEmptyState(isDarkMode)
-                        : ListView.separated(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: MnemonicsSpacing.l,
-                                vertical: MnemonicsSpacing.m),
-                            itemCount: filtered.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: MnemonicsSpacing.m),
-                            itemBuilder: (context, i) {
-                              final word = filtered[i];
-                              final accent =
-                                  accentColors[i % accentColors.length];
-                              return _buildWordCard(
-                                  word, accent, i, filtered, isDarkMode);
-                            },
-                          ),
+                    data: (_) {
+                      if (filtered.isEmpty) {
+                        return _buildEmptyState(isDarkMode);
+                      }
+
+                      // Group words by category
+                      final Map<String, List<VocabularyWord>> grouped = {};
+                      for (var word in filtered) {
+                        final cat = word.category.isEmpty
+                            ? 'Uncategorized'
+                            : word.category;
+                        grouped.putIfAbsent(cat, () => []).add(word);
+                      }
+                      final sortedCategories = grouped.keys.toList()..sort();
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: MnemonicsSpacing.l,
+                            vertical: MnemonicsSpacing.m),
+                        itemCount: sortedCategories.length,
+                        itemBuilder: (context, index) {
+                          final category = sortedCategories[index];
+                          final categoryWords = grouped[category]!;
+
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                                bottom: MnemonicsSpacing.m),
+                            child: _buildCategoryExpansionTile(
+                              category: category,
+                              categoryWords: categoryWords,
+                              filtered: filtered,
+                              isDarkMode: isDarkMode,
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
                 ),
               ],
@@ -604,5 +618,88 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
       case WordDifficulty.advanced:
         return Colors.red;
     }
+  }
+
+  Widget _buildCategoryExpansionTile({
+    required String category,
+    required List<VocabularyWord> categoryWords,
+    required List<VocabularyWord> filtered,
+    required bool isDarkMode,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+        boxShadow: isDarkMode
+            ? MnemonicsColors.darkCardShadow
+            : MnemonicsColors.cardShadow,
+        border: isDarkMode
+            ? Border.all(
+                color: MnemonicsColors.darkBorder.withOpacity(0.3),
+                width: 1,
+              )
+            : null,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            title: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    category.toUpperCase(),
+                    style: MnemonicsTypography.bodyLarge.copyWith(
+                      color: isDarkMode
+                          ? MnemonicsColors.darkTextPrimary
+                          : MnemonicsColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: MnemonicsColors.primaryGreen.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${categoryWords.length}',
+                    style: MnemonicsTypography.bodyRegular.copyWith(
+                      color: MnemonicsColors.primaryGreen,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            children: categoryWords.map((word) {
+              final globalIndex = filtered.indexOf(word);
+              final accentColorsList = [
+                MnemonicsColors.primaryGreen,
+                MnemonicsColors.secondaryOrange,
+                MnemonicsColors.progressPink
+              ];
+              final accent =
+                  accentColorsList[globalIndex % accentColorsList.length];
+
+              return Padding(
+                padding: const EdgeInsets.only(
+                  left: MnemonicsSpacing.m,
+                  right: MnemonicsSpacing.m,
+                  bottom: MnemonicsSpacing.m,
+                ),
+                child: _buildWordCard(
+                    word, accent, globalIndex, filtered, isDarkMode),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
   }
 }

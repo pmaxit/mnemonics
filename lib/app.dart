@@ -6,6 +6,9 @@ import 'features/home/presentation/screens/learn_word_detail_screen.dart';
 import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/home/presentation/screens/main_scaffold.dart';
 import 'features/home/presentation/screens/home_screen.dart';
+import 'features/auth/presentation/screens/welcome_screen.dart';
+import 'features/auth/presentation/screens/login_screen.dart';
+import 'features/auth/presentation/screens/signup_screen.dart';
 import 'features/home/presentation/screens/knowledge_tree_detail_screen.dart';
 import 'features/practice/presentation/screens/practice_screen.dart';
 import 'features/practice/presentation/screens/learning_session_screen.dart';
@@ -25,6 +28,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/welcome',
+        builder: (context, state) => const WelcomeScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => const SignupScreen(),
       ),
       GoRoute(
         path: '/knowledge-tree',

@@ -340,7 +340,9 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
       ),
       body: Stack(
         children: [
-          AnimatedWaveBackground(height: MediaQuery.of(context).size.height),
+          Positioned.fill(
+            child: const AnimatedWaveBackground(),
+          ),
           _loading
               ? const Center(child: CircularProgressIndicator())
               : PageView.builder(
@@ -633,42 +635,6 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                             },
                           ),
                           const SizedBox(height: MnemonicsSpacing.l),
-                          const Text('Your Notes:',
-                              style: MnemonicsTypography.bodyLarge),
-                          TextField(
-                            controller: _notesController,
-                            maxLines: 3,
-                            decoration: const InputDecoration(
-                              hintText: 'Add your notes or mnemonic...',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (_) {
-                              setState(() {
-                                _isNotesDirty = true;
-                              });
-                              _saveUserWordData();
-                            },
-                          ),
-                          if (_isNotesDirty) ...[
-                            const SizedBox(height: MnemonicsSpacing.s),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: ElevatedButton.icon(
-                                onPressed:
-                                    _isSavingNotes ? null : _saveCloudNotes,
-                                icon: _isSavingNotes
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                            strokeWidth: 2))
-                                    : const Icon(Icons.cloud_upload),
-                                label: const Text('Save to Cloud'),
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: MnemonicsSpacing.m),
-                          const SizedBox(height: MnemonicsSpacing.m),
                           _buildProgressInfo(),
                           const SizedBox(height: MnemonicsSpacing.m),
                           _buildSpacedRepetitionHint(),
@@ -716,6 +682,41 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                   ),
                                 ),
                               ],
+                            ),
+                            const SizedBox(height: MnemonicsSpacing.l),
+                          ],
+                          const Text('Your Notes:',
+                              style: MnemonicsTypography.bodyLarge),
+                          TextField(
+                            controller: _notesController,
+                            maxLines: 3,
+                            decoration: const InputDecoration(
+                              hintText: 'Add your notes or mnemonic...',
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (_) {
+                              setState(() {
+                                _isNotesDirty = true;
+                              });
+                              _saveUserWordData();
+                            },
+                          ),
+                          if (_isNotesDirty) ...[
+                            const SizedBox(height: MnemonicsSpacing.s),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: ElevatedButton.icon(
+                                onPressed:
+                                    _isSavingNotes ? null : _saveCloudNotes,
+                                icon: _isSavingNotes
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2))
+                                    : const Icon(Icons.cloud_upload),
+                                label: const Text('Save to Cloud'),
+                              ),
                             ),
                           ],
                           // TODO: Add spaced repetition review actions

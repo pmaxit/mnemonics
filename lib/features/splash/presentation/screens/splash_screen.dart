@@ -77,7 +77,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void _navigateToHome() {
     _pulseController.stop();
     _flyInController.reverse().then((_) {
-      context.go('/main/home');
+      context.go('/welcome');
     });
   }
 

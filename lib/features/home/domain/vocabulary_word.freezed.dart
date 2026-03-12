@@ -35,6 +35,9 @@ mixin _$VocabularyWord {
   WordDifficulty get difficulty => throw _privateConstructorUsedError;
   String get category => throw _privateConstructorUsedError;
   List<String> get setIds => throw _privateConstructorUsedError;
+  String? get definition => throw _privateConstructorUsedError;
+  List<String> get phrases => throw _privateConstructorUsedError;
+  List<List<String>> get exampleSentences => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -61,7 +64,10 @@ abstract class $VocabularyWordCopyWith<$Res> {
       List<String> antonyms,
       WordDifficulty difficulty,
       String category,
-      List<String> setIds});
+      List<String> setIds,
+      String? definition,
+      List<String> phrases,
+      List<List<String>> exampleSentences});
 }
 
 /// @nodoc
@@ -90,6 +96,9 @@ class _$VocabularyWordCopyWithImpl<$Res, $Val extends VocabularyWord>
     Object? difficulty = null,
     Object? category = null,
     Object? setIds = null,
+    Object? definition = freezed,
+    Object? phrases = null,
+    Object? exampleSentences = null,
   }) {
     return _then(_value.copyWith(
       word: null == word
@@ -144,6 +153,18 @@ class _$VocabularyWordCopyWithImpl<$Res, $Val extends VocabularyWord>
           ? _value.setIds
           : setIds // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      definition: freezed == definition
+          ? _value.definition
+          : definition // ignore: cast_nullable_to_non_nullable
+              as String?,
+      phrases: null == phrases
+          ? _value.phrases
+          : phrases // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      exampleSentences: null == exampleSentences
+          ? _value.exampleSentences
+          : exampleSentences // ignore: cast_nullable_to_non_nullable
+              as List<List<String>>,
     ) as $Val);
   }
 }
@@ -169,7 +190,10 @@ abstract class _$$VocabularyWordImplCopyWith<$Res>
       List<String> antonyms,
       WordDifficulty difficulty,
       String category,
-      List<String> setIds});
+      List<String> setIds,
+      String? definition,
+      List<String> phrases,
+      List<List<String>> exampleSentences});
 }
 
 /// @nodoc
@@ -196,6 +220,9 @@ class __$$VocabularyWordImplCopyWithImpl<$Res>
     Object? difficulty = null,
     Object? category = null,
     Object? setIds = null,
+    Object? definition = freezed,
+    Object? phrases = null,
+    Object? exampleSentences = null,
   }) {
     return _then(_$VocabularyWordImpl(
       word: null == word
@@ -250,6 +277,18 @@ class __$$VocabularyWordImplCopyWithImpl<$Res>
           ? _value._setIds
           : setIds // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      definition: freezed == definition
+          ? _value.definition
+          : definition // ignore: cast_nullable_to_non_nullable
+              as String?,
+      phrases: null == phrases
+          ? _value._phrases
+          : phrases // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      exampleSentences: null == exampleSentences
+          ? _value._exampleSentences
+          : exampleSentences // ignore: cast_nullable_to_non_nullable
+              as List<List<String>>,
     ));
   }
 }
@@ -270,10 +309,15 @@ class _$VocabularyWordImpl implements _VocabularyWord {
       required final List<String> antonyms,
       required this.difficulty,
       required this.category,
-      final List<String> setIds = const <String>[]})
+      final List<String> setIds = const <String>[],
+      this.definition,
+      final List<String> phrases = const <String>[],
+      final List<List<String>> exampleSentences = const <List<String>>[]})
       : _synonyms = synonyms,
         _antonyms = antonyms,
-        _setIds = setIds;
+        _setIds = setIds,
+        _phrases = phrases,
+        _exampleSentences = exampleSentences;
 
   factory _$VocabularyWordImpl.fromJson(Map<String, dynamic> json) =>
       _$$VocabularyWordImplFromJson(json);
@@ -326,8 +370,29 @@ class _$VocabularyWordImpl implements _VocabularyWord {
   }
 
   @override
+  final String? definition;
+  final List<String> _phrases;
+  @override
+  @JsonKey()
+  List<String> get phrases {
+    if (_phrases is EqualUnmodifiableListView) return _phrases;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_phrases);
+  }
+
+  final List<List<String>> _exampleSentences;
+  @override
+  @JsonKey()
+  List<List<String>> get exampleSentences {
+    if (_exampleSentences is EqualUnmodifiableListView)
+      return _exampleSentences;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_exampleSentences);
+  }
+
+  @override
   String toString() {
-    return 'VocabularyWord(word: $word, meaning: $meaning, mnemonic: $mnemonic, aiMnemonic: $aiMnemonic, aiInsights: $aiInsights, image: $image, video: $video, example: $example, synonyms: $synonyms, antonyms: $antonyms, difficulty: $difficulty, category: $category, setIds: $setIds)';
+    return 'VocabularyWord(word: $word, meaning: $meaning, mnemonic: $mnemonic, aiMnemonic: $aiMnemonic, aiInsights: $aiInsights, image: $image, video: $video, example: $example, synonyms: $synonyms, antonyms: $antonyms, difficulty: $difficulty, category: $category, setIds: $setIds, definition: $definition, phrases: $phrases, exampleSentences: $exampleSentences)';
   }
 
   @override
@@ -352,7 +417,12 @@ class _$VocabularyWordImpl implements _VocabularyWord {
                 other.difficulty == difficulty) &&
             (identical(other.category, category) ||
                 other.category == category) &&
-            const DeepCollectionEquality().equals(other._setIds, _setIds));
+            const DeepCollectionEquality().equals(other._setIds, _setIds) &&
+            (identical(other.definition, definition) ||
+                other.definition == definition) &&
+            const DeepCollectionEquality().equals(other._phrases, _phrases) &&
+            const DeepCollectionEquality()
+                .equals(other._exampleSentences, _exampleSentences));
   }
 
   @JsonKey(ignore: true)
@@ -371,7 +441,10 @@ class _$VocabularyWordImpl implements _VocabularyWord {
       const DeepCollectionEquality().hash(_antonyms),
       difficulty,
       category,
-      const DeepCollectionEquality().hash(_setIds));
+      const DeepCollectionEquality().hash(_setIds),
+      definition,
+      const DeepCollectionEquality().hash(_phrases),
+      const DeepCollectionEquality().hash(_exampleSentences));
 
   @JsonKey(ignore: true)
   @override
@@ -402,7 +475,10 @@ abstract class _VocabularyWord implements VocabularyWord {
       required final List<String> antonyms,
       required final WordDifficulty difficulty,
       required final String category,
-      final List<String> setIds}) = _$VocabularyWordImpl;
+      final List<String> setIds,
+      final String? definition,
+      final List<String> phrases,
+      final List<List<String>> exampleSentences}) = _$VocabularyWordImpl;
 
   factory _VocabularyWord.fromJson(Map<String, dynamic> json) =
       _$VocabularyWordImpl.fromJson;
@@ -435,6 +511,12 @@ abstract class _VocabularyWord implements VocabularyWord {
   String get category;
   @override
   List<String> get setIds;
+  @override
+  String? get definition;
+  @override
+  List<String> get phrases;
+  @override
+  List<List<String>> get exampleSentences;
   @override
   @JsonKey(ignore: true)
   _$$VocabularyWordImplCopyWith<_$VocabularyWordImpl> get copyWith =>

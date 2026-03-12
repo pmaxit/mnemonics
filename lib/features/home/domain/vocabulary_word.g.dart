@@ -26,6 +26,16 @@ _$VocabularyWordImpl _$$VocabularyWordImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           const <String>[],
+      definition: json['definition'] as String?,
+      phrases: (json['phrases'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const <String>[],
+      exampleSentences: (json['exampleSentences'] as List<dynamic>?)
+              ?.map(
+                  (e) => (e as List<dynamic>).map((e) => e as String).toList())
+              .toList() ??
+          const <List<String>>[],
     );
 
 Map<String, dynamic> _$$VocabularyWordImplToJson(
@@ -44,6 +54,9 @@ Map<String, dynamic> _$$VocabularyWordImplToJson(
       'difficulty': _$WordDifficultyEnumMap[instance.difficulty]!,
       'category': instance.category,
       'setIds': instance.setIds,
+      'definition': instance.definition,
+      'phrases': instance.phrases,
+      'exampleSentences': instance.exampleSentences,
     };
 
 const _$WordDifficultyEnumMap = {

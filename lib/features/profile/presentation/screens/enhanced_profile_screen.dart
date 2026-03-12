@@ -14,6 +14,9 @@ import '../../domain/user_statistics.dart';
 import '../widgets/profile_settings_widget.dart';
 import '../widgets/difficulty_stats_widget.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
+import 'package:go_router/go_router.dart';
+import '../../../auth/providers/auth_provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class EnhancedProfileScreen extends ConsumerStatefulWidget {
   const EnhancedProfileScreen({super.key});
@@ -203,6 +206,9 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
       case 'importData':
         _handleDataImport();
         break;
+      case 'logout':
+        _handleLogout();
+        break;
       case 'resetProgress':
         _handleProgressReset();
         break;
@@ -283,6 +289,38 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
     }
   }
 
+  Future<void> _handleLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Log Out'),
+        content: const Text(
+          'Are you sure you want to log out of your account?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      // Perform actual Firebase logout
+      await ref.read(authControllerProvider.notifier).signOut();
+
+      if (mounted) {
+        context.go('/welcome');
+      }
+    }
+  }
+
   Future<void> _handleProgressReset() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -331,6 +369,15 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
         await userSettingsNotifier.updateLanguages(['en']); // Default language
         await userSettingsNotifier
             .updateReviewFrequency(1); // Default frequency
+
+        // Clear all Hive boxes that might contain user data
+        final hiveDir =
+            await Hive.boxExists('user_settings') ? '' : ''; // Dummy check
+        await Hive.deleteBoxFromDisk('user_word_data');
+        await Hive.deleteBoxFromDisk('user_settings');
+        await Hive.deleteBoxFromDisk('review_activity');
+        await Hive.deleteBoxFromDisk('user_statistics');
+        await Hive.deleteBoxFromDisk('user_info');
 
         // Invalidate all providers to refresh UI state
         ref.invalidate(allUserWordDataProvider);

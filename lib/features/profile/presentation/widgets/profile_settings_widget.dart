@@ -18,14 +18,13 @@ class ProfileSettingsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = isDarkMode 
-        ? MnemonicsColors.darkSurface 
-        : Colors.white;
-    final textColor = isDarkMode 
-        ? MnemonicsColors.darkTextPrimary 
+    final backgroundColor =
+        isDarkMode ? MnemonicsColors.darkSurface : Colors.white;
+    final textColor = isDarkMode
+        ? MnemonicsColors.darkTextPrimary
         : MnemonicsColors.textPrimary;
-    final secondaryTextColor = isDarkMode 
-        ? MnemonicsColors.darkTextSecondary 
+    final secondaryTextColor = isDarkMode
+        ? MnemonicsColors.darkTextSecondary
         : MnemonicsColors.textSecondary;
 
     return Container(
@@ -36,10 +35,10 @@ class ProfileSettingsWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-        boxShadow: isDarkMode 
-            ? MnemonicsColors.darkCardShadow 
+        boxShadow: isDarkMode
+            ? MnemonicsColors.darkCardShadow
             : MnemonicsColors.cardShadow,
-        border: isDarkMode 
+        border: isDarkMode
             ? Border.all(
                 color: MnemonicsColors.darkBorder.withOpacity(0.3),
                 width: 1,
@@ -59,7 +58,7 @@ class ProfileSettingsWidget extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // Learning Preferences
           _buildSettingsSection(
             'Learning Preferences',
@@ -83,7 +82,7 @@ class ProfileSettingsWidget extends StatelessWidget {
             ],
             textColor,
           ),
-          
+
           // Appearance
           _buildSettingsSection(
             'Appearance',
@@ -99,7 +98,7 @@ class ProfileSettingsWidget extends StatelessWidget {
             ],
             textColor,
           ),
-          
+
           // Data Management
           _buildSettingsSection(
             'Data Management',
@@ -123,11 +122,19 @@ class ProfileSettingsWidget extends StatelessWidget {
             ],
             textColor,
           ),
-          
+
           // Advanced
           _buildSettingsSection(
             'Advanced',
             [
+              _buildSettingItem(
+                icon: Icons.logout,
+                title: 'Log Out',
+                subtitle: 'Sign out of your account',
+                onTap: () => onSettingChanged('logout', null),
+                textColor: textColor,
+                secondaryTextColor: secondaryTextColor,
+              ),
               _buildSettingItem(
                 icon: Icons.restore,
                 title: 'Reset Progress',
@@ -190,16 +197,17 @@ class ProfileSettingsWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(MnemonicsSpacing.s),
               decoration: BoxDecoration(
-                color: isDestructive 
+                color: isDestructive
                     ? Colors.red.withOpacity(0.1)
-                    : (isDarkMode ? MnemonicsColors.darkBorder : MnemonicsColors.surface),
+                    : (isDarkMode
+                        ? MnemonicsColors.darkBorder
+                        : MnemonicsColors.surface),
                 borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
               ),
               child: Icon(
                 icon,
-                color: isDestructive 
-                    ? Colors.red 
-                    : MnemonicsColors.primaryGreen,
+                color:
+                    isDestructive ? Colors.red : MnemonicsColors.primaryGreen,
                 size: 20,
               ),
             ),
