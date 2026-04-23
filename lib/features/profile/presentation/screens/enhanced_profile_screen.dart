@@ -17,6 +17,8 @@ import '../../../../common/widgets/animated_wave_background.dart';
 import 'package:go_router/go_router.dart';
 import '../../../auth/providers/auth_provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:http/http.dart' as http;
+import '../../../auth/infrastructure/auth_repository.dart';
 
 class EnhancedProfileScreen extends ConsumerStatefulWidget {
   const EnhancedProfileScreen({super.key});
@@ -353,6 +355,17 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
               duration: Duration(seconds: 1),
             ),
           );
+        }
+
+        // Clear cloud user data
+        final userId = ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
+        try {
+          final response = await http.delete(Uri.parse('https://mnemonics-api-1078980357394.us-central1.run.app/reset/$userId'));
+          if (response.statusCode != 200) {
+            print('Failed to reset cloud data. Status code: ${response.statusCode}');
+          }
+        } catch (e) {
+          print('Error calling reset API: $e');
         }
 
         // Clear user word data

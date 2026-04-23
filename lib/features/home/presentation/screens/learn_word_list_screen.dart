@@ -11,6 +11,7 @@ import '../../infrastructure/word_set_repository.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../../auth/infrastructure/auth_repository.dart';
 
 enum SortOption {
   alphabeticalAsc,
@@ -68,9 +69,11 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
   }
 
   Future<void> _fetchLearnedWords() async {
+    final userId =
+        ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
     try {
       final response = await http.get(Uri.parse(
-          'https://mnemonics-api-1078980357394.us-central1.run.app/learned_status/default'));
+          'https://mnemonics-api-1078980357394.us-central1.run.app/learned_status/$userId'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (mounted) {
@@ -228,6 +231,109 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
                     onChanged: (value) => setState(() => _search = value),
                   ),
                 ),
+
+                // Category Chip Filter Bar
+                SizedBox(
+                  height: 48,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: MnemonicsSpacing.m),
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(width: MnemonicsSpacing.s),
+                    itemCount: categories.length + 1, // +1 for "All"
+                    itemBuilder: (context, index) {
+                      final isAll = index == 0;
+                      final label = isAll ? 'All' : categories[index - 1];
+                      final isSelected = isAll
+                          ? _category == null
+                          : _category == label;
+
+                      // Count words matching this category chip
+                      final chipCount = isAll
+                          ? vocabList
+                              .where((w) => w.setIds.contains(widget.setId))
+                              .length
+                          : vocabList
+                              .where((w) =>
+                                  w.setIds.contains(widget.setId) &&
+                                  w.category == label)
+                              .length;
+
+                      return ChoiceChip(
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isAll ? label : _formatCategoryLabel(label),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.white.withOpacity(0.25)
+                                    : (isDarkMode
+                                        ? MnemonicsColors.darkBorder
+                                            .withOpacity(0.4)
+                                        : MnemonicsColors.surface),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '$chipCount',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : (isDarkMode
+                                          ? MnemonicsColors.darkTextSecondary
+                                          : MnemonicsColors.textSecondary),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        selected: isSelected,
+                        onSelected: (_) {
+                          setState(() {
+                            _category = isAll ? null : label;
+                          });
+                        },
+                        selectedColor: MnemonicsColors.primaryGreen,
+                        backgroundColor: isDarkMode
+                            ? MnemonicsColors.darkSurface
+                            : Colors.white,
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? Colors.white
+                              : (isDarkMode
+                                  ? MnemonicsColors.darkTextPrimary
+                                  : MnemonicsColors.textPrimary),
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              MnemonicsSpacing.radiusL),
+                          side: BorderSide(
+                            color: isSelected
+                                ? MnemonicsColors.primaryGreen
+                                : (isDarkMode
+                                    ? MnemonicsColors.darkBorder
+                                        .withOpacity(0.3)
+                                    : MnemonicsColors.surface),
+                          ),
+                        ),
+                        showCheckmark: false,
+                        elevation: isSelected ? 2 : 0,
+                        pressElevation: 4,
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: MnemonicsSpacing.s),
 
                 // Sorting UI
                 Padding(
@@ -607,6 +713,17 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
         );
       },
     );
+  }
+
+  String _formatCategoryLabel(String category) {
+    if (category.isEmpty) return 'Uncategorized';
+    // Title-case: capitalize first letter of each word
+    return category
+        .split(' ')
+        .map((word) => word.isEmpty
+            ? word
+            : '${word[0].toUpperCase()}${word.substring(1)}')
+        .join(' ');
   }
 
   Color _getDifficultyColor(WordDifficulty difficulty) {

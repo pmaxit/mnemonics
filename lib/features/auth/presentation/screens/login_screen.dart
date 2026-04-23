@@ -60,6 +60,54 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _handleGoogleLogin() async {
+    try {
+      await ref.read(authControllerProvider.notifier).signInWithGoogle();
+
+      final authState = ref.read(authControllerProvider);
+      if (authState.hasError) {
+        throw authState.error!;
+      }
+
+      if (mounted) {
+        context.go('/main/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google Sign-In failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleAppleLogin() async {
+    try {
+      await ref.read(authControllerProvider.notifier).signInWithApple();
+
+      final authState = ref.read(authControllerProvider);
+      if (authState.hasError) {
+        throw authState.error!;
+      }
+
+      if (mounted) {
+        context.go('/main/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Apple Sign-In failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _handleSocialLogin(String provider) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$provider login is not yet implemented.')),
@@ -232,7 +280,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       AuthSocialButton(
                         label: "Continue with Google",
                         icon: const GoogleIconWidget(),
-                        onPressed: () => _handleSocialLogin('Google'),
+                        onPressed: isLoading ? () {} : _handleGoogleLogin,
                       ),
                       AuthSocialButton(
                         label: "Continue with Apple",
@@ -241,7 +289,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         backgroundColor: Colors.black,
                         textColor: Colors.white,
                         border: BorderSide.none,
-                        onPressed: () => _handleSocialLogin('Apple'),
+                        onPressed: isLoading ? () {} : _handleAppleLogin,
                       ),
                       AuthSocialButton(
                         label: "Continue with Facebook",

@@ -63,6 +63,54 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     }
   }
 
+  Future<void> _handleGoogleSignup() async {
+    try {
+      await ref.read(authControllerProvider.notifier).signInWithGoogle();
+
+      final authState = ref.read(authControllerProvider);
+      if (authState.hasError) {
+        throw authState.error!;
+      }
+
+      if (mounted) {
+        context.go('/main/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google Sign-Up failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleAppleSignup() async {
+    try {
+      await ref.read(authControllerProvider.notifier).signInWithApple();
+
+      final authState = ref.read(authControllerProvider);
+      if (authState.hasError) {
+        throw authState.error!;
+      }
+
+      if (mounted) {
+        context.go('/main/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Apple Sign-Up failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
@@ -235,7 +283,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       AuthSocialButton(
                         label: "Sign Up with Google",
                         icon: const GoogleIconWidget(),
-                        onPressed: _handleSignup,
+                        onPressed: isLoading ? () {} : _handleGoogleSignup,
                       ),
                       AuthSocialButton(
                         label: "Sign Up with Apple",
@@ -244,7 +292,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         backgroundColor: Colors.black,
                         textColor: Colors.white,
                         border: BorderSide.none,
-                        onPressed: _handleSignup,
+                        onPressed: isLoading ? () {} : _handleAppleSignup,
                       ),
 
                       const Spacer(),

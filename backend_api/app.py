@@ -48,12 +48,12 @@ def get_vocabulary():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/notes/<word>', methods=['GET'])
-def get_notes(word):
+@app.route('/notes/<user_id>/<word>', methods=['GET'])
+def get_notes(user_id, word):
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT notes FROM UserNotes WHERE word = %s", (word,))
+        cursor.execute("SELECT notes FROM UserNotes WHERE user_id = %s AND word = %s", (user_id, word))
         row = cursor.fetchone()
         cursor.close()
         conn.close()
@@ -63,17 +63,17 @@ def get_notes(word):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/notes/<word>', methods=['POST'])
-def save_notes(word):
+@app.route('/notes/<user_id>/<word>', methods=['POST'])
+def save_notes(user_id, word):
     data = request.json
     notes = data.get('notes', '')
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute('''
-        INSERT INTO UserNotes (word, notes) VALUES (%s, %s)
+        INSERT INTO UserNotes (user_id, word, notes) VALUES (%s, %s, %s)
         ON DUPLICATE KEY UPDATE notes = %s
-        ''', (word, notes, notes))
+        ''', (user_id, word, notes, notes))
         conn.commit()
         cursor.close()
         conn.close()
@@ -125,6 +125,58 @@ def get_all_learned_status(user_id):
         conn.close()
         learned_words = [row['word'] for row in rows]
         return jsonify({"learned_words": learned_words})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/user_progress/<user_id>', methods=['GET'])
+def get_user_progress(user_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT word, progress_data FROM UserWordProgress WHERE user_id = %s", (user_id,))
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        progress = {}
+        for row in rows:
+            progress[row['word']] = row['progress_data']
+            
+        return jsonify({"progress": progress})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/user_progress/<user_id>/<word>', methods=['POST'])
+def save_user_progress(user_id, word):
+    data = request.json
+    try:
+        import json
+        progress_data_str = json.dumps(data)
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+        INSERT INTO UserWordProgress (user_id, word, progress_data) VALUES (%s, %s, %s)
+        ON DUPLICATE KEY UPDATE progress_data = %s
+        ''', (user_id, word, progress_data_str, progress_data_str))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/reset/<user_id>', methods=['DELETE'])
+def reset_user_data(user_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM UserNotes WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM UserLearnedWords WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM UserWordProgress WHERE user_id = %s", (user_id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"status": "ok"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

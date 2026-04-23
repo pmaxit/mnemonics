@@ -67,14 +67,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   static const List<IconData> setIcons = [
-    Icons.book,
-    Icons.star,
-    Icons.school,
+    Icons.school,                // SAT
+    Icons.menu_book,             // GRE
+    Icons.favorite,              // Emotions
+    Icons.person,                // Character
+    Icons.record_voice_over,     // Speech
+    Icons.psychology,            // Intellect
+    Icons.flash_on,              // Conflict
+    Icons.gavel,                 // Power
+    Icons.balance,               // Morality
+    Icons.rate_review,           // Criticism
+    Icons.all_inclusive,         // Abundance
+    Icons.autorenew,             // Change
+    Icons.star,                  // MyList
   ];
   static const List<Color> accentColors = [
-    MnemonicsColors.primaryGreen,
-    MnemonicsColors.secondaryOrange,
-    MnemonicsColors.progressPink,
+    Color(0xFF4CAF50),           // SAT — green
+    Color(0xFFE91E63),           // GRE — pink
+    Color(0xFFFF7043),           // Emotions — deep orange
+    Color(0xFF26A69A),           // Character — teal
+    Color(0xFF5C6BC0),           // Speech — indigo
+    Color(0xFF7E57C2),           // Intellect — deep purple
+    Color(0xFFEF5350),           // Conflict — red
+    Color(0xFF455A64),           // Power — blue grey
+    Color(0xFF66BB6A),           // Morality — light green
+    Color(0xFFFFA726),           // Criticism — orange
+    Color(0xFF42A5F5),           // Abundance — blue
+    Color(0xFF26C6DA),           // Change — cyan
+    Color(0xFFFFCA28),           // MyList — amber
   ];
 
   String _getRandomQuote() {

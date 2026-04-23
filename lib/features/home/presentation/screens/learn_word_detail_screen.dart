@@ -17,6 +17,7 @@ import '../../../practice/providers/ai_word_insights_provider.dart';
 import 'package:translator/translator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../../auth/infrastructure/auth_repository.dart';
 
 class LearnWordDetailScreen extends ConsumerStatefulWidget {
   final List<VocabularyWord> words;
@@ -109,9 +110,11 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
   }
 
   Future<void> _fetchCloudNotes(String word) async {
+    final userId =
+        ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
     try {
       final response = await http.get(Uri.parse(
-          'https://mnemonics-api-1078980357394.us-central1.run.app/notes/$word'));
+          'https://mnemonics-api-1078980357394.us-central1.run.app/notes/$userId/$word'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['notes'] != null && data['notes'].toString().isNotEmpty) {
@@ -132,6 +135,8 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
   Future<void> _saveCloudNotes() async {
     final word = widget.words[_currentIndex].word;
     final notes = _notesController?.text ?? '';
+    final userId =
+        ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
 
     setState(() {
       _isSavingNotes = true;
@@ -140,7 +145,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     try {
       final response = await http.post(
         Uri.parse(
-            'https://mnemonics-api-1078980357394.us-central1.run.app/notes/$word'),
+            'https://mnemonics-api-1078980357394.us-central1.run.app/notes/$userId/$word'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'notes': notes}),
       );
@@ -171,9 +176,11 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
   }
 
   Future<void> _fetchCloudLearnedStatus(String word) async {
+    final userId =
+        ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
     try {
       final response = await http.get(Uri.parse(
-          'https://mnemonics-api-1078980357394.us-central1.run.app/learned_status/default/$word'));
+          'https://mnemonics-api-1078980357394.us-central1.run.app/learned_status/$userId/$word'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (mounted) {
@@ -189,10 +196,12 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
 
   Future<void> _saveCloudLearnedStatus(bool learned) async {
     final word = widget.words[_currentIndex].word;
+    final userId =
+        ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
     try {
       final response = await http.post(
         Uri.parse(
-            'https://mnemonics-api-1078980357394.us-central1.run.app/learned_status/default/$word'),
+            'https://mnemonics-api-1078980357394.us-central1.run.app/learned_status/$userId/$word'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'is_learned': learned}),
       );
