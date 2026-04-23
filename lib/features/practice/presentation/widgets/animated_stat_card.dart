@@ -146,6 +146,9 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return AnimatedBuilder(
@@ -162,15 +165,7 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
 
         // Calculate shadow
         final shadowProgress = _hoverAnimation.value;
-        final boxShadow = BoxShadow.lerp(
-          (isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow).first,
-          (isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow).first.copyWith(
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-          shadowProgress,
-        );
-
+        
         return Transform.translate(
           offset: entrySlide,
           child: Transform.scale(

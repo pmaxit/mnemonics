@@ -367,6 +367,25 @@ def update_study_plan_day_status(user_id, day_num):
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/study-plan/<plan_id>', methods=['DELETE'])
+def delete_study_plan(plan_id):
+    """Deletes (archives) a study plan."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # Instead of hard delete, we set status to 'abandoned' to match ENUM
+        cursor.execute(
+            "UPDATE StudyPlans SET status = 'abandoned' WHERE id = %s",
+            (plan_id,)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == '__main__':
     # Run locally on a specified port
     port = int(os.environ.get("PORT", 8080))

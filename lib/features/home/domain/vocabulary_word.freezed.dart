@@ -36,11 +36,17 @@ mixin _$VocabularyWord {
   String get category => throw _privateConstructorUsedError;
   List<String> get setIds => throw _privateConstructorUsedError;
   String? get definition => throw _privateConstructorUsedError;
+  @PhrasesConverter()
   List<String> get phrases => throw _privateConstructorUsedError;
+  @ExampleSentencesConverter()
   List<List<String>> get exampleSentences => throw _privateConstructorUsedError;
 
+  /// Serializes this VocabularyWord to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of VocabularyWord
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $VocabularyWordCopyWith<VocabularyWord> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -66,8 +72,8 @@ abstract class $VocabularyWordCopyWith<$Res> {
       String category,
       List<String> setIds,
       String? definition,
-      List<String> phrases,
-      List<List<String>> exampleSentences});
+      @PhrasesConverter() List<String> phrases,
+      @ExampleSentencesConverter() List<List<String>> exampleSentences});
 }
 
 /// @nodoc
@@ -80,6 +86,8 @@ class _$VocabularyWordCopyWithImpl<$Res, $Val extends VocabularyWord>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of VocabularyWord
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -192,8 +200,8 @@ abstract class _$$VocabularyWordImplCopyWith<$Res>
       String category,
       List<String> setIds,
       String? definition,
-      List<String> phrases,
-      List<List<String>> exampleSentences});
+      @PhrasesConverter() List<String> phrases,
+      @ExampleSentencesConverter() List<List<String>> exampleSentences});
 }
 
 /// @nodoc
@@ -204,6 +212,8 @@ class __$$VocabularyWordImplCopyWithImpl<$Res>
       _$VocabularyWordImpl _value, $Res Function(_$VocabularyWordImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of VocabularyWord
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -311,7 +321,8 @@ class _$VocabularyWordImpl implements _VocabularyWord {
       required this.category,
       final List<String> setIds = const <String>[],
       this.definition,
-      final List<String> phrases = const <String>[],
+      @PhrasesConverter() final List<String> phrases = const <String>[],
+      @ExampleSentencesConverter()
       final List<List<String>> exampleSentences = const <List<String>>[]})
       : _synonyms = synonyms,
         _antonyms = antonyms,
@@ -374,6 +385,7 @@ class _$VocabularyWordImpl implements _VocabularyWord {
   final List<String> _phrases;
   @override
   @JsonKey()
+  @PhrasesConverter()
   List<String> get phrases {
     if (_phrases is EqualUnmodifiableListView) return _phrases;
     // ignore: implicit_dynamic_type
@@ -383,6 +395,7 @@ class _$VocabularyWordImpl implements _VocabularyWord {
   final List<List<String>> _exampleSentences;
   @override
   @JsonKey()
+  @ExampleSentencesConverter()
   List<List<String>> get exampleSentences {
     if (_exampleSentences is EqualUnmodifiableListView)
       return _exampleSentences;
@@ -425,7 +438,7 @@ class _$VocabularyWordImpl implements _VocabularyWord {
                 .equals(other._exampleSentences, _exampleSentences));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -446,7 +459,9 @@ class _$VocabularyWordImpl implements _VocabularyWord {
       const DeepCollectionEquality().hash(_phrases),
       const DeepCollectionEquality().hash(_exampleSentences));
 
-  @JsonKey(ignore: true)
+  /// Create a copy of VocabularyWord
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$VocabularyWordImplCopyWith<_$VocabularyWordImpl> get copyWith =>
@@ -477,7 +492,8 @@ abstract class _VocabularyWord implements VocabularyWord {
       required final String category,
       final List<String> setIds,
       final String? definition,
-      final List<String> phrases,
+      @PhrasesConverter() final List<String> phrases,
+      @ExampleSentencesConverter()
       final List<List<String>> exampleSentences}) = _$VocabularyWordImpl;
 
   factory _VocabularyWord.fromJson(Map<String, dynamic> json) =
@@ -514,11 +530,16 @@ abstract class _VocabularyWord implements VocabularyWord {
   @override
   String? get definition;
   @override
+  @PhrasesConverter()
   List<String> get phrases;
   @override
+  @ExampleSentencesConverter()
   List<List<String>> get exampleSentences;
+
+  /// Create a copy of VocabularyWord
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$VocabularyWordImplCopyWith<_$VocabularyWordImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

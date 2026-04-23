@@ -115,6 +115,12 @@ class DayStatusNotifier extends StateNotifier<AsyncValue<void>> {
         () => _repo.updateDayStatus(dayNumber, DayStatus.done));
     _ref.invalidate(activePlansProvider);
   }
+
+  Future<void> deletePlan(String planId) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _repo.deletePlan(planId));
+    _ref.invalidate(activePlansProvider);
+  }
 }
 
 final dayStatusNotifierProvider =

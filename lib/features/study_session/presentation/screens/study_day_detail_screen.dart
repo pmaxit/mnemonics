@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../profile/domain/user_statistics.dart';
 import '../../domain/study_plan_day.dart';
 import '../../providers/study_session_providers.dart';
 import '../../../home/domain/vocabulary_word.dart';

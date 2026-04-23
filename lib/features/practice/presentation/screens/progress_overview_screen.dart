@@ -618,7 +618,7 @@ class _StudyPlanSection extends ConsumerWidget {
                       .map((plan) => Padding(
                             padding: const EdgeInsets.only(
                                 bottom: MnemonicsSpacing.m),
-                            child: _activePlanCard(context, plan),
+                            child: _activePlanCard(context, ref, plan),
                           ))
                       .toList(),
                 ),
@@ -690,7 +690,7 @@ class _StudyPlanSection extends ConsumerWidget {
   }
 
   // ── Active plan card ─────────────────────────────────────────────────────
-  Widget _activePlanCard(BuildContext context, StudyPlan plan) {
+  Widget _activePlanCard(BuildContext context, WidgetRef ref, StudyPlan plan) {
     final days = plan.days;
     final done = days.where((d) => d.status == DayStatus.done).length;
     final inProgress =
@@ -719,16 +719,29 @@ class _StudyPlanSection extends ConsumerWidget {
                   BorderRadius.circular(MnemonicsSpacing.radiusM),
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(Icons.calendar_month,
-                    color: MnemonicsColors.primaryGreen, size: 14),
-                const SizedBox(width: 4),
-                Text('Active Plan',
-                    style: MnemonicsTypography.bodyRegular.copyWith(
-                      color: MnemonicsColors.primaryGreen,
-                      fontWeight: FontWeight.w600,
-                    )),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.calendar_month,
+                        color: MnemonicsColors.primaryGreen, size: 14),
+                    const SizedBox(width: 4),
+                    Text('Active Plan',
+                        style: MnemonicsTypography.bodyRegular.copyWith(
+                          color: MnemonicsColors.primaryGreen,
+                          fontWeight: FontWeight.w600,
+                        )),
+                  ],
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete_outline_rounded, 
+                    color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                    size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => _confirmDelete(context, ref, plan),
+                ),
               ],
             ),
           ),
@@ -943,5 +956,55 @@ class _StudyPlanSection extends ConsumerWidget {
           style: MnemonicsTypography.bodyRegular
               .copyWith(color: MnemonicsColors.textSecondary)),
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, StudyPlan plan) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL)),
+        title: Text('Delete Study Plan?', 
+          style: MnemonicsTypography.headingMedium.copyWith(
+            color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+            fontSize: 20,
+          )),
+        content: Text('This will remove the "${plan.title}" plan. This action cannot be undone.',
+          style: MnemonicsTypography.bodyRegular.copyWith(
+            color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+          )),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: MnemonicsColors.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await ref.read(dayStatusNotifierProvider.notifier).deletePlan(plan.id);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Study plan deleted'),
+              backgroundColor: MnemonicsColors.textPrimary,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.redAccent),
+          );
+        }
+      }
+    }
   }
 }

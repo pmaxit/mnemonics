@@ -101,4 +101,17 @@ class StudyPlanRepository {
       throw Exception('Failed to update day status: ${response.body}');
     }
   }
+
+  // -------------------------------------------------------------------------
+  // Delete plan
+  // -------------------------------------------------------------------------
+  Future<void> deletePlan(String planId) async {
+    final response = await http.delete(
+      Uri.parse('$_baseUrl/study-plan/$planId'),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete study plan: ${response.body}');
+    }
+  }
 }

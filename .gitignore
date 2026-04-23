@@ -1,2 +1,37 @@
-assets/credentials.json
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+
+# Android
+android/.gradle/
+android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+android/local.properties
+
+# iOS / macOS
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/ephemeral/
+ios/Pods/
+ios/Runner/GeneratedPluginRegistrant.m
+ios/Runner/GeneratedPluginRegistrant.h
+macos/Flutter/ephemeral/
+macos/Pods/
+macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Environment
 .env
+assets/credentials.json
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log

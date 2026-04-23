@@ -5,7 +5,7 @@ import '../../domain/study_plan.dart';
 import '../../domain/study_plan_day.dart';
 import '../../providers/study_session_providers.dart';
 import '../widgets/calendar_heatmap_widget.dart';
-import '../../theme/mnemonics_theme.dart';
+import '../../../../common/design/design_system.dart';
 
 class StudyCalendarScreen extends ConsumerWidget {
   const StudyCalendarScreen({super.key});
@@ -19,11 +19,11 @@ class StudyCalendarScreen extends ConsumerWidget {
       backgroundColor: isDarkMode ? MnemonicsColors.darkBackground : MnemonicsColors.surface,
       body: plansAsync.when(
         loading: () => const Center(
-          child: CircularProgressIndicator(color: MnemonicsColors.primaryIndigo),
+          child: CircularProgressIndicator(color: MnemonicsColors.primaryGreen),
         ),
         error: (e, _) => _buildError(context, e.toString()),
         data: (plans) =>
-            plans.isEmpty ? _buildEmpty(context) : _buildPlanView(context, ref, plans.first),
+            plans.isEmpty ? _buildEmpty(context) : _buildPlanView(context, ref, plans.first, isDarkMode),
       ),
       floatingActionButton: plansAsync.maybeWhen(
         data: (plans) => plans.isEmpty
@@ -134,7 +134,7 @@ class StudyCalendarScreen extends ConsumerWidget {
   // Plan view — heatmap + stats
   // ---------------------------------------------------------------------------
   Widget _buildPlanView(
-      BuildContext context, WidgetRef ref, StudyPlan plan) {
+      BuildContext context, WidgetRef ref, StudyPlan plan, bool isDarkMode) {
     final doneDays = plan.days.where((d) => d.status == DayStatus.done).length;
     final inProgressDays =
         plan.days.where((d) => d.status == DayStatus.inProgress).length;
@@ -149,6 +149,13 @@ class StudyCalendarScreen extends ConsumerWidget {
           backgroundColor: isDarkMode ? MnemonicsColors.darkBackground : Colors.white,
           elevation: 0,
           scrolledUnderElevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+              onPressed: () => _confirmDelete(context, ref, plan),
+            ),
+            const SizedBox(width: 8),
+          ],
           flexibleSpace: FlexibleSpaceBar(
             background: Container(
               decoration: BoxDecoration(
@@ -306,5 +313,56 @@ class StudyCalendarScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDelete(
+      BuildContext context, WidgetRef ref, StudyPlan plan) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: MnemonicsColors.darkSurface,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL)),
+        title: const Text('Delete Study Plan?',
+            style: TextStyle(color: Colors.white, fontSize: 20)),
+        content: Text(
+            'This will remove the "${plan.title}" plan. This action cannot be undone.',
+            style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white60)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete',
+                style: TextStyle(
+                    color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await ref.read(dayStatusNotifierProvider.notifier).deletePlan(plan.id);
+        if (context.mounted) {
+          context.pop(); // Go back from calendar screen after deletion
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Study plan deleted'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Error: $e'), backgroundColor: Colors.redAccent),
+          );
+        }
+      }
+    }
   }
 }

@@ -63,7 +63,13 @@ class MysqlDatabaseService {
           try {
             if (row['phrases'] != null &&
                 row['phrases'].toString().isNotEmpty) {
-              parsedPhrases = List<String>.from(json.decode(row['phrases']));
+              final rawPhrases = row['phrases'].toString();
+              if (rawPhrases.startsWith('[') && rawPhrases.endsWith(']')) {
+                parsedPhrases = List<String>.from(json.decode(rawPhrases));
+              } else {
+                // Not JSON, treat as a single phrase or comma-separated list
+                parsedPhrases = rawPhrases.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+              }
             }
           } catch (e) {
             print('Error parsing phrases: $e');
@@ -73,9 +79,21 @@ class MysqlDatabaseService {
           try {
             if (row['example_sentences'] != null &&
                 row['example_sentences'].toString().isNotEmpty) {
-              final decodedList = json.decode(row['example_sentences']) as List;
-              parsedExampleSentences =
-                  decodedList.map((inner) => List<String>.from(inner)).toList();
+              final rawExamples = row['example_sentences'].toString();
+              if (rawExamples.startsWith('[') && rawExamples.endsWith(']')) {
+                final decodedList = json.decode(rawExamples) as List;
+                parsedExampleSentences = decodedList.map((inner) {
+                  if (inner is List) {
+                    return List<String>.from(inner);
+                  } else {
+                    // Fallback for single-level list
+                    return [inner.toString()];
+                  }
+                }).toList();
+              } else {
+                // Not JSON, treat as single example sentence
+                parsedExampleSentences = [[rawExamples]];
+              }
             }
           } catch (e) {
             print('Error parsing example_sentences: $e');
