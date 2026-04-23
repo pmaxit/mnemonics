@@ -112,7 +112,7 @@ class MainScaffold extends StatelessWidget {
               }
             },
             showNotificationDot:
-                currentIndex != 3, // Example: show dot unless on Profile
+                currentIndex != 3, // Show dot unless on Profile
           ),
         ),
       ],

@@ -21,6 +21,10 @@ import 'features/practice/presentation/screens/details/accuracy_detail_screen.da
 import 'features/practice/presentation/screens/details/learning_stages_detail_screen.dart';
 import 'features/practice/presentation/screens/details/breakdown_detail_screen.dart';
 import 'features/profile/presentation/screens/enhanced_profile_screen.dart';
+import 'features/study_session/presentation/screens/study_calendar_screen.dart';
+import 'features/study_session/presentation/screens/study_plan_wizard_screen.dart';
+import 'features/study_session/presentation/screens/study_day_detail_screen.dart';
+import 'features/study_session/domain/study_plan_day.dart';
 import 'package:flutter/material.dart';
 
 /// Converts a [Stream] into a [Listenable] for GoRouter's refreshListenable.
@@ -171,6 +175,22 @@ final routerProvider = Provider<GoRouter>((ref) {
           final filter = state.pathParameters['filter']!;
           return BreakdownDetailScreen(
               breakdownType: type, filterValue: filter);
+        },
+      ),
+      GoRoute(
+        path: '/study-plan/create',
+        builder: (context, state) => const StudyPlanWizardScreen(),
+      ),
+      GoRoute(
+        path: '/study-plan/day/:dayNum',
+        builder: (context, state) {
+          if (state.extra is StudyPlanDay) {
+            return StudyDayDetailScreen(day: state.extra as StudyPlanDay);
+          }
+          final extra = state.extra as Map<String, dynamic>;
+          final day = extra['day'] as StudyPlanDay;
+          final date = extra['date'] as DateTime?;
+          return StudyDayDetailScreen(day: day, date: date);
         },
       ),
     ],

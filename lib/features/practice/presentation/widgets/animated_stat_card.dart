@@ -146,9 +146,8 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    super.build(context); // Required for AutomaticKeepAliveClientMixin
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return AnimatedBuilder(
       animation: Listenable.merge([
         _entryAnimation,
@@ -164,8 +163,11 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
         // Calculate shadow
         final shadowProgress = _hoverAnimation.value;
         final boxShadow = BoxShadow.lerp(
-          AnimatedProgressUtils.restingShadow.first,
-          AnimatedProgressUtils.hoverShadow.first,
+          (isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow).first,
+          (isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow).first.copyWith(
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
           shadowProgress,
         );
 
@@ -183,11 +185,11 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
                   child: TweenAnimationBuilder<Color?>(
                     duration: AnimatedProgressUtils.microInteraction,
                     tween: ColorTween(
-                      begin: Colors.white,
+                      begin: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
                       end: _isHovered
                           ? (widget.accentColor ?? MnemonicsColors.primaryGreen)
-                              .withOpacity(0.02)
-                          : Colors.white,
+                              .withOpacity(0.05)
+                          : (isDarkMode ? MnemonicsColors.darkSurface : Colors.white),
                     ),
                     builder: (context, color, child) {
                       return Container(
@@ -195,15 +197,17 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
                         decoration: BoxDecoration(
                           color: color,
                           borderRadius:
-                              BorderRadius.circular(MnemonicsSpacing.radiusL),
-                          boxShadow: boxShadow != null ? [boxShadow] : null,
+                              BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                          boxShadow: isDarkMode 
+                              ? MnemonicsColors.darkCardShadow 
+                              : MnemonicsColors.cardShadow,
                           border: Border.all(
                             color: _isHovered
                                 ? (widget.accentColor ??
                                         MnemonicsColors.primaryGreen)
                                     .withOpacity(0.3)
-                                : Colors.transparent,
-                            width: 2,
+                                : (isDarkMode ? MnemonicsColors.darkBorder.withOpacity(0.2) : Colors.transparent),
+                            width: 1.5,
                           ),
                         ),
                         child: Column(
@@ -260,18 +264,19 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
                             AnimatedBuilder(
                               animation: _entryAnimation,
                               builder: (context, child) {
-                                return Opacity(
-                                  opacity: _entryAnimation.value,
-                                  child: Text(
-                                    widget.label,
-                                    style: MnemonicsTypography.bodyRegular
-                                        .copyWith(
-                                      color: MnemonicsColors.textSecondary,
-                                      fontWeight: FontWeight.w500,
+                                  return Opacity(
+                                    opacity: _entryAnimation.value,
+                                    child: Text(
+                                      widget.label,
+                                      style: MnemonicsTypography.bodyRegular
+                                          .copyWith(
+                                        color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 14,
+                                      ),
+                                      textAlign: TextAlign.center,
                                     ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                );
+                                  );
                               },
                             ),
                           ],

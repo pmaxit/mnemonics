@@ -9,6 +9,10 @@ import '../widgets/animated_progress_chart.dart';
 import '../widgets/animated_stat_card.dart';
 import '../../../profile/providers/user_info_provider.dart';
 import '../../../profile/domain/user_info.dart';
+import 'package:intl/intl.dart';
+import '../../../study_session/providers/study_session_providers.dart';
+import '../../../study_session/domain/study_plan.dart';
+import '../../../study_session/domain/study_plan_day.dart';
 
 class ProgressOverviewScreen extends ConsumerStatefulWidget {
   const ProgressOverviewScreen({super.key});
@@ -169,6 +173,10 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
             weeklyProgress: statistics.weeklyProgress,
             animationDelay: 0,
           ),
+          const SizedBox(height: MnemonicsSpacing.xl),
+
+          // ── Study Plan card ──────────────────────────────────────────────
+          _StudyPlanSection(isDarkMode: isDarkMode),
           const SizedBox(height: MnemonicsSpacing.xl),
 
           // Learning stages breakdown
@@ -557,6 +565,383 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Study Plan section embedded in Practice
+// ─────────────────────────────────────────────────────────────────────────────
+class _StudyPlanSection extends ConsumerWidget {
+  final bool isDarkMode;
+  const _StudyPlanSection({required this.isDarkMode});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final plansAsync = ref.watch(activePlansProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Study Plan',
+              style: MnemonicsTypography.bodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 20,
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () => context.push('/study-plan/create'),
+              icon: const Icon(Icons.add_rounded, size: 16),
+              label: const Text('New Plan'),
+              style: TextButton.styleFrom(
+                foregroundColor: MnemonicsColors.primaryGreen,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: MnemonicsSpacing.m),
+
+        plansAsync.when(
+          loading: () => _loadingCard(),
+          error: (_, __) => _errorCard(),
+          data: (plans) => plans.isEmpty
+              ? _emptyCard(context)
+              : Column(
+                  children: plans
+                      .map((plan) => Padding(
+                            padding: const EdgeInsets.only(
+                                bottom: MnemonicsSpacing.m),
+                            child: _activePlanCard(context, plan),
+                          ))
+                      .toList(),
+                ),
+        ),
+      ],
+    );
+  }
+
+  // ── Empty state ──────────────────────────────────────────────────────────
+  Widget _emptyCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/study-plan/create'),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(MnemonicsSpacing.l),
+        decoration: _cardDecoration(),
+        child: Column(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: MnemonicsColors.primaryGreen.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.calendar_month_outlined,
+                  color: MnemonicsColors.primaryGreen, size: 24),
+            ),
+            const SizedBox(height: MnemonicsSpacing.m),
+            Text('No active study plan',
+                style: MnemonicsTypography.bodyLarge
+                    .copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(height: MnemonicsSpacing.xs),
+            Text(
+              'Create an AI-powered plan to practise\nwords day by day',
+              textAlign: TextAlign.center,
+              style: MnemonicsTypography.bodyRegular
+                  .copyWith(color: MnemonicsColors.textSecondary, height: 1.4),
+            ),
+            const SizedBox(height: MnemonicsSpacing.l),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                color: MnemonicsColors.primaryGreen,
+                borderRadius:
+                    BorderRadius.circular(MnemonicsSpacing.radiusL),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.auto_awesome,
+                      color: Colors.white, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Generate Plan with AI',
+                    style: MnemonicsTypography.bodyRegular.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Active plan card ─────────────────────────────────────────────────────
+  Widget _activePlanCard(BuildContext context, StudyPlan plan) {
+    final days = plan.days;
+    final done = days.where((d) => d.status == DayStatus.done).length;
+    final inProgress =
+        days.where((d) => d.status == DayStatus.inProgress).length;
+    final total = days.length;
+    final progress = total == 0 ? 0.0 : done / total;
+
+    final startDate = DateTime.tryParse(plan.startDate) ?? DateTime.now();
+    final todayOffset = DateTime.now().difference(startDate).inDays;
+    final todayDayNum = (todayOffset + 1).clamp(1, total);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(MnemonicsSpacing.l),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Active badge
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: MnemonicsColors.primaryGreen.withOpacity(0.12),
+              borderRadius:
+                  BorderRadius.circular(MnemonicsSpacing.radiusM),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.calendar_month,
+                    color: MnemonicsColors.primaryGreen, size: 14),
+                const SizedBox(width: 4),
+                Text('Active Plan',
+                    style: MnemonicsTypography.bodyRegular.copyWith(
+                      color: MnemonicsColors.primaryGreen,
+                      fontWeight: FontWeight.w600,
+                    )),
+              ],
+            ),
+          ),
+          const SizedBox(height: MnemonicsSpacing.s),
+          Text(
+            plan.title ?? '${plan.totalWords}-Word ${plan.numDays}-Day Plan',
+            style: MnemonicsTypography.bodyLarge.copyWith(
+                fontWeight: FontWeight.w700, fontSize: 17),
+          ),
+          const SizedBox(height: MnemonicsSpacing.s),
+
+          // Stat chips
+          Row(
+            children: [
+              _chip('$done done', MnemonicsColors.primaryGreen),
+              const SizedBox(width: MnemonicsSpacing.s),
+              _chip('$inProgress in progress',
+                  MnemonicsColors.secondaryOrange),
+              const SizedBox(width: MnemonicsSpacing.s),
+              _chip('${total - done} left',
+                  MnemonicsColors.textSecondary),
+            ],
+          ),
+          const SizedBox(height: MnemonicsSpacing.m),
+
+          // Progress bar
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Progress',
+                  style: MnemonicsTypography.bodyRegular
+                      .copyWith(fontWeight: FontWeight.w500)),
+              Text('${(progress * 100).round()}%',
+                  style: MnemonicsTypography.bodyRegular.copyWith(
+                      color: MnemonicsColors.primaryGreen,
+                      fontWeight: FontWeight.w700)),
+            ],
+          ),
+          const SizedBox(height: MnemonicsSpacing.s),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor:
+                  MnemonicsColors.primaryGreen.withOpacity(0.12),
+              valueColor: const AlwaysStoppedAnimation(
+                  MnemonicsColors.primaryGreen),
+            ),
+          ),
+          const SizedBox(height: MnemonicsSpacing.l),
+
+          // Day grid
+          Text('Daily Calendar',
+              style: MnemonicsTypography.bodyRegular
+                  .copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: MnemonicsSpacing.s),
+
+          // Legend
+          Row(
+            children: [
+              _legendDot(Colors.grey.shade300, 'Not started'),
+              const SizedBox(width: MnemonicsSpacing.m),
+              _legendDot(
+                  MnemonicsColors.secondaryOrange, 'In progress'),
+              const SizedBox(width: MnemonicsSpacing.m),
+              _legendDot(MnemonicsColors.primaryGreen, 'Done'),
+            ],
+          ),
+          const SizedBox(height: MnemonicsSpacing.s),
+
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: List.generate(total, (i) {
+              final day = days[i];
+              final planStartDate =
+                  DateTime.tryParse(plan.startDate) ?? DateTime.now();
+              final dayDate = planStartDate.add(Duration(days: i));
+              final isToday = DateUtils.isSameDay(dayDate, DateTime.now());
+              
+              final bgColor = _dayColor(day.status, isToday);
+              final textColor =
+                  (day.status == DayStatus.notAttempted && !isToday)
+                      ? MnemonicsColors.textSecondary
+                      : Colors.white;
+
+              return GestureDetector(
+                onTap: () => context.push(
+                  '/study-plan/day/${day.dayNumber}',
+                  extra: {
+                    'day': day,
+                    'date': dayDate,
+                  },
+                ),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(
+                        MnemonicsSpacing.radiusM),
+                    border: isToday
+                        ? Border.all(
+                            color: MnemonicsColors.primaryGreen,
+                            width: 2)
+                        : null,
+                  ),
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        DateFormat('MMM').format(dayDate).toUpperCase(),
+                        style: MnemonicsTypography.bodyRegular.copyWith(
+                          color: textColor.withOpacity(0.8),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 9,
+                        ),
+                      ),
+                      Text(
+                        '${dayDate.day}',
+                        style: MnemonicsTypography.bodyRegular.copyWith(
+                          color: textColor,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip(String label, Color color) {
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
+      ),
+      child: Text(label,
+          style: MnemonicsTypography.bodyRegular
+              .copyWith(color: color, fontWeight: FontWeight.w600)),
+    );
+  }
+
+  Widget _legendDot(Color color, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+        ),
+        const SizedBox(width: 4),
+        Text(label,
+            style: MnemonicsTypography.bodyRegular
+                .copyWith(color: MnemonicsColors.textSecondary)),
+      ],
+    );
+  }
+
+  Color _dayColor(DayStatus status, bool isToday) {
+    if (isToday && status == DayStatus.notAttempted) {
+      return MnemonicsColors.primaryGreen.withOpacity(0.25);
+    }
+    switch (status) {
+      case DayStatus.done:
+        return MnemonicsColors.primaryGreen;
+      case DayStatus.inProgress:
+        return MnemonicsColors.secondaryOrange;
+      case DayStatus.notAttempted:
+        return Colors.grey.shade200;
+    }
+  }
+
+  BoxDecoration _cardDecoration() {
+    return BoxDecoration(
+      color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+      boxShadow: isDarkMode
+          ? MnemonicsColors.darkCardShadow
+          : MnemonicsColors.cardShadow,
+      border: isDarkMode
+          ? Border.all(
+              color: MnemonicsColors.darkBorder.withOpacity(0.3), width: 1)
+          : null,
+    );
+  }
+
+  Widget _loadingCard() {
+    return Container(
+      height: 100,
+      decoration: _cardDecoration(),
+      child: const Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  Widget _errorCard() {
+    return Container(
+      padding: const EdgeInsets.all(MnemonicsSpacing.l),
+      decoration: _cardDecoration(),
+      child: Text('Could not load study plan',
+          style: MnemonicsTypography.bodyRegular
+              .copyWith(color: MnemonicsColors.textSecondary)),
     );
   }
 }
