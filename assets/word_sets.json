@@ -12,6 +12,7 @@
     { "id": "criticism", "name": "Criticism", "description": "Words about judgment & evaluation" },
     { "id": "abundance", "name": "Abundance", "description": "Words about quantity & scarcity" },
     { "id": "change", "name": "Change", "description": "Words about transformation & transition" },
-    { "id": "mylist", "name": "MyList", "description": "Your custom list" }
+    { "id": "mylist", "name": "MyList", "description": "Your custom list" },
+    { "id": "phrases", "name": "Phrases", "description": "Useful collocations & phrasal verbs" }
   ]
 }

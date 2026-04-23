@@ -80,6 +80,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     Icons.all_inclusive,         // Abundance
     Icons.autorenew,             // Change
     Icons.star,                  // MyList
+    Icons.forum,                 // Phrases
   ];
   static const List<Color> accentColors = [
     Color(0xFF4CAF50),           // SAT — green
@@ -95,6 +96,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     Color(0xFF42A5F5),           // Abundance — blue
     Color(0xFF26C6DA),           // Change — cyan
     Color(0xFFFFCA28),           // MyList — amber
+    Color(0xFF673AB7),           // Phrases — deep purple
   ];
 
   String _getRandomQuote() {
