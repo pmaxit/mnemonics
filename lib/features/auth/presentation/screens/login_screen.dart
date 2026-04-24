@@ -108,11 +108,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  void _handleSocialLogin(String provider) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$provider login is not yet implemented.')),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -291,15 +287,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         border: BorderSide.none,
                         onPressed: isLoading ? () {} : _handleAppleLogin,
                       ),
-                      AuthSocialButton(
-                        label: "Continue with Facebook",
-                        icon: const Icon(Icons.facebook,
-                            color: Colors.white, size: 28),
-                        backgroundColor: const Color(0xFF1877F2),
-                        textColor: Colors.white,
-                        border: BorderSide.none,
-                        onPressed: () => _handleSocialLogin('Facebook'),
-                      ),
+
 
                       const Spacer(),
 

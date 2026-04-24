@@ -32,8 +32,12 @@ mixin _$TimerSessionState {
   bool get isPaused => throw _privateConstructorUsedError;
   SessionPhase get currentPhase => throw _privateConstructorUsedError;
 
+  /// Serializes this TimerSessionState to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of TimerSessionState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $TimerSessionStateCopyWith<TimerSessionState> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -68,6 +72,8 @@ class _$TimerSessionStateCopyWithImpl<$Res, $Val extends TimerSessionState>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of TimerSessionState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -162,6 +168,8 @@ class __$$TimerSessionStateImplCopyWithImpl<$Res>
       $Res Function(_$TimerSessionStateImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of TimerSessionState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -335,7 +343,7 @@ class _$TimerSessionStateImpl implements _TimerSessionState {
                 other.currentPhase == currentPhase));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -351,7 +359,9 @@ class _$TimerSessionStateImpl implements _TimerSessionState {
       isPaused,
       currentPhase);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of TimerSessionState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$TimerSessionStateImplCopyWith<_$TimerSessionStateImpl> get copyWith =>
@@ -405,8 +415,11 @@ abstract class _TimerSessionState implements TimerSessionState {
   bool get isPaused;
   @override
   SessionPhase get currentPhase;
+
+  /// Create a copy of TimerSessionState
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$TimerSessionStateImplCopyWith<_$TimerSessionStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -423,8 +436,12 @@ mixin _$WordReview {
   Duration get timeSpent => throw _privateConstructorUsedError;
   bool get wasSkipped => throw _privateConstructorUsedError;
 
+  /// Serializes this WordReview to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of WordReview
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $WordReviewCopyWith<WordReview> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -453,6 +470,8 @@ class _$WordReviewCopyWithImpl<$Res, $Val extends WordReview>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of WordReview
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -511,6 +530,8 @@ class __$$WordReviewImplCopyWithImpl<$Res>
       _$WordReviewImpl _value, $Res Function(_$WordReviewImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of WordReview
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -591,12 +612,14 @@ class _$WordReviewImpl implements _WordReview {
                 other.wasSkipped == wasSkipped));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType, word, reviewedAt, difficulty, timeSpent, wasSkipped);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of WordReview
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$WordReviewImplCopyWith<_$WordReviewImpl> get copyWith =>
@@ -631,8 +654,11 @@ abstract class _WordReview implements WordReview {
   Duration get timeSpent;
   @override
   bool get wasSkipped;
+
+  /// Create a copy of WordReview
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$WordReviewImplCopyWith<_$WordReviewImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -653,8 +679,12 @@ mixin _$SessionSummary {
   List<String> get strugglingWords => throw _privateConstructorUsedError;
   List<String> get masteredWords => throw _privateConstructorUsedError;
 
+  /// Serializes this SessionSummary to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SessionSummary
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $SessionSummaryCopyWith<SessionSummary> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -686,6 +716,8 @@ class _$SessionSummaryCopyWithImpl<$Res, $Val extends SessionSummary>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of SessionSummary
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -762,6 +794,8 @@ class __$$SessionSummaryImplCopyWithImpl<$Res>
       _$SessionSummaryImpl _value, $Res Function(_$SessionSummaryImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SessionSummary
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -893,7 +927,7 @@ class _$SessionSummaryImpl implements _SessionSummary {
                 .equals(other._masteredWords, _masteredWords));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -906,7 +940,9 @@ class _$SessionSummaryImpl implements _SessionSummary {
       const DeepCollectionEquality().hash(_strugglingWords),
       const DeepCollectionEquality().hash(_masteredWords));
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SessionSummary
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SessionSummaryImplCopyWith<_$SessionSummaryImpl> get copyWith =>
@@ -951,8 +987,11 @@ abstract class _SessionSummary implements SessionSummary {
   List<String> get strugglingWords;
   @override
   List<String> get masteredWords;
+
+  /// Create a copy of SessionSummary
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SessionSummaryImplCopyWith<_$SessionSummaryImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

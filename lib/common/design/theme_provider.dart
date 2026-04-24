@@ -22,6 +22,10 @@ class ThemeNotifier extends _$ThemeNotifier {
         break;
     }
   }
+
+  void setThemeMode(ThemeMode mode) {
+    state = mode;
+  }
 }
 
 @riverpod
@@ -54,6 +58,23 @@ ThemeData lightTheme(LightThemeRef ref) {
         borderSide: BorderSide.none,
       ),
       contentPadding: const EdgeInsets.all(MnemonicsSpacing.m),
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.transparent,
+      centerTitle: true,
+      iconTheme: const IconThemeData(
+        color: MnemonicsColors.textPrimary,
+        size: 22,
+      ),
+      titleTextStyle: MnemonicsTypography.headingMedium.copyWith(
+        color: MnemonicsColors.textPrimary,
+        fontWeight: FontWeight.w700,
+        fontSize: 20,
+      ),
     ),
   );
 }
@@ -89,6 +110,23 @@ ThemeData darkTheme(DarkThemeRef ref) {
         borderSide: BorderSide.none,
       ),
       contentPadding: const EdgeInsets.all(MnemonicsSpacing.m),
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.transparent,
+      centerTitle: true,
+      iconTheme: const IconThemeData(
+        color: Colors.white,
+        size: 22,
+      ),
+      titleTextStyle: MnemonicsTypography.headingMedium.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w700,
+        fontSize: 20,
+      ),
     ),
   );
 } 

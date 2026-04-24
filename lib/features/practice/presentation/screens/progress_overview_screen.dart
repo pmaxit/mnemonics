@@ -80,10 +80,11 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + kToolbarHeight,
         left: MnemonicsSpacing.l,
         right: MnemonicsSpacing.l,
-        bottom: MnemonicsSpacing.l,
+        bottom: 120, // Space for CustomBottomNavBar
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,7 +379,6 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
   }
 
   String _getMotivationalMessage(StatisticsData statistics) {
-    // Psychology-driven motivational messages based on progress
     if (statistics.totalLearned == 0) {
       return "Every expert was once a beginner. Start your journey today! 🌱";
     } else if (statistics.totalLearned < 10) {
@@ -425,7 +425,6 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
   }
 
   double _getMotivationProgress(StatisticsData statistics) {
-    // Calculate progress towards next milestone
     if (statistics.totalLearned < 10) {
       return statistics.totalLearned / 10;
     } else if (statistics.totalLearned < 50) {
@@ -435,7 +434,7 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
     } else if (statistics.totalLearned < 250) {
       return (statistics.totalLearned - 100) / 150;
     } else {
-      return 1.0; // Max achievement
+      return 1.0;
     }
   }
 
@@ -459,7 +458,6 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
       ),
       child: Row(
         children: [
-          // Avatar section
           Container(
             width: 60,
             height: 60,
@@ -504,7 +502,6 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
             ),
           ),
           const SizedBox(width: MnemonicsSpacing.m),
-          // Content section
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -550,7 +547,6 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
               ],
             ),
           ),
-          // Statistics indicator
           Container(
             padding: const EdgeInsets.all(MnemonicsSpacing.s),
             decoration: BoxDecoration(
@@ -569,9 +565,6 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Study Plan section embedded in Practice
-// ─────────────────────────────────────────────────────────────────────────────
 class _StudyPlanSection extends ConsumerWidget {
   final bool isDarkMode;
   const _StudyPlanSection({required this.isDarkMode});
@@ -583,7 +576,6 @@ class _StudyPlanSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section header
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -610,7 +602,7 @@ class _StudyPlanSection extends ConsumerWidget {
 
         plansAsync.when(
           loading: () => _loadingCard(),
-          error: (_, __) => _errorCard(),
+          error: (err, __) => _errorCard(err),
           data: (plans) => plans.isEmpty
               ? _emptyCard(context)
               : Column(
@@ -627,7 +619,9 @@ class _StudyPlanSection extends ConsumerWidget {
     );
   }
 
-  // ── Empty state ──────────────────────────────────────────────────────────
+  Widget _loadingCard() => const Center(child: CircularProgressIndicator());
+  Widget _errorCard(dynamic err) => Center(child: Text('Error: $err'));
+
   Widget _emptyCard(BuildContext context) {
     return GestureDetector(
       onTap: () => context.push('/study-plan/create'),
@@ -689,7 +683,6 @@ class _StudyPlanSection extends ConsumerWidget {
     );
   }
 
-  // ── Active plan card ─────────────────────────────────────────────────────
   Widget _activePlanCard(BuildContext context, WidgetRef ref, StudyPlan plan) {
     final days = plan.days;
     final done = days.where((d) => d.status == DayStatus.done).length;
@@ -698,10 +691,6 @@ class _StudyPlanSection extends ConsumerWidget {
     final total = days.length;
     final progress = total == 0 ? 0.0 : done / total;
 
-    final startDate = DateTime.tryParse(plan.startDate) ?? DateTime.now();
-    final todayOffset = DateTime.now().difference(startDate).inDays;
-    final todayDayNum = (todayOffset + 1).clamp(1, total);
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(MnemonicsSpacing.l),
@@ -709,7 +698,6 @@ class _StudyPlanSection extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Active badge
           Container(
             padding:
                 const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -752,8 +740,6 @@ class _StudyPlanSection extends ConsumerWidget {
                 fontWeight: FontWeight.w700, fontSize: 17),
           ),
           const SizedBox(height: MnemonicsSpacing.s),
-
-          // Stat chips
           Row(
             children: [
               _chip('$done done', MnemonicsColors.primaryGreen),
@@ -766,8 +752,6 @@ class _StudyPlanSection extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: MnemonicsSpacing.m),
-
-          // Progress bar
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -792,91 +776,6 @@ class _StudyPlanSection extends ConsumerWidget {
                   MnemonicsColors.primaryGreen),
             ),
           ),
-          const SizedBox(height: MnemonicsSpacing.l),
-
-          // Day grid
-          Text('Daily Calendar',
-              style: MnemonicsTypography.bodyRegular
-                  .copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: MnemonicsSpacing.s),
-
-          // Legend
-          Row(
-            children: [
-              _legendDot(Colors.grey.shade300, 'Not started'),
-              const SizedBox(width: MnemonicsSpacing.m),
-              _legendDot(
-                  MnemonicsColors.secondaryOrange, 'In progress'),
-              const SizedBox(width: MnemonicsSpacing.m),
-              _legendDot(MnemonicsColors.primaryGreen, 'Done'),
-            ],
-          ),
-          const SizedBox(height: MnemonicsSpacing.s),
-
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: List.generate(total, (i) {
-              final day = days[i];
-              final planStartDate =
-                  DateTime.tryParse(plan.startDate) ?? DateTime.now();
-              final dayDate = planStartDate.add(Duration(days: i));
-              final isToday = DateUtils.isSameDay(dayDate, DateTime.now());
-              
-              final bgColor = _dayColor(day.status, isToday);
-              final textColor =
-                  (day.status == DayStatus.notAttempted && !isToday)
-                      ? MnemonicsColors.textSecondary
-                      : Colors.white;
-
-              return GestureDetector(
-                onTap: () => context.push(
-                  '/study-plan/day/${day.dayNumber}',
-                  extra: {
-                    'day': day,
-                    'date': dayDate,
-                  },
-                ),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(
-                        MnemonicsSpacing.radiusM),
-                    border: isToday
-                        ? Border.all(
-                            color: MnemonicsColors.primaryGreen,
-                            width: 2)
-                        : null,
-                  ),
-                  alignment: Alignment.center,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        DateFormat('MMM').format(dayDate).toUpperCase(),
-                        style: MnemonicsTypography.bodyRegular.copyWith(
-                          color: textColor.withOpacity(0.8),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 9,
-                        ),
-                      ),
-                      Text(
-                        '${dayDate.day}',
-                        style: MnemonicsTypography.bodyRegular.copyWith(
-                          color: textColor,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ),
         ],
       ),
     );
@@ -884,127 +783,162 @@ class _StudyPlanSection extends ConsumerWidget {
 
   Widget _chip(String label, Color color) {
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
       ),
-      child: Text(label,
-          style: MnemonicsTypography.bodyRegular
-              .copyWith(color: color, fontWeight: FontWeight.w600)),
-    );
-  }
-
-  Widget _legendDot(Color color, String label) {
-    return Row(
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+      child: Text(
+        label,
+        style: MnemonicsTypography.bodyRegular.copyWith(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
         ),
-        const SizedBox(width: 4),
-        Text(label,
-            style: MnemonicsTypography.bodyRegular
-                .copyWith(color: MnemonicsColors.textSecondary)),
-      ],
+      ),
     );
-  }
-
-  Color _dayColor(DayStatus status, bool isToday) {
-    if (isToday && status == DayStatus.notAttempted) {
-      return MnemonicsColors.primaryGreen.withOpacity(0.25);
-    }
-    switch (status) {
-      case DayStatus.done:
-        return MnemonicsColors.primaryGreen;
-      case DayStatus.inProgress:
-        return MnemonicsColors.secondaryOrange;
-      case DayStatus.notAttempted:
-        return Colors.grey.shade200;
-    }
   }
 
   BoxDecoration _cardDecoration() {
     return BoxDecoration(
       color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
       borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-      boxShadow: isDarkMode
-          ? MnemonicsColors.darkCardShadow
-          : MnemonicsColors.cardShadow,
-      border: isDarkMode
-          ? Border.all(
-              color: MnemonicsColors.darkBorder.withOpacity(0.3), width: 1)
-          : null,
+      boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+      border: isDarkMode ? Border.all(color: MnemonicsColors.darkBorder.withOpacity(0.3)) : null,
     );
   }
 
-  Widget _loadingCard() {
-    return Container(
-      height: 100,
-      decoration: _cardDecoration(),
-      child: const Center(child: CircularProgressIndicator()),
-    );
-  }
-
-  Widget _errorCard() {
-    return Container(
-      padding: const EdgeInsets.all(MnemonicsSpacing.l),
-      decoration: _cardDecoration(),
-      child: Text('Could not load study plan',
-          style: MnemonicsTypography.bodyRegular
-              .copyWith(color: MnemonicsColors.textSecondary)),
-    );
-  }
-
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, StudyPlan plan) async {
+  void _confirmDelete(BuildContext context, WidgetRef ref, StudyPlan plan) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL)),
-        title: Text('Delete Study Plan?', 
-          style: MnemonicsTypography.headingMedium.copyWith(
-            color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
-            fontSize: 20,
-          )),
-        content: Text('This will remove the "${plan.title}" plan. This action cannot be undone.',
-          style: MnemonicsTypography.bodyRegular.copyWith(
-            color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
-          )),
+        title: const Text('Delete Plan?'),
+        content: const Text('Are you sure you want to remove this study plan? Progress on individual words will be kept, but the plan schedule will be lost.'),
         actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: TextStyle(color: MnemonicsColors.textSecondary)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+            onPressed: () => Navigator.pop(context, true), 
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
           ),
         ],
       ),
     );
 
     if (confirmed == true) {
-      try {
-        await ref.read(dayStatusNotifierProvider.notifier).deletePlan(plan.id);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Study plan deleted'),
-              backgroundColor: MnemonicsColors.textPrimary,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.redAccent),
-          );
-        }
-      }
+      await ref.read(studyPlanRepositoryProvider).deletePlan(plan.id);
+      ref.invalidate(activePlansProvider);
     }
+  }
+}
+
+class StreakCard extends StatelessWidget {
+  final int streakCount;
+  final int animationDelay;
+  const StreakCard({super.key, required this.streakCount, this.animationDelay = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(MnemonicsSpacing.m),
+      decoration: BoxDecoration(
+        color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+        boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.local_fire_department, color: Colors.orange, size: 32),
+          const SizedBox(height: 8),
+          Text('$streakCount Days', style: MnemonicsTypography.bodyLarge.copyWith(fontWeight: FontWeight.bold)),
+          Text('Streak', style: MnemonicsTypography.bodyRegular.copyWith(color: MnemonicsColors.textSecondary, fontSize: 12)),
+        ],
+      ),
+    );
+  }
+}
+
+class ProgressPercentageCard extends StatelessWidget {
+  final String label;
+  final double percentage;
+  final Color accentColor;
+  final int animationDelay;
+  const ProgressPercentageCard({super.key, required this.label, required this.percentage, required this.accentColor, this.animationDelay = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(MnemonicsSpacing.m),
+      decoration: BoxDecoration(
+        color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+        boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+      ),
+      child: Column(
+        children: [
+          CircularProgressIndicator(
+            value: percentage / 100,
+            backgroundColor: accentColor.withOpacity(0.1),
+            valueColor: AlwaysStoppedAnimation(accentColor),
+            strokeWidth: 6,
+          ),
+          const SizedBox(height: 8),
+          Text('${percentage.round()}%', style: MnemonicsTypography.bodyLarge.copyWith(fontWeight: FontWeight.bold)),
+          Text(label, style: MnemonicsTypography.bodyRegular.copyWith(color: MnemonicsColors.textSecondary, fontSize: 12)),
+        ],
+      ),
+    );
+  }
+}
+
+class AnimatedBreakdownSection extends StatelessWidget {
+  final String title;
+  final Map<String, int> data;
+  final int animationDelay;
+  final Function(String) onCategoryTap;
+  const AnimatedBreakdownSection({super.key, required this.title, required this.data, this.animationDelay = 0, required this.onCategoryTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: MnemonicsTypography.bodyLarge.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
+        const SizedBox(height: 12),
+        if (data.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Center(child: Text('No data available')),
+          )
+        else
+          ...data.entries.map((entry) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: InkWell(
+              onTap: () => onCategoryTap(entry.key),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(entry.key)),
+                    Text('${entry.value} words', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ),
+          )),
+      ],
+    );
   }
 }

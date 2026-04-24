@@ -244,3 +244,30 @@ Center(
 - ❌ Never create screens without dark mode support
 - ❌ Never navigate after an action without providing user feedback (SnackBar or dialog)
 - ❌ Never use `bodySmall` or `bodyMedium` — they don't exist in `MnemonicsTypography`; use `bodyRegular` with `.copyWith(fontSize: 12)` for small text
+- ❌ **Never assume local backend changes are live.** Always deploy using the command in section 11.
+
+---
+
+## 11. Backend Deployment (Cloud Run)
+
+The backend API is hosted on Google Cloud Run. **Always redeploy after making changes to `backend_api/` files.**
+
+### Deployment Command
+
+Run this command from the `backend_api/` directory:
+
+```bash
+gcloud run deploy mnemonics-api \
+  --source . \
+  --project adveralabs \
+  --region us-central1 \
+  --set-env-vars INSTANCE_UNIX_SOCKET=/cloudsql/adveralabs:us-central1:adveralabs-mysql \
+  --add-cloudsql-instances adveralabs:us-central1:adveralabs-mysql \
+  --allow-unauthenticated
+```
+
+### Critical Deployment Rules
+
+- **Dockerfile Integrity**: Ensure any new Python files (e.g., agents) are added to the `COPY` instruction in the `Dockerfile`.
+- **Health Check**: After deployment, verify the service is up by calling the `/health` endpoint.
+- **Environment Variables**: Always include the `INSTANCE_UNIX_SOCKET` and Cloud SQL instances flag to ensure DB connectivity.

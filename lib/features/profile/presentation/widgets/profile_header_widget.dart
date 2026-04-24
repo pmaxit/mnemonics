@@ -78,7 +78,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget>
           child: Transform.scale(
             scale: _scaleAnimation.value,
             child: Container(
-              margin: const EdgeInsets.all(MnemonicsSpacing.m),
+              margin: const EdgeInsets.fromLTRB(
+                  MnemonicsSpacing.m, 0, MnemonicsSpacing.m, MnemonicsSpacing.s),
               padding: const EdgeInsets.all(MnemonicsSpacing.l),
               decoration: BoxDecoration(
                 color: backgroundColor,

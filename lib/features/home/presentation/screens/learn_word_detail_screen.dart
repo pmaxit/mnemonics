@@ -1,8 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import '../../domain/vocabulary_word.dart';
 import '../../../../common/design/design_system.dart';
+import '../../../../common/design/theme_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../home/infrastructure/user_word_data_repository.dart';
 import '../../../home/domain/user_word_data.dart';
@@ -339,13 +341,39 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = ref.watch(themeNotifierProvider);
+    final isDarkMode = themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              color: (isDarkMode ? const Color(0xFF1A1A1A) : Colors.white)
+                  .withOpacity(0.5),
+            ),
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
-        title: Text(widget.words[_currentIndex].word),
+        title: Text(
+          widget.words[_currentIndex].word,
+          style: MnemonicsTypography.headingMedium.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            color: isDarkMode ? Colors.white : MnemonicsColors.textPrimary,
+          ),
+        ),
       ),
       body: Stack(
         children: [
@@ -361,7 +389,12 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                   itemBuilder: (context, index) {
                     final word = widget.words[index];
                     return SingleChildScrollView(
-                      padding: const EdgeInsets.all(MnemonicsSpacing.l),
+                      padding: EdgeInsets.only(
+                        left: MnemonicsSpacing.l,
+                        right: MnemonicsSpacing.l,
+                        bottom: MnemonicsSpacing.l,
+                        top: MediaQuery.of(context).padding.top + kToolbarHeight,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

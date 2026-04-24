@@ -25,7 +25,12 @@ class SessionSetupWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(MnemonicsSpacing.l),
+      padding: const EdgeInsets.only(
+        left: MnemonicsSpacing.l,
+        right: MnemonicsSpacing.l,
+        top: MnemonicsSpacing.l,
+        bottom: 120, // Space for CustomBottomNavBar
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

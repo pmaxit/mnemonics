@@ -33,8 +33,12 @@ mixin _$StatisticsData {
   int get totalReviews => throw _privateConstructorUsedError;
   int get streak => throw _privateConstructorUsedError;
 
+  /// Serializes this StatisticsData to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of StatisticsData
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $StatisticsDataCopyWith<StatisticsData> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -69,6 +73,8 @@ class _$StatisticsDataCopyWithImpl<$Res, $Val extends StatisticsData>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of StatisticsData
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -163,6 +169,8 @@ class __$$StatisticsDataImplCopyWithImpl<$Res>
       _$StatisticsDataImpl _value, $Res Function(_$StatisticsDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of StatisticsData
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -325,7 +333,7 @@ class _$StatisticsDataImpl implements _StatisticsData {
             (identical(other.streak, streak) || other.streak == streak));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -341,7 +349,9 @@ class _$StatisticsDataImpl implements _StatisticsData {
       totalReviews,
       streak);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of StatisticsData
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$StatisticsDataImplCopyWith<_$StatisticsDataImpl> get copyWith =>
@@ -395,8 +405,11 @@ abstract class _StatisticsData implements StatisticsData {
   int get totalReviews;
   @override
   int get streak;
+
+  /// Create a copy of StatisticsData
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$StatisticsDataImplCopyWith<_$StatisticsDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -411,8 +424,12 @@ mixin _$DailyProgress {
   int get wordsLearned => throw _privateConstructorUsedError;
   int get reviewsCompleted => throw _privateConstructorUsedError;
 
+  /// Serializes this DailyProgress to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of DailyProgress
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $DailyProgressCopyWith<DailyProgress> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -436,6 +453,8 @@ class _$DailyProgressCopyWithImpl<$Res, $Val extends DailyProgress>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of DailyProgress
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -479,6 +498,8 @@ class __$$DailyProgressImplCopyWithImpl<$Res>
       _$DailyProgressImpl _value, $Res Function(_$DailyProgressImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DailyProgress
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -538,12 +559,14 @@ class _$DailyProgressImpl implements _DailyProgress {
                 other.reviewsCompleted == reviewsCompleted));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
       Object.hash(runtimeType, date, wordsLearned, reviewsCompleted);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DailyProgress
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DailyProgressImplCopyWith<_$DailyProgressImpl> get copyWith =>
@@ -572,8 +595,11 @@ abstract class _DailyProgress implements DailyProgress {
   int get wordsLearned;
   @override
   int get reviewsCompleted;
+
+  /// Create a copy of DailyProgress
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DailyProgressImplCopyWith<_$DailyProgressImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -1,4 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../design/design_system.dart';
 
 /// Enum for navigation tabs
 enum AppTab { home, practice, timer, profile }
@@ -26,65 +28,81 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDarkMode
+        ? MnemonicsColors.darkSurface.withOpacity(0.7)
+        : Colors.white.withOpacity(0.7);
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16, left: 12, right: 12),
-      child: PhysicalModel(
-        color: Colors.white,
-        elevation: 8,
+      padding: const EdgeInsets.only(bottom: 24, left: 24, right: 24),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(barRadius),
-        shadowColor: Colors.black.withOpacity(0.10),
-        child: Container(
-          height: barHeight,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(barRadius),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _NavBarItem(
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home,
-                label: 'Home',
-                tab: AppTab.home,
-                isActive: currentTab == AppTab.home,
-                onTap: () => onTabSelected(AppTab.home),
-                activeColor: activeColor,
-                inactiveColor: inactiveColor,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            height: barHeight,
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(barRadius),
+              border: Border.all(
+                color: (isDarkMode ? Colors.white : Colors.black).withOpacity(0.1),
+                width: 1,
               ),
-              _NavBarItem(
-                icon: Icons.groups_outlined,
-                activeIcon: Icons.groups,
-                label: 'Practice',
-                tab: AppTab.practice,
-                isActive: currentTab == AppTab.practice,
-                onTap: () => onTabSelected(AppTab.practice),
-                activeColor: activeColor,
-                inactiveColor: inactiveColor,
-              ),
-              _NavBarItem(
-                icon: Icons.school_outlined,
-                activeIcon: Icons.school,
-                label: 'Learn',
-                tab: AppTab.timer,
-                isActive: currentTab == AppTab.timer,
-                onTap: () => onTabSelected(AppTab.timer),
-                activeColor: activeColor,
-                inactiveColor: inactiveColor,
-              ),
-              _NavBarItem(
-                icon: Icons.person_outline,
-                activeIcon: Icons.person,
-                label: 'Profile',
-                tab: AppTab.profile,
-                isActive: currentTab == AppTab.profile,
-                onTap: () => onTabSelected(AppTab.profile),
-                showNotificationDot: showNotificationDot,
-                activeColor: activeColor,
-                inactiveColor: inactiveColor,
-              ),
-            ],
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.1),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _NavBarItem(
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home,
+                  label: 'Home',
+                  tab: AppTab.home,
+                  isActive: currentTab == AppTab.home,
+                  onTap: () => onTabSelected(AppTab.home),
+                  activeColor: activeColor,
+                  inactiveColor: isDarkMode ? Colors.white70 : inactiveColor,
+                ),
+                _NavBarItem(
+                  icon: Icons.groups_outlined,
+                  activeIcon: Icons.groups,
+                  label: 'Practice',
+                  tab: AppTab.practice,
+                  isActive: currentTab == AppTab.practice,
+                  onTap: () => onTabSelected(AppTab.practice),
+                  activeColor: activeColor,
+                  inactiveColor: isDarkMode ? Colors.white70 : inactiveColor,
+                ),
+                _NavBarItem(
+                  icon: Icons.school_outlined,
+                  activeIcon: Icons.school,
+                  label: 'Learn',
+                  tab: AppTab.timer,
+                  isActive: currentTab == AppTab.timer,
+                  onTap: () => onTabSelected(AppTab.timer),
+                  activeColor: activeColor,
+                  inactiveColor: isDarkMode ? Colors.white70 : inactiveColor,
+                ),
+                _NavBarItem(
+                  icon: Icons.person_outline,
+                  activeIcon: Icons.person,
+                  label: 'Profile',
+                  tab: AppTab.profile,
+                  isActive: currentTab == AppTab.profile,
+                  onTap: () => onTabSelected(AppTab.profile),
+                  showNotificationDot: showNotificationDot,
+                  activeColor: activeColor,
+                  inactiveColor: isDarkMode ? Colors.white70 : inactiveColor,
+                ),
+              ],
+            ),
           ),
         ),
       ),

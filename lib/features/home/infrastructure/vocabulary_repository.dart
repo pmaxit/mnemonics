@@ -14,10 +14,11 @@ class VocabularyRepository {
   final MysqlDatabaseService _mysqlService = MysqlDatabaseService();
 
   Future<List<VocabularyWord>> loadVocabulary(
-      {bool forceRefresh = false}) async {
+      {bool forceRefresh = false, String? userId}) async {
     try {
       // Try to load from MySQL database first
-      return await _mysqlService.fetchVocabulary(forceRefresh: forceRefresh);
+      return await _mysqlService.fetchVocabulary(
+          forceRefresh: forceRefresh, userId: userId);
     } catch (e) {
       print('Error loading vocabulary from MySQL: $e');
 

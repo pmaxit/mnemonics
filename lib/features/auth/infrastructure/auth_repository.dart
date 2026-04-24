@@ -101,6 +101,7 @@ class AuthRepository {
     // Create an OAuthCredential from the Apple response
     final oauthCredential = OAuthProvider('apple.com').credential(
       idToken: appleCredential.identityToken,
+      accessToken: appleCredential.authorizationCode,
       rawNonce: rawNonce,
     );
 
@@ -123,7 +124,4 @@ class AuthRepository {
     return userCredential;
   }
 
-  Future<UserCredential> signInWithFacebook() async {
-    throw UnimplementedError('Facebook sign in is not yet implemented.');
-  }
 }

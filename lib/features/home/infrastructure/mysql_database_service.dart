@@ -12,7 +12,7 @@ class MysqlDatabaseService {
   static const Duration _cacheTimeout = Duration(hours: 1);
 
   Future<List<VocabularyWord>> fetchVocabulary(
-      {bool forceRefresh = false}) async {
+      {bool forceRefresh = false, String? userId}) async {
     if (!forceRefresh &&
         _cachedWords != null &&
         _lastFetchTime != null &&
@@ -21,7 +21,10 @@ class MysqlDatabaseService {
     }
 
     try {
-      final response = await http.get(Uri.parse(_apiUrl));
+      final uri = Uri.parse(_apiUrl).replace(
+        queryParameters: userId != null ? {'user_id': userId} : null,
+      );
+      final response = await http.get(uri);
 
       if (response.statusCode != 200) {
         throw Exception('Failed to load vocabulary: ${response.statusCode}');

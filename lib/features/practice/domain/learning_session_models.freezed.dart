@@ -29,7 +29,9 @@ mixin _$LearningSessionState {
   DateTime? get sessionEndTime => throw _privateConstructorUsedError;
   int get countdownSeconds => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LearningSessionState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $LearningSessionStateCopyWith<LearningSessionState> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -65,6 +67,8 @@ class _$LearningSessionStateCopyWithImpl<$Res,
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of LearningSessionState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -159,6 +163,8 @@ class __$$LearningSessionStateImplCopyWithImpl<$Res>
       $Res Function(_$LearningSessionStateImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LearningSessionState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -335,7 +341,9 @@ class _$LearningSessionStateImpl extends _LearningSessionState {
       sessionEndTime,
       countdownSeconds);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LearningSessionState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LearningSessionStateImplCopyWith<_$LearningSessionStateImpl>
@@ -381,8 +389,11 @@ abstract class _LearningSessionState extends LearningSessionState {
   DateTime? get sessionEndTime;
   @override
   int get countdownSeconds;
+
+  /// Create a copy of LearningSessionState
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LearningSessionStateImplCopyWith<_$LearningSessionStateImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
@@ -395,7 +406,9 @@ mixin _$SessionWordReview {
   Duration get timeSpent => throw _privateConstructorUsedError;
   bool get wasSkipped => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SessionWordReview
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $SessionWordReviewCopyWith<SessionWordReview> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -424,6 +437,8 @@ class _$SessionWordReviewCopyWithImpl<$Res, $Val extends SessionWordReview>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of SessionWordReview
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -482,6 +497,8 @@ class __$$SessionWordReviewImplCopyWithImpl<$Res>
       $Res Function(_$SessionWordReviewImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SessionWordReview
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -563,7 +580,9 @@ class _$SessionWordReviewImpl implements _SessionWordReview {
   int get hashCode => Object.hash(
       runtimeType, word, difficulty, reviewedAt, timeSpent, wasSkipped);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SessionWordReview
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SessionWordReviewImplCopyWith<_$SessionWordReviewImpl> get copyWith =>
@@ -589,8 +608,11 @@ abstract class _SessionWordReview implements SessionWordReview {
   Duration get timeSpent;
   @override
   bool get wasSkipped;
+
+  /// Create a copy of SessionWordReview
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SessionWordReviewImplCopyWith<_$SessionWordReviewImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -607,7 +629,9 @@ mixin _$LearningSessionSummary {
   List<String> get strugglingWords => throw _privateConstructorUsedError;
   List<String> get masteredWords => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LearningSessionSummary
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $LearningSessionSummaryCopyWith<LearningSessionSummary> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -640,6 +664,8 @@ class _$LearningSessionSummaryCopyWithImpl<$Res,
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of LearningSessionSummary
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -719,6 +745,8 @@ class __$$LearningSessionSummaryImplCopyWithImpl<$Res>
       $Res Function(_$LearningSessionSummaryImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LearningSessionSummary
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -860,7 +888,9 @@ class _$LearningSessionSummaryImpl extends _LearningSessionSummary {
       const DeepCollectionEquality().hash(_strugglingWords),
       const DeepCollectionEquality().hash(_masteredWords));
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LearningSessionSummary
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LearningSessionSummaryImplCopyWith<_$LearningSessionSummaryImpl>
@@ -897,8 +927,11 @@ abstract class _LearningSessionSummary extends LearningSessionSummary {
   List<String> get strugglingWords;
   @override
   List<String> get masteredWords;
+
+  /// Create a copy of LearningSessionSummary
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LearningSessionSummaryImplCopyWith<_$LearningSessionSummaryImpl>
       get copyWith => throw _privateConstructorUsedError;
 }

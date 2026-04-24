@@ -65,61 +65,13 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen>
 
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return Stack(
-      children: [
-        AnimatedWaveBackground(height: screenHeight),
-        Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: _buildAppBar(sessionState, sessionNotifier),
-          body: _buildBody(sessionState, sessionNotifier, isDarkMode),
-        ),
-      ],
+    return Padding(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + kToolbarHeight,
+        bottom: 120, // Space for CustomBottomNavBar
+      ),
+      child: _buildBody(sessionState, sessionNotifier, isDarkMode),
     );
-  }
-
-  PreferredSizeWidget? _buildAppBar(
-      LearningSessionState sessionState, LearningSession sessionNotifier) {
-    switch (sessionState.phase) {
-      case LearningSessionPhase.setup:
-        return null;
-      case LearningSessionPhase.active:
-      case LearningSessionPhase.paused:
-        return AppBar(
-          title: const Text('Learning Session'),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          actions: [
-            IconButton(
-              icon:
-                  Icon(sessionState.isPaused ? Icons.play_arrow : Icons.pause),
-              onPressed: () {
-                if (sessionState.isPaused) {
-                  sessionNotifier.resumeSession();
-                } else {
-                  sessionNotifier.pauseSession();
-                }
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.stop),
-              onPressed: () {
-                _showEndSessionDialog(sessionNotifier);
-              },
-            ),
-          ],
-        );
-      case LearningSessionPhase.countdown:
-        return AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        );
-      case LearningSessionPhase.completed:
-        return AppBar(
-          title: const Text('Session Complete'),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        );
-    }
   }
 
   Widget _buildBody(LearningSessionState sessionState,

@@ -13,6 +13,7 @@ import '../../../profile/domain/user_info.dart';
 import '../widgets/knowledge_tree_widget.dart';
 import '../../../profile/providers/profile_statistics_provider.dart';
 import '../../infrastructure/user_word_data_repository.dart';
+import '../../../auth/providers/user_profile_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -119,7 +120,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
 
     return Container(
-      margin: const EdgeInsets.all(MnemonicsSpacing.m),
+      margin: const EdgeInsets.fromLTRB(
+          MnemonicsSpacing.m, 0, MnemonicsSpacing.m, MnemonicsSpacing.s),
       padding: const EdgeInsets.all(MnemonicsSpacing.l),
       decoration: BoxDecoration(
         color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
@@ -412,35 +414,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         (themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
 
-    return Stack(
+    return ListView(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + kToolbarHeight,
+        bottom: 120, // Space for CustomBottomNavBar
+      ),
       children: [
-        // Full-screen animated background
-        AnimatedWaveBackground(height: screenHeight),
-        // Main content
-        Column(
-          children: [
-            // Animated Header (only this slides up)
-            AnimatedBuilder(
-              animation: _animationController,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, _slideAnimation.value),
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: _buildAnimatedHeader(isDarkMode),
-                  ),
-                );
-              },
-            ),
-            // Card Content (static)
-            Expanded(
-              child: wordSetsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Error: $e')),
-                data: (sets) {
-                  return ListView(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: MnemonicsSpacing.m),
+        // Animated Header (only this slides up)
+        AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(0, _slideAnimation.value),
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: _buildAnimatedHeader(isDarkMode),
+              ),
+            );
+          },
+        ),
+        // Card Content (static)
+        wordSetsAsync.when(
+          loading: () => const SizedBox(
+              height: 200, child: Center(child: CircularProgressIndicator())),
+          error: (e, _) => Center(child: Text('Error: $e')),
+          data: (sets) {
+            final userProfile = ref.watch(userProfileProvider).value;
+            final enabledSets = userProfile?.enabledWordSets
+                    .split(',')
+                    .where((s) => s.isNotEmpty)
+                    .toSet() ??
+                {};
+
+            final filteredSets = sets.where((s) {
+              if (enabledSets.isEmpty) return true;
+              return enabledSets.contains(s.id);
+            }).toList();
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: MnemonicsSpacing.m),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Knowledge Tree Header Widget
                       statsAsync.when(
@@ -609,29 +627,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         ),
                       ),
                       const SizedBox(height: MnemonicsSpacing.m),
-
-                      ...sets.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final set = entry.value;
-                        final accent =
-                            accentColors[index % accentColors.length];
-                        final icon = setIcons[index % setIcons.length];
-
-                        return _buildAnimatedCard(
-                          set: set,
-                          accent: accent,
-                          icon: icon,
-                          isDarkMode: isDarkMode,
-                          index: index,
-                        );
-                      }),
-                      const SizedBox(height: MnemonicsSpacing.xl),
                     ],
-                  );
-                },
-              ),
-            ),
-          ],
+                  ),
+                ),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: MnemonicsSpacing.m),
+                  itemCount: filteredSets.length,
+                  itemBuilder: (context, index) {
+                    final set = filteredSets[index];
+                    final accent = accentColors[index % accentColors.length];
+                    final icon = setIcons[index % setIcons.length];
+
+                    return _buildAnimatedCard(
+                      set: set,
+                      accent: accent,
+                      icon: icon,
+                      isDarkMode: isDarkMode,
+                      index: index,
+                    );
+                  },
+                ),
+                const SizedBox(height: MnemonicsSpacing.xl),
+              ],
+            );
+          },
         ),
       ],
     );

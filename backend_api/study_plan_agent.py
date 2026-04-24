@@ -153,8 +153,10 @@ def create_study_plan(
     conn.close()
 
     return {
-        "plan_id": plan_id,
+        "id": plan_id,
+        "user_id": user_id,
         "title": title,
+        "total_words": total_words,
         "num_days": num_days,
         "words_per_day": words_per_day,
         "start_date": start_date.isoformat(),

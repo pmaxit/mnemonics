@@ -28,6 +28,8 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground> with Si
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -36,23 +38,28 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground> with Si
           height: widget.height,
           child: Stack(
             children: [
-              // Light gradient background
+              // Gradient background
               Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Color(0xFFF8F9FA), // very light gray
-                      Color(0xFFE3F6F5), // very light green/blue
-                    ],
+                    colors: isDarkMode
+                        ? [
+                            const Color(0xFF1A1A1A), // dark background
+                            const Color(0xFF0F172A), // deeper navy/black
+                          ]
+                        : [
+                            const Color(0xFFF8F9FA), // very light gray
+                            const Color(0xFFE3F6F5), // very light green/blue
+                          ],
                   ),
                 ),
               ),
               // Waves
               CustomPaint(
                 size: Size(MediaQuery.of(context).size.width, widget.height),
-                painter: _WavePainter(_controller.value),
+                painter: _WavePainter(_controller.value, isDarkMode),
               ),
             ],
           ),
@@ -64,15 +71,20 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground> with Si
 
 class _WavePainter extends CustomPainter {
   final double animationValue;
-  _WavePainter(this.animationValue);
+  final bool isDarkMode;
+  _WavePainter(this.animationValue, this.isDarkMode);
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint1 = Paint()
-      ..color = const Color(0xFFB2DFDB).withOpacity(0.30) // light teal
+      ..color = isDarkMode
+          ? const Color(0xFF4CAF8F).withOpacity(0.05) // subtle green for dark
+          : const Color(0xFFB2DFDB).withOpacity(0.30) // light teal
       ..style = PaintingStyle.fill;
     final paint2 = Paint()
-      ..color = Colors.white.withOpacity(0.60)
+      ..color = isDarkMode
+          ? Colors.white.withOpacity(0.02)
+          : Colors.white.withOpacity(0.60)
       ..style = PaintingStyle.fill;
 
     final path1 = Path();

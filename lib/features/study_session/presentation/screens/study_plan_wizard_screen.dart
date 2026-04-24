@@ -62,28 +62,34 @@ class _StudyPlanWizardScreenState
     // Navigate to Practice tab and show success once plan is created
     ref.listen(studyPlanCreationProvider, (_, next) {
       if (next.createdPlan != null) {
-        ref.read(studyPlanCreationProvider.notifier).reset();
+        final planName = next.createdPlan!.title;
+        
+        // Navigate first
         context.go('/main/practice');
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Row(
               children: [
-                Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                SizedBox(width: 10),
-                Text(
-                  'Study plan created! Start practising below.',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Study plan "$planName" created! Start practising below.',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
               ],
             ),
             backgroundColor: MnemonicsColors.primaryGreen,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             duration: const Duration(seconds: 4),
           ),
         );
+
+        // Then reset
+        ref.read(studyPlanCreationProvider.notifier).reset();
       }
     });
 

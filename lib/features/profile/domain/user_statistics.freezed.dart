@@ -44,8 +44,12 @@ mixin _$UserStatistics {
       throw _privateConstructorUsedError; // User profile info
   DateTime? get joinDate => throw _privateConstructorUsedError;
 
+  /// Serializes this UserStatistics to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of UserStatistics
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $UserStatisticsCopyWith<UserStatistics> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -84,6 +88,8 @@ class _$UserStatisticsCopyWithImpl<$Res, $Val extends UserStatistics>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of UserStatistics
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -202,6 +208,8 @@ class __$$UserStatisticsImplCopyWithImpl<$Res>
       _$UserStatisticsImpl _value, $Res Function(_$UserStatisticsImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of UserStatistics
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -438,7 +446,7 @@ class _$UserStatisticsImpl implements _UserStatistics {
                 other.joinDate == joinDate));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -458,7 +466,9 @@ class _$UserStatisticsImpl implements _UserStatistics {
       const DeepCollectionEquality().hash(_milestones),
       joinDate);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of UserStatistics
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$UserStatisticsImplCopyWith<_$UserStatisticsImpl> get copyWith =>
@@ -494,7 +504,8 @@ abstract class _UserStatistics implements UserStatistics {
   factory _UserStatistics.fromJson(Map<String, dynamic> json) =
       _$UserStatisticsImpl.fromJson;
 
-  @override // Overall progress tracking
+// Overall progress tracking
+  @override
   int get totalWordsLearned;
   @override
   int get wordsLearnedToday;
@@ -507,25 +518,29 @@ abstract class _UserStatistics implements UserStatistics {
   @override
   double get averageAccuracy;
   @override
-  int get totalStudyTimeMinutes;
-  @override // Difficulty-based breakdown
-  Map<WordDifficulty, DifficultyProgress> get difficultyStats;
-  @override // Category-based breakdown
-  Map<String, CategoryProgress> get categoryStats;
-  @override // Learning stage progression
-  Map<LearningStage, int> get stageBreakdown;
-  @override // Review action tracking
-  List<UserReviewAction> get recentActions;
-  @override // Time-based analytics
+  int get totalStudyTimeMinutes; // Difficulty-based breakdown
+  @override
+  Map<WordDifficulty, DifficultyProgress>
+      get difficultyStats; // Category-based breakdown
+  @override
+  Map<String, CategoryProgress> get categoryStats; // Learning stage progression
+  @override
+  Map<LearningStage, int> get stageBreakdown; // Review action tracking
+  @override
+  List<UserReviewAction> get recentActions; // Time-based analytics
+  @override
   List<DailyProgress> get weeklyProgress;
   @override
-  double get learningVelocity;
-  @override // Milestones and achievements
-  List<Milestone> get milestones;
-  @override // User profile info
-  DateTime? get joinDate;
+  double get learningVelocity; // Milestones and achievements
   @override
-  @JsonKey(ignore: true)
+  List<Milestone> get milestones; // User profile info
+  @override
+  DateTime? get joinDate;
+
+  /// Create a copy of UserStatistics
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$UserStatisticsImplCopyWith<_$UserStatisticsImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -544,8 +559,12 @@ mixin _$DifficultyProgress {
   int get totalReviews => throw _privateConstructorUsedError;
   DateTime? get lastReviewedAt => throw _privateConstructorUsedError;
 
+  /// Serializes this DifficultyProgress to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of DifficultyProgress
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $DifficultyProgressCopyWith<DifficultyProgress> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -576,6 +595,8 @@ class _$DifficultyProgressCopyWithImpl<$Res, $Val extends DifficultyProgress>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of DifficultyProgress
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -646,6 +667,8 @@ class __$$DifficultyProgressImplCopyWithImpl<$Res>
       $Res Function(_$DifficultyProgressImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DifficultyProgress
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -746,7 +769,7 @@ class _$DifficultyProgressImpl implements _DifficultyProgress {
                 other.lastReviewedAt == lastReviewedAt));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -758,7 +781,9 @@ class _$DifficultyProgressImpl implements _DifficultyProgress {
       totalReviews,
       lastReviewedAt);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DifficultyProgress
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DifficultyProgressImplCopyWith<_$DifficultyProgressImpl> get copyWith =>
@@ -800,8 +825,11 @@ abstract class _DifficultyProgress implements DifficultyProgress {
   int get totalReviews;
   @override
   DateTime? get lastReviewedAt;
+
+  /// Create a copy of DifficultyProgress
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DifficultyProgressImplCopyWith<_$DifficultyProgressImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -821,8 +849,12 @@ mixin _$CategoryProgress {
       throw _privateConstructorUsedError;
   DateTime? get lastReviewedAt => throw _privateConstructorUsedError;
 
+  /// Serializes this CategoryProgress to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of CategoryProgress
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $CategoryProgressCopyWith<CategoryProgress> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -853,6 +885,8 @@ class _$CategoryProgressCopyWithImpl<$Res, $Val extends CategoryProgress>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of CategoryProgress
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -923,6 +957,8 @@ class __$$CategoryProgressImplCopyWithImpl<$Res>
       $Res Function(_$CategoryProgressImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of CategoryProgress
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1031,7 +1067,7 @@ class _$CategoryProgressImpl implements _CategoryProgress {
                 other.lastReviewedAt == lastReviewedAt));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -1043,7 +1079,9 @@ class _$CategoryProgressImpl implements _CategoryProgress {
       const DeepCollectionEquality().hash(_difficultyBreakdown),
       lastReviewedAt);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of CategoryProgress
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$CategoryProgressImplCopyWith<_$CategoryProgressImpl> get copyWith =>
@@ -1085,8 +1123,11 @@ abstract class _CategoryProgress implements CategoryProgress {
   Map<WordDifficulty, int> get difficultyBreakdown;
   @override
   DateTime? get lastReviewedAt;
+
+  /// Create a copy of CategoryProgress
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$CategoryProgressImplCopyWith<_$CategoryProgressImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1109,8 +1150,12 @@ mixin _$UserReviewAction {
   LearningStage get newStage => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
 
+  /// Serializes this UserReviewAction to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of UserReviewAction
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $UserReviewActionCopyWith<UserReviewAction> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1145,6 +1190,8 @@ class _$UserReviewActionCopyWithImpl<$Res, $Val extends UserReviewAction>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of UserReviewAction
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1239,6 +1286,8 @@ class __$$UserReviewActionImplCopyWithImpl<$Res>
       $Res Function(_$UserReviewActionImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of UserReviewAction
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1377,7 +1426,7 @@ class _$UserReviewActionImpl implements _UserReviewAction {
             (identical(other.notes, notes) || other.notes == notes));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -1393,7 +1442,9 @@ class _$UserReviewActionImpl implements _UserReviewAction {
       newStage,
       notes);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of UserReviewAction
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$UserReviewActionImplCopyWith<_$UserReviewActionImpl> get copyWith =>
@@ -1447,8 +1498,11 @@ abstract class _UserReviewAction implements UserReviewAction {
   LearningStage get newStage;
   @override
   String? get notes;
+
+  /// Create a copy of UserReviewAction
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$UserReviewActionImplCopyWith<_$UserReviewActionImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1467,8 +1521,12 @@ mixin _$DailyProgress {
       throw _privateConstructorUsedError;
   double get accuracyRate => throw _privateConstructorUsedError;
 
+  /// Serializes this DailyProgress to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of DailyProgress
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $DailyProgressCopyWith<DailyProgress> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1498,6 +1556,8 @@ class _$DailyProgressCopyWithImpl<$Res, $Val extends DailyProgress>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of DailyProgress
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1562,6 +1622,8 @@ class __$$DailyProgressImplCopyWithImpl<$Res>
       _$DailyProgressImpl _value, $Res Function(_$DailyProgressImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DailyProgress
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1659,7 +1721,7 @@ class _$DailyProgressImpl implements _DailyProgress {
                 other.accuracyRate == accuracyRate));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -1670,7 +1732,9 @@ class _$DailyProgressImpl implements _DailyProgress {
       const DeepCollectionEquality().hash(_difficultyBreakdown),
       accuracyRate);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DailyProgress
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DailyProgressImplCopyWith<_$DailyProgressImpl> get copyWith =>
@@ -1708,8 +1772,11 @@ abstract class _DailyProgress implements DailyProgress {
   Map<WordDifficulty, int> get difficultyBreakdown;
   @override
   double get accuracyRate;
+
+  /// Create a copy of DailyProgress
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DailyProgressImplCopyWith<_$DailyProgressImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1729,8 +1796,12 @@ mixin _$Milestone {
   bool get isUnlocked => throw _privateConstructorUsedError;
   DateTime? get unlockedAt => throw _privateConstructorUsedError;
 
+  /// Serializes this Milestone to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of Milestone
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $MilestoneCopyWith<Milestone> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1761,6 +1832,8 @@ class _$MilestoneCopyWithImpl<$Res, $Val extends Milestone>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of Milestone
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1837,6 +1910,8 @@ class __$$MilestoneImplCopyWithImpl<$Res>
       _$MilestoneImpl _value, $Res Function(_$MilestoneImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of Milestone
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1944,12 +2019,14 @@ class _$MilestoneImpl implements _Milestone {
                 other.unlockedAt == unlockedAt));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, id, title, description, type,
       targetValue, currentValue, isUnlocked, unlockedAt);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of Milestone
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$MilestoneImplCopyWith<_$MilestoneImpl> get copyWith =>
@@ -1993,8 +2070,11 @@ abstract class _Milestone implements Milestone {
   bool get isUnlocked;
   @override
   DateTime? get unlockedAt;
+
+  /// Create a copy of Milestone
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$MilestoneImplCopyWith<_$MilestoneImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

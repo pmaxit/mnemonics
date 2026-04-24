@@ -19,6 +19,8 @@ final lightThemeProvider = AutoDisposeProvider<ThemeData>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef LightThemeRef = AutoDisposeProviderRef<ThemeData>;
 String _$darkThemeHash() => r'1734834b1bc2957cc298f781db341e0f6d344299';
 
@@ -33,6 +35,8 @@ final darkThemeProvider = AutoDisposeProvider<ThemeData>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef DarkThemeRef = AutoDisposeProviderRef<ThemeData>;
 String _$themeNotifierHash() => r'883391504b1204ae992eb5c37f41e2d07e82833c';
 
@@ -51,4 +55,4 @@ final themeNotifierProvider =
 
 typedef _$ThemeNotifier = AutoDisposeNotifier<ThemeMode>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -21,10 +21,13 @@ import 'features/practice/presentation/screens/details/accuracy_detail_screen.da
 import 'features/practice/presentation/screens/details/learning_stages_detail_screen.dart';
 import 'features/practice/presentation/screens/details/breakdown_detail_screen.dart';
 import 'features/profile/presentation/screens/enhanced_profile_screen.dart';
+import 'features/profile/presentation/screens/profile_settings_screen.dart';
 import 'features/study_session/presentation/screens/study_calendar_screen.dart';
 import 'features/study_session/presentation/screens/study_plan_wizard_screen.dart';
 import 'features/study_session/presentation/screens/study_day_detail_screen.dart';
 import 'features/study_session/domain/study_plan_day.dart';
+import 'features/auth/presentation/screens/onboarding_wizard_screen.dart';
+import 'features/auth/providers/user_profile_provider.dart';
 import 'package:flutter/material.dart';
 
 /// Converts a [Stream] into a [Listenable] for GoRouter's refreshListenable.
@@ -58,15 +61,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLoggedIn = user != null;
       final currentLocation = state.matchedLocation;
 
-      // If logged in and on an auth route, go to home
+      // If logged in and on an auth route, go to home (or onboarding)
       if (isLoggedIn && authRoutes.contains(currentLocation)) {
+        // We will handle the onboarding check below
         return '/main/home';
       }
 
       // If not logged in and on a protected route, go to welcome
-      if (!isLoggedIn &&
-          !authRoutes.contains(currentLocation)) {
+      if (!isLoggedIn && !authRoutes.contains(currentLocation)) {
         return '/welcome';
+      }
+
+      // Onboarding check for logged in users
+      if (isLoggedIn && currentLocation != '/onboarding') {
+        final profileAsync = ref.read(userProfileProvider);
+        if (profileAsync is AsyncData && profileAsync.value != null) {
+          if (!profileAsync.value!.hasCompletedOnboarding) {
+            return '/onboarding';
+          }
+        }
       }
 
       // No redirect needed
@@ -88,6 +101,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/signup',
         builder: (context, state) => const SignupScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingWizardScreen(),
       ),
       GoRoute(
         path: '/knowledge-tree',
@@ -122,6 +139,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'profile',
                 builder: (context, state) => const EnhancedProfileScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'settings',
+                    builder: (context, state) => const ProfileSettingsScreen(),
+                  ),
+                ],
               ),
             ],
           ),

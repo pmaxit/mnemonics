@@ -39,16 +39,59 @@ def health_check():
 
 @app.route('/vocabulary', methods=['GET'])
 def get_vocabulary():
+    user_id = request.args.get('user_id')
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM Vocabulary")
+        
+        if user_id:
+            # Get user profile (level and enabled sets)
+            cursor.execute("SELECT vocabulary_level, enabled_word_sets FROM UserProfiles WHERE user_id = %s", (user_id,))
+            user_profile = cursor.fetchone()
+            
+            user_levels = user_profile['vocabulary_level'] if user_profile else "1"
+            enabled_sets = user_profile['enabled_word_sets'] if user_profile and user_profile['enabled_word_sets'] else None
+            
+            # Filter words by exact selected levels
+            levels_list = [f"Level {l.strip()}" for l in str(user_levels).split(',') if l.strip()]
+            if not levels_list:
+                levels_list = ["Level 1"]
+                
+            placeholders = ', '.join(['%s'] * len(levels_list))
+            where_clauses = [f"category IN ({placeholders})"]
+            query_params = levels_list
+            
+            # Add word set filtering if enabled
+            if enabled_sets:
+                sets_list = [s.strip() for s in enabled_sets.split(',') if s.strip()]
+                if sets_list:
+                    set_clauses = []
+                    for s in sets_list:
+                        set_clauses.append("FIND_IN_SET(%s, setIds) > 0")
+                        query_params.append(s)
+                    where_clauses.append(f"({' OR '.join(set_clauses)})")
+            
+            query = f"SELECT * FROM Vocabulary WHERE {' AND '.join(where_clauses)}"
+            print(f"DEBUG: Executing query: {query} with params: {query_params}")
+            try:
+                cursor.execute(query, query_params)
+            except Exception as sql_e:
+                print(f"SQL ERROR: {sql_e}")
+                raise sql_e
+        else:
+            cursor.execute("SELECT * FROM Vocabulary")
+            
         rows = cursor.fetchall()
         cursor.close()
-        conn.close()
         return jsonify(rows)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
 
 @app.route('/notes/<user_id>/<word>', methods=['GET'])
 def get_notes(user_id, word):
@@ -175,11 +218,65 @@ def reset_user_data(user_id):
         cursor.execute("DELETE FROM UserNotes WHERE user_id = %s", (user_id,))
         cursor.execute("DELETE FROM UserLearnedWords WHERE user_id = %s", (user_id,))
         cursor.execute("DELETE FROM UserWordProgress WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM UserProfiles WHERE user_id = %s", (user_id,))
         conn.commit()
         cursor.close()
         conn.close()
         return jsonify({"status": "ok"})
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/user_profile/<user_id>', methods=['GET'])
+def get_user_profile(user_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM UserProfiles WHERE user_id = %s", (user_id,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if row:
+            # Convert boolean
+            row['has_completed_onboarding'] = bool(row['has_completed_onboarding'])
+            return jsonify(row)
+        return jsonify({
+            "user_id": user_id,
+            "vocabulary_level": "1",
+            "learning_goal": "",
+            "has_completed_onboarding": False,
+            "enabled_word_sets": ""
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/user_profile/<user_id>', methods=['POST'])
+def save_user_profile(user_id):
+    data = request.json
+    vocabulary_level = data.get('vocabulary_level', '1')
+    learning_goal = data.get('learning_goal', '')
+    has_completed_onboarding = data.get('has_completed_onboarding', False)
+    enabled_word_sets = data.get('enabled_word_sets', '')
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+        INSERT INTO UserProfiles (user_id, vocabulary_level, learning_goal, has_completed_onboarding, enabled_word_sets) 
+        VALUES (%s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE 
+            vocabulary_level = %s, 
+            learning_goal = %s, 
+            has_completed_onboarding = %s,
+            enabled_word_sets = %s
+        ''', (user_id, vocabulary_level, learning_goal, has_completed_onboarding, enabled_word_sets,
+              vocabulary_level, learning_goal, has_completed_onboarding, enabled_word_sets))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 # ---------------------------------------------------------------------------
@@ -212,6 +309,28 @@ def create_study_plan():
             title=title,
         )
         return jsonify(result), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/onboarding/curate', methods=['POST'])
+def curate_onboarding():
+    """
+    Agentic onboarding curation.
+    Body: { user_id, goal, score }
+    """
+    from onboarding_agent import curate_onboarding_results
+    data = request.json or {}
+    user_id = data.get('user_id')
+    goal = data.get('goal')
+    score = data.get('score', 0)
+
+    if not all([user_id, goal]):
+        return jsonify({'error': 'Missing user_id or goal'}), 400
+
+    try:
+        result = curate_onboarding_results(user_id, goal, score)
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -385,6 +504,21 @@ def delete_study_plan(plan_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/settings/summary', methods=['POST'])
+def get_settings_summary():
+    data = request.json
+    level = data.get('level', '1')
+    enabled_sets = data.get('enabled_sets', '')
+    
+    try:
+        from onboarding_agent import generate_settings_summary
+        summary = generate_settings_summary(level, enabled_sets)
+        return jsonify({"summary": summary})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     # Run locally on a specified port

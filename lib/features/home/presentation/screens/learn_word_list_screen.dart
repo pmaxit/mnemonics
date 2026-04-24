@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -152,9 +153,24 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
 
     final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              color: (isDarkMode ? const Color(0xFF1A1A1A) : Colors.white)
+                  .withOpacity(0.5),
+            ),
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: wordSetsAsync.when(
@@ -163,17 +179,24 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
           data: (sets) {
             final set = sets.firstWhere((s) => s.id == widget.setId,
                 orElse: () => WordSet(id: '', name: '', description: ''));
-            return Text(set.name.isNotEmpty ? set.name : 'Word List');
+            return Text(
+              set.name.isNotEmpty ? set.name : 'Word List',
+              style: MnemonicsTypography.headingMedium.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 20,
+              ),
+            );
           },
         ),
       ),
       body: Stack(
         children: [
-          AnimatedWaveBackground(height: screenHeight),
-          Container(
-            color: Colors.transparent,
-            child: Column(
-              children: [
+          const Positioned.fill(
+            child: AnimatedWaveBackground(height: double.infinity),
+          ),
+          Column(
+            children: [
+              SizedBox(height: MediaQuery.of(context).padding.top + kToolbarHeight),
                 // Animated Header (only this slides up)
                 AnimatedBuilder(
                   animation: _animationController,
@@ -440,7 +463,6 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
                 ),
               ],
             ),
-          ),
         ],
       ),
     );
@@ -448,7 +470,8 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
 
   Widget _buildAnimatedHeader(String title, bool isDarkMode) {
     return Container(
-      margin: const EdgeInsets.all(MnemonicsSpacing.m),
+      margin: const EdgeInsets.fromLTRB(
+          MnemonicsSpacing.m, 0, MnemonicsSpacing.m, MnemonicsSpacing.s),
       padding: const EdgeInsets.all(MnemonicsSpacing.l),
       decoration: BoxDecoration(
         color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,

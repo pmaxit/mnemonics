@@ -315,20 +315,36 @@ def difficulty_to_level(difficulty):
     """Map difficulty to Level 1-6."""
     if not difficulty:
         return "Level 1"
-    d = difficulty.lower()
-    if "begin" in d or "basic" in d or "easy" in d:
+    d = difficulty.strip()
+    
+    # CEFR Mapping
+    if d == "A1" or d == "A2":
         return "Level 1"
-    elif "element" in d or "pre" in d:
+    elif d == "B1":
         return "Level 2"
-    elif "upper" in d:
-        return "Level 4"
-    elif "intermed" in d or "medium" in d or "mid" in d:
+    elif d == "B2" or d == "B2+":
         return "Level 3"
-    elif "adv" in d or "hard" in d:
+    elif d == "C1" or d == "C1+":
+        return "Level 4"
+    elif d == "C2":
         return "Level 5"
-    elif "prof" in d or "expert" in d or "master" in d:
+    
+    # Textual Mapping
+    d_lower = d.lower()
+    if "begin" in d_lower or "basic" in d_lower or "easy" in d_lower:
+        return "Level 1"
+    elif "element" in d_lower or "pre" in d_lower:
+        return "Level 2"
+    elif "intermed" in d_lower or "medium" in d_lower or "mid" in d_lower:
+        return "Level 3"
+    elif "upper" in d_lower:
+        return "Level 4"
+    elif "adv" in d_lower or "hard" in d_lower:
+        return "Level 5"
+    elif "prof" in d_lower or "expert" in d_lower or "master" in d_lower:
         return "Level 6"
-    return "Level 1"
+        
+    return "Level 3" # Default to intermediate if unknown
 
 
 def main():

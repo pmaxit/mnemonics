@@ -2,23 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/design/design_system.dart';
 import '../../../../common/design/theme_provider.dart';
-import '../../../home/providers.dart';
-import '../../../home/infrastructure/user_word_data_repository.dart';
 import '../../providers/unified_statistics_provider.dart';
 import '../widgets/profile_header_widget.dart';
 import '../widgets/statistics_overview_widget.dart';
-import '../widgets/achievements_widget.dart';
-import '../widgets/learning_insights_widget.dart';
-import 'goal_summary_screen.dart';
-import '../../domain/user_statistics.dart';
-import '../widgets/profile_settings_widget.dart';
 import '../widgets/difficulty_stats_widget.dart';
-import '../../../../common/widgets/animated_wave_background.dart';
-import 'package:go_router/go_router.dart';
-import '../../../auth/providers/auth_provider.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:http/http.dart' as http;
-import '../../../auth/infrastructure/auth_repository.dart';
 
 class EnhancedProfileScreen extends ConsumerStatefulWidget {
   const EnhancedProfileScreen({super.key});
@@ -59,379 +46,56 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
   @override
   Widget build(BuildContext context) {
     final profileStatsAsync = ref.watch(unifiedStatisticsProvider);
-    final userSettings = ref.watch(userSettingsProvider);
     final themeMode = ref.watch(themeNotifierProvider);
     final isDarkMode = themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
 
-    final screenHeight = MediaQuery.of(context).size.height;
-    return Stack(
-      children: [
-        AnimatedWaveBackground(height: screenHeight),
-        Scaffold(
-          backgroundColor: Colors.transparent,
-          body: profileStatsAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: isDarkMode
-                        ? MnemonicsColors.darkTextSecondary
-                        : MnemonicsColors.textSecondary,
+    return Padding(
+      padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top + kToolbarHeight,
+          bottom: 120,
+        ),
+        child: profileStatsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(
+            child: Text('Error loading stats: $error'),
+          ),
+          data: (profileStats) => FadeTransition(
+            opacity: _fadeAnimation,
+            child: CustomScrollView(
+              slivers: [
+                // Profile Header
+                SliverToBoxAdapter(
+                  child: ProfileHeaderWidget(
+                    profileStats: profileStats,
+                    isDarkMode: isDarkMode,
                   ),
-                  const SizedBox(height: MnemonicsSpacing.m),
-                  Text(
-                    'Unable to load profile data',
-                    style: MnemonicsTypography.bodyLarge.copyWith(
-                      color: isDarkMode
-                          ? MnemonicsColors.darkTextSecondary
-                          : MnemonicsColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: MnemonicsSpacing.s),
-                  Text(
-                    error.toString(),
-                    style: MnemonicsTypography.bodyRegular.copyWith(
-                      color: isDarkMode
-                          ? MnemonicsColors.darkTextSecondary
-                          : MnemonicsColors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-            data: (profileStats) => FadeTransition(
-              opacity: _fadeAnimation,
-              child: CustomScrollView(
-                slivers: [
-                  // Profile Header with Statistics
-                  SliverToBoxAdapter(
-                    child: ProfileHeaderWidget(
-                      profileStats: profileStats,
-                      isDarkMode: isDarkMode,
-                    ),
-                  ),
+                ),
 
-                  // Quick Stats Overview
-                  SliverToBoxAdapter(
-                    child: StatisticsOverviewWidget(
-                      profileStats: profileStats,
-                      isDarkMode: isDarkMode,
-                    ),
+                // Stats Overview
+                SliverToBoxAdapter(
+                  child: StatisticsOverviewWidget(
+                    profileStats: profileStats,
+                    isDarkMode: isDarkMode,
                   ),
+                ),
 
-                  // Achievements Section
-                  SliverToBoxAdapter(
-                    child: AchievementsWidget(
-                      milestones: profileStats.milestones,
-                      isDarkMode: isDarkMode,
-                      onGoalTap: (Milestone milestone) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (context) =>
-                                GoalSummaryScreen(milestone: milestone),
-                          ),
-                        );
-                      },
-                    ),
+                // Difficulty Stats
+                SliverToBoxAdapter(
+                  child: DifficultyStatsWidget(
+                    difficultyStats: profileStats.difficultyStats,
+                    isDarkMode: isDarkMode,
                   ),
+                ),
 
-                  // Learning Insights
-                  SliverToBoxAdapter(
-                    child: LearningInsightsWidget(
-                      profileStats: profileStats,
-                      isDarkMode: isDarkMode,
-                    ),
-                  ),
-
-                  // Difficulty Statistics
-                  SliverToBoxAdapter(
-                    child: DifficultyStatsWidget(
-                      difficultyStats: profileStats.difficultyStats,
-                      isDarkMode: isDarkMode,
-                    ),
-                  ),
-
-                  // Settings Section
-                  if (userSettings != null)
-                    SliverToBoxAdapter(
-                      child: ProfileSettingsWidget(
-                        userSettings: userSettings,
-                        themeMode: themeMode,
-                        isDarkMode: isDarkMode,
-                        onSettingChanged: (key, value) =>
-                            _handleSettingChange(key, value),
-                      ),
-                    )
-                  else
-                    const SliverToBoxAdapter(
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-
-                  // Bottom padding
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: MnemonicsSpacing.xl),
-                  ),
-                ],
-              ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: MnemonicsSpacing.xxl),
+                ),
+              ],
             ),
           ),
         ),
-      ],
     );
-  }
-
-  void _handleSettingChange(String key, dynamic value) {
-    switch (key) {
-      case 'theme':
-        ref.read(themeNotifierProvider.notifier).toggleTheme();
-        break;
-      case 'dailyGoal':
-        if (value is int) {
-          ref.read(userSettingsProvider.notifier).updateDailyGoal(value);
-        }
-        break;
-      case 'reviewFrequency':
-        if (value is int) {
-          ref.read(userSettingsProvider.notifier).updateReviewFrequency(value);
-        }
-        break;
-      case 'exportData':
-        _handleDataExport();
-        break;
-      case 'importData':
-        _handleDataImport();
-        break;
-      case 'logout':
-        _handleLogout();
-        break;
-      case 'resetProgress':
-        _handleProgressReset();
-        break;
-    }
-  }
-
-  Future<void> _handleDataExport() async {
-    try {
-      final repo = ref.read(userWordDataRepositoryProvider);
-      final allData = await repo.getAllUserWordData();
-
-      // Create export data with timestamp
-      final exportData = {
-        'exportDate': DateTime.now().toIso8601String(),
-        'version': '1.0',
-        'userData': allData.map((e) => e.toJson()).toList(),
-      };
-
-      // For now, just show success message
-      // In a real app, you would use file_picker or share_plus to save/share the file
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Data export prepared successfully'),
-            backgroundColor: MnemonicsColors.primaryGreen,
-            action: SnackBarAction(
-              label: 'View',
-              textColor: Colors.white,
-              onPressed: () {
-                // Show export data preview
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Export Data'),
-                    content: Text('${allData.length} words exported'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('OK'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Export failed: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _handleDataImport() async {
-    // For now, just show a placeholder dialog
-    // In a real app, you would use file_picker to select a JSON file
-    if (mounted) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Import Data'),
-          content: const Text('Data import feature will be available soon.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  Future<void> _handleLogout() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Log Out'),
-        content: const Text(
-          'Are you sure you want to log out of your account?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Log Out'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      // Perform actual Firebase logout
-      await ref.read(authControllerProvider.notifier).signOut();
-
-      if (mounted) {
-        context.go('/welcome');
-      }
-    }
-  }
-
-  Future<void> _handleProgressReset() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reset Progress'),
-        content: const Text(
-          'Are you sure you want to reset all your learning progress? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        // Show loading indicator
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Resetting progress...'),
-              duration: Duration(seconds: 1),
-            ),
-          );
-        }
-
-        // Clear cloud user data
-        final userId = ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
-        try {
-          final response = await http.delete(Uri.parse('https://mnemonics-api-1078980357394.us-central1.run.app/reset/$userId'));
-          if (response.statusCode != 200) {
-            print('Failed to reset cloud data. Status code: ${response.statusCode}');
-          }
-        } catch (e) {
-          print('Error calling reset API: $e');
-        }
-
-        // Clear user word data
-        final userWordRepo = ref.read(userWordDataRepositoryProvider);
-        await userWordRepo.clearAllData();
-
-        // Clear review activities
-        final reviewRepo = ref.read(reviewActivityRepositoryProvider);
-        await reviewRepo.clearAllData();
-
-        // Reset user settings to defaults
-        final userSettingsNotifier = ref.read(userSettingsProvider.notifier);
-        await userSettingsNotifier.updateDailyGoal(10); // Default goal
-        await userSettingsNotifier.updateLanguages(['en']); // Default language
-        await userSettingsNotifier
-            .updateReviewFrequency(1); // Default frequency
-
-        // Clear all Hive boxes that might contain user data
-        final hiveDir =
-            await Hive.boxExists('user_settings') ? '' : ''; // Dummy check
-        await Hive.deleteBoxFromDisk('user_word_data');
-        await Hive.deleteBoxFromDisk('user_settings');
-        await Hive.deleteBoxFromDisk('review_activity');
-        await Hive.deleteBoxFromDisk('user_statistics');
-        await Hive.deleteBoxFromDisk('user_info');
-
-        // Invalidate all providers to refresh UI state
-        ref.invalidate(allUserWordDataProvider);
-        ref.invalidate(reviewActivityListProvider);
-        ref.invalidate(unifiedStatisticsProvider);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content:
-                  Text('✅ All learning progress has been reset successfully'),
-              backgroundColor: MnemonicsColors.primaryGreen,
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-      } catch (e) {
-        String errorMessage = 'Reset failed';
-        if (e.toString().contains('HiveError')) {
-          errorMessage = 'Database error occurred during reset';
-        } else if (e.toString().contains('Permission')) {
-          errorMessage = 'Permission denied - unable to clear data';
-        } else {
-          errorMessage = 'Reset failed: ${e.toString()}';
-        }
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ $errorMessage'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 4),
-              action: SnackBarAction(
-                label: 'Retry',
-                textColor: Colors.white,
-                onPressed: () => _handleProgressReset(),
-              ),
-            ),
-          );
-        }
-      }
-    }
   }
 }

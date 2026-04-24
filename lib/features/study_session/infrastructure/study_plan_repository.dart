@@ -58,9 +58,16 @@ class StudyPlanRepository {
     }
 
     final list = jsonDecode(response.body) as List<dynamic>;
-    return list
-        .map((e) => StudyPlan.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final plans = <StudyPlan>[];
+    for (final item in list) {
+      try {
+        plans.add(StudyPlan.fromJson(item as Map<String, dynamic>));
+      } catch (e) {
+        // Log the error and continue to the next plan
+        print('Error parsing study plan: $e');
+      }
+    }
+    return plans;
   }
 
   // -------------------------------------------------------------------------

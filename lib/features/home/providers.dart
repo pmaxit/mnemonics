@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'infrastructure/vocabulary_repository.dart';
 import 'domain/vocabulary_word.dart';
 import 'infrastructure/user_word_data_repository.dart';
@@ -14,7 +15,8 @@ final homeTabIndexProvider = StateProvider<int>((ref) => 0);
 
 final vocabularyListProvider = FutureProvider<List<VocabularyWord>>((ref) async {
   final repo = ref.watch(vocabularyRepositoryProvider);
-  return await repo.loadVocabulary();
+  final user = FirebaseAuth.instance.currentUser;
+  return await repo.loadVocabulary(userId: user?.uid);
 });
 
 final userWordDataProvider = FutureProvider.family<UserWordData?, String>((ref, word) async {
@@ -97,4 +99,10 @@ class UserSettingsNotifier extends StateNotifier<UserSettings?> {
     final box = await Hive.openBox<UserSettings>(boxName);
     await box.putAt(0, state!);
   }
-} 
+
+  Future<void> saveSettings(UserSettings settings) async {
+    state = settings;
+    final box = await Hive.openBox<UserSettings>(boxName);
+    await box.putAt(0, state!);
+  }
+}

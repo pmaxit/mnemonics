@@ -7,6 +7,7 @@ import '../../../profile/providers/profile_statistics_provider.dart';
 import '../../../home/providers.dart';
 import '../../../home/domain/vocabulary_word.dart';
 import '../../../profile/domain/user_statistics.dart' as stats;
+import '../../../../common/widgets/animated_wave_background.dart';
 
 class KnowledgeTreeDetailScreen extends ConsumerStatefulWidget {
   const KnowledgeTreeDetailScreen({super.key});
@@ -202,15 +203,23 @@ class _KnowledgeTreeDetailScreenState
     }
 
     return Scaffold(
-      backgroundColor: MnemonicsColors.background,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: MnemonicsColors.background.withOpacity(0.8),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        title:
-            Text('Your Word Canopy', style: MnemonicsTypography.headingMedium),
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        title: Text(
+          'Your Word Canopy',
+          style: MnemonicsTypography.headingMedium.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+          ),
+        ),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: MnemonicsColors.textPrimary),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _triggerTreeWhisperer(context),
@@ -219,24 +228,31 @@ class _KnowledgeTreeDetailScreenState
         label: const Text('Tree Spirit',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
-      body: InteractiveViewer(
-        transformationController: _transformationController,
-        boundaryMargin: const EdgeInsets.all(2000),
-        minScale: 0.1,
-        maxScale: 3.0,
-        constrained: false, // Allow unbounded canvas
-        child: Container(
-          width: 4000,
-          height: 4000,
-          color: MnemonicsColors.background, // Canvas background
-          child: CustomPaint(
-            painter: SemanticTreePainter(
-              categoryToWords: categoryToWords,
-              health: health,
-              seed: 42,
+      body: Stack(
+        children: [
+          const Positioned.fill(
+            child: AnimatedWaveBackground(height: double.infinity),
+          ),
+          InteractiveViewer(
+            transformationController: _transformationController,
+            boundaryMargin: const EdgeInsets.all(2000),
+            minScale: 0.1,
+            maxScale: 3.0,
+            constrained: false, // Allow unbounded canvas
+            child: Container(
+              width: 4000,
+              height: 4000,
+              color: Colors.transparent, // Canvas background
+              child: CustomPaint(
+                painter: SemanticTreePainter(
+                  categoryToWords: categoryToWords,
+                  health: health,
+                  seed: 42,
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -27,7 +27,12 @@ class ProfileScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeNotifierProvider);
     final userSettings = ref.watch(userSettingsProvider);
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(MnemonicsSpacing.m),
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + kToolbarHeight + MnemonicsSpacing.m,
+        left: MnemonicsSpacing.m,
+        right: MnemonicsSpacing.m,
+        bottom: MnemonicsSpacing.m,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
