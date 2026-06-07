@@ -43,7 +43,7 @@ ThemeData lightTheme(LightThemeRef ref) {
       bodyLarge: MnemonicsTypography.bodyLarge,
       bodyMedium: MnemonicsTypography.bodyRegular,
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
@@ -95,7 +95,7 @@ ThemeData darkTheme(DarkThemeRef ref) {
       bodyLarge: MnemonicsTypography.bodyLarge.copyWith(color: Colors.white),
       bodyMedium: MnemonicsTypography.bodyRegular.copyWith(color: Colors.white),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
