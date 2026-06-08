@@ -3,11 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import '../domain/study_plan.dart';
 import '../domain/study_plan_day.dart';
+import '../../../core/config/api_config.dart';
 
 class StudyPlanRepository {
-  static const String _baseUrl =
-      'https://mnemonics-api-1078980357394.us-central1.run.app';
-
   String? get _userId => FirebaseAuth.instance.currentUser?.uid;
 
   // -------------------------------------------------------------------------
@@ -23,7 +21,7 @@ class StudyPlanRepository {
     if (uid == null) throw Exception('User not authenticated');
 
     final response = await http.post(
-      Uri.parse('$_baseUrl/study-plan/create'),
+      Uri.parse('${ApiConfig.baseUrl}/study-plan/create'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'user_id': uid,
@@ -50,7 +48,7 @@ class StudyPlanRepository {
     if (uid == null) return [];
 
     final response = await http.get(
-      Uri.parse('$_baseUrl/study-plan/$uid'),
+      Uri.parse('${ApiConfig.baseUrl}/study-plan/$uid'),
     );
 
     if (response.statusCode != 200) {
@@ -78,7 +76,7 @@ class StudyPlanRepository {
     if (uid == null) throw Exception('User not authenticated');
 
     final response = await http.get(
-      Uri.parse('$_baseUrl/study-plan/$uid/day/$dayNumber'),
+      Uri.parse('${ApiConfig.baseUrl}/study-plan/$uid/day/$dayNumber'),
     );
 
     if (response.statusCode != 200) {
@@ -99,7 +97,7 @@ class StudyPlanRepository {
     final statusStr = status == DayStatus.done ? 'done' : 'in_progress';
 
     final response = await http.post(
-      Uri.parse('$_baseUrl/study-plan/$uid/day/$dayNumber/status'),
+      Uri.parse('${ApiConfig.baseUrl}/study-plan/$uid/day/$dayNumber/status'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'status': statusStr}),
     );
@@ -114,7 +112,7 @@ class StudyPlanRepository {
   // -------------------------------------------------------------------------
   Future<void> deletePlan(String planId) async {
     final response = await http.delete(
-      Uri.parse('$_baseUrl/study-plan/$planId'),
+      Uri.parse('${ApiConfig.baseUrl}/study-plan/$planId'),
     );
 
     if (response.statusCode != 200) {

@@ -2,16 +2,15 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/user_profile.dart';
+import '../../../core/config/api_config.dart';
 
 final userProfileRepositoryProvider = Provider<UserProfileRepository>((ref) {
   return UserProfileRepository();
 });
 
 class UserProfileRepository {
-  static const String _baseUrl = 'https://mnemonics-api-1078980357394.us-central1.run.app';
-
   Future<UserProfile?> getUserProfile(String userId) async {
-    final response = await http.get(Uri.parse('$_baseUrl/user_profile/$userId'));
+    final response = await http.get(Uri.parse(ApiConfig.userProfile(userId)));
 
     if (response.statusCode == 200) {
       return UserProfile.fromJson(json.decode(response.body));
@@ -24,7 +23,7 @@ class UserProfileRepository {
 
   Future<void> saveUserProfile(UserProfile profile) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/user_profile/${profile.userId}'),
+      Uri.parse(ApiConfig.userProfile(profile.userId)),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(profile.toJson()),
     );
@@ -40,7 +39,7 @@ class UserProfileRepository {
     required int score,
   }) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/onboarding/curate'),
+      Uri.parse('${ApiConfig.baseUrl}/onboarding/curate'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'user_id': userId,
@@ -56,7 +55,7 @@ class UserProfileRepository {
 
   Future<String> getSettingsSummary(String level, String enabledSets) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/settings/summary'),
+      Uri.parse('${ApiConfig.baseUrl}/settings/summary'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'level': level,

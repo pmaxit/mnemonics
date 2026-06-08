@@ -20,6 +20,7 @@ import 'package:translator/translator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../../auth/infrastructure/auth_repository.dart';
+import '../../../../core/config/api_config.dart';
 
 class LearnWordDetailScreen extends ConsumerStatefulWidget {
   final List<VocabularyWord> words;
@@ -115,8 +116,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     final userId =
         ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
     try {
-      final response = await http.get(Uri.parse(
-          'https://mnemonics-api-1078980357394.us-central1.run.app/notes/$userId/$word'));
+      final response = await http.get(Uri.parse(ApiConfig.notes(userId, word)));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['notes'] != null && data['notes'].toString().isNotEmpty) {
@@ -146,8 +146,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
 
     try {
       final response = await http.post(
-        Uri.parse(
-            'https://mnemonics-api-1078980357394.us-central1.run.app/notes/$userId/$word'),
+        Uri.parse(ApiConfig.notes(userId, word)),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'notes': notes}),
       );
@@ -181,8 +180,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     final userId =
         ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
     try {
-      final response = await http.get(Uri.parse(
-          'https://mnemonics-api-1078980357394.us-central1.run.app/learned_status/$userId/$word'));
+      final response = await http.get(Uri.parse(ApiConfig.learnedStatus(userId, word)));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (mounted) {
@@ -202,8 +200,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
         ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
     try {
       final response = await http.post(
-        Uri.parse(
-            'https://mnemonics-api-1078980357394.us-central1.run.app/learned_status/$userId/$word'),
+        Uri.parse(ApiConfig.learnedStatus(userId, word)),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'is_learned': learned}),
       );

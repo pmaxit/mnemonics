@@ -13,6 +13,7 @@ import '../../../../common/widgets/animated_wave_background.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../../auth/infrastructure/auth_repository.dart';
+import '../../../../core/config/api_config.dart';
 
 enum SortOption {
   alphabeticalAsc,
@@ -73,8 +74,7 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
     final userId =
         ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
     try {
-      final response = await http.get(Uri.parse(
-          'https://mnemonics-api-1078980357394.us-central1.run.app/learned_status/$userId'));
+      final response = await http.get(Uri.parse(ApiConfig.allLearnedStatus(userId)));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (mounted) {

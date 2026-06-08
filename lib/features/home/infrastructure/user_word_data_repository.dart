@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import '../domain/user_word_data.dart';
 import '../../auth/infrastructure/auth_repository.dart';
+import '../../../core/config/api_config.dart';
 
 final userWordDataRepositoryProvider = Provider<UserWordDataRepository>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
@@ -12,8 +13,6 @@ final userWordDataRepositoryProvider = Provider<UserWordDataRepository>((ref) {
 
 class UserWordDataRepository {
   static const String boxName = 'user_word_data';
-  static const String baseUrl =
-      'https://mnemonics-api-1078980357394.us-central1.run.app';
   final AuthRepository _authRepository;
 
   UserWordDataRepository(this._authRepository);
@@ -29,7 +28,7 @@ class UserWordDataRepository {
     if (_userId == 'default') return;
     
     try {
-      final response = await http.get(Uri.parse('$baseUrl/user_progress/$_userId'));
+      final response = await http.get(Uri.parse(ApiConfig.userProgress(_userId)));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final progressMap = data['progress'] as Map<String, dynamic>? ?? {};
@@ -70,7 +69,7 @@ class UserWordDataRepository {
     if (_userId != 'default') {
       try {
         final response = await http.post(
-          Uri.parse('$baseUrl/user_progress/$_userId/${data.word}'),
+          Uri.parse(ApiConfig.wordProgress(_userId, data.word)),
           headers: {'Content-Type': 'application/json'},
           body: json.encode(data.toJson()),
         );

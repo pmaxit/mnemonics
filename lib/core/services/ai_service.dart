@@ -1,20 +1,63 @@
+import 'dart:convert';
 import 'dart:developer';
-
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'ai_service.g.dart';
 
 class AIService {
-  late final GenerativeModel _model;
+  static const String _openRouterBaseUrl = 'https://openrouter.ai/api/v1';
+  static const String _model = 'google/gemma-4-12b-instruct';
 
-  AIService() {
-    final apiKey = dotenv.env['GEMINI_API_KEY'];
-    if (apiKey == null || apiKey.isEmpty) {
-      throw Exception('GEMINI_API_KEY is not set in .env file');
+  final String _apiKey;
+  final http.Client _client;
+
+  AIService({http.Client? client})
+      : _apiKey = dotenv.env['OPENROUTER_API_KEY'] ?? '',
+        _client = client ?? http.Client();
+
+  Future<String> _callOpenRouter(String prompt, {bool jsonMode = false}) async {
+    if (_apiKey.isEmpty) {
+      throw Exception('OPENROUTER_API_KEY is not set in .env file');
     }
-    _model = GenerativeModel(model: 'gemini-2.5-flash-lite', apiKey: apiKey);
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $_apiKey',
+      'HTTP-Referer': 'https://mnemonics-app.com',
+      'X-Title': 'Mnemonics App',
+    };
+
+    final body = jsonEncode({
+      'model': _model,
+      'messages': [
+        {'role': 'user', 'content': prompt}
+      ],
+      'temperature': 0.7,
+      if (jsonMode) 'response_format': {'type': 'json_object'},
+    });
+
+    try {
+      final response = await _client.post(
+        Uri.parse('$_openRouterBaseUrl/chat/completions'),
+        headers: headers,
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['choices'][0]['message']['content'];
+      } else {
+        final error = jsonDecode(response.body);
+        log('OpenRouter error: ${response.statusCode} - $error');
+        throw Exception('Failed to generate response: ${error['error']['message']}');
+      }
+    } catch (e) {
+      log('Error calling OpenRouter: $e');
+      rethrow;
+    }
   }
 
   Future<String> generateMnemonic({
@@ -42,10 +85,8 @@ Instructions:
 ''';
 
     try {
-      final content = [Content.text(prompt)];
-      final response = await _model.generateContent(content);
-      return response.text?.trim() ??
-          'Hmm, my brain fizzled out. Try generating again!';
+      final response = await _callOpenRouter(prompt);
+      return response.isNotEmpty ? response : 'Hmm, my brain fizzled out. Try generating again!';
     } catch (e) {
       log('Error generating mnemonic: $e');
       throw Exception('Failed to generate magic mnemonic. Please try again.');
@@ -72,7 +113,7 @@ For the word: "$word"
 4. Give 3 synonyms commonly tested on GRE.
 5. Give 1 quick memory tip or association to remember the word.
 
-Return EXACTLY a valid JSON object with NO OTHER markdown or formatting (DO NOT wrap it in ```json) using the following structure:
+Return EXACTLY a valid JSON object with NO OTHER markdown or formatting (DO NOT wrap it in triple backticks) using the following structure:
 {
   "definition": "definition here",
   "common_phrases": ["phrase 1", "phrase 2", "phrase 3"],
@@ -83,14 +124,8 @@ Return EXACTLY a valid JSON object with NO OTHER markdown or formatting (DO NOT 
 ''';
 
     try {
-      final content = [Content.text(prompt)];
-      final response = await _model.generateContent(
-        content,
-        generationConfig:
-            GenerationConfig(responseMimeType: 'application/json'),
-      );
-
-      return response.text?.trim() ?? '{}';
+      final response = await _callOpenRouter(prompt, jsonMode: true);
+      return response.trim();
     } catch (e) {
       log('Error generating word insights: $e');
       throw Exception('Failed to generate word insights. Please try again.');
@@ -110,24 +145,26 @@ Their current stats:
 - Accuracy: ${(accuracy * 100).toStringAsFixed(1)}%
 - Current Streak: $streak days
 
-Write a SINGLE, mystical, encouraging sentence (max 20 words) as if the Tree itself is speaking to them. 
+Write a SINGLE, mystical, encouraging sentence (max 20 words) as if the Tree itself is speaking to them.
 Acknowledge their effort or their stats, but keep it poetic and magical.
 Return ONLY the sentence, nothing else.
 ''';
 
     try {
-      final content = [Content.text(prompt)];
-      final response = await _model.generateContent(content);
-      return response.text?.replaceAll('"', '').trim() ??
-          'The roots run deep, but your potential reaches higher.';
+      final response = await _callOpenRouter(prompt);
+      return response.replaceAll('"', '').trim();
     } catch (e) {
       log('Error generating tree wisdom: $e');
       return 'The wind rustles the leaves, whispering of untold words yet to be learned.';
     }
   }
+
+  void dispose() {
+    _client.close();
+  }
 }
 
 @riverpod
-AIService aiService(AiServiceRef ref) {
+AIService aiService(Ref ref) {
   return AIService();
 }

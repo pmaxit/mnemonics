@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../domain/vocabulary_word.dart';
 import '../../profile/services/data_migration_service.dart';
+import '../../../core/config/api_config.dart';
 
 class MysqlDatabaseService {
-  static const String _apiUrl =
-      'https://mnemonics-api-1078980357394.us-central1.run.app/vocabulary';
+  static const String _apiUrl = ApiConfig.vocabulary;
 
   DateTime? _lastFetchTime;
   List<VocabularyWord>? _cachedWords;

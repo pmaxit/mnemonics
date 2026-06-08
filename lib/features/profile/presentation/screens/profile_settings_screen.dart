@@ -13,6 +13,7 @@ import '../../../auth/infrastructure/auth_repository.dart';
 import '../../../auth/domain/user_profile.dart';
 import '../../providers/unified_statistics_provider.dart';
 import '../widgets/profile_settings_widget.dart';
+import '../../../../core/config/api_config.dart';
 
 class ProfileSettingsScreen extends ConsumerWidget {
   const ProfileSettingsScreen({super.key});
@@ -233,7 +234,7 @@ class ProfileSettingsScreen extends ConsumerWidget {
     if (confirmed == true) {
       try {
         final userId = ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
-        await http.delete(Uri.parse('https://mnemonics-api-1078980357394.us-central1.run.app/reset/$userId'));
+        await http.delete(Uri.parse(ApiConfig.resetUser(userId)));
         
         await ref.read(userWordDataRepositoryProvider).clearAllData();
         await ref.read(reviewActivityRepositoryProvider).clearAllData();

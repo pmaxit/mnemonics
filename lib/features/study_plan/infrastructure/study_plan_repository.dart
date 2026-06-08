@@ -1,11 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../domain/study_plan.dart';
+import '../../../../core/config/api_config.dart';
 
 class StudyPlanRepository {
-  static const String _baseUrl =
-      'https://mnemonics-api-1078980357394.us-central1.run.app';
-
   /// Create a new study plan via the agentic backend
   Future<StudyPlan> createStudyPlan({
     required int totalWords,
@@ -14,7 +12,7 @@ class StudyPlanRepository {
     String userId = 'default',
   }) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/study-plans'),
+      Uri.parse('${ApiConfig.baseUrl}/study-plans'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'total_words': totalWords,
@@ -44,7 +42,7 @@ class StudyPlanRepository {
   /// List all study plans for a user
   Future<List<StudyPlan>> listStudyPlans({String userId = 'default'}) async {
     final response = await http.get(
-      Uri.parse('$_baseUrl/study-plans?user_id=$userId'),
+      Uri.parse('${ApiConfig.baseUrl}/study-plans?user_id=$userId'),
     );
 
     if (response.statusCode != 200) {
@@ -58,7 +56,7 @@ class StudyPlanRepository {
   /// Get full plan with day statuses (for calendar view)
   Future<StudyPlan> getStudyPlan(int planId) async {
     final response = await http.get(
-      Uri.parse('$_baseUrl/study-plans/$planId'),
+      Uri.parse('${ApiConfig.baseUrl}/study-plans/$planId'),
     );
 
     if (response.statusCode != 200) {
@@ -71,7 +69,7 @@ class StudyPlanRepository {
   /// Get the word list for a specific day
   Future<StudyPlanDayDetail> getStudyPlanDay(int planId, int dayNum) async {
     final response = await http.get(
-      Uri.parse('$_baseUrl/study-plans/$planId/days/$dayNum'),
+      Uri.parse('${ApiConfig.baseUrl}/study-plans/$planId/days/$dayNum'),
     );
 
     if (response.statusCode != 200) {
@@ -89,7 +87,7 @@ class StudyPlanRepository {
     required String status,
   }) async {
     final response = await http.put(
-      Uri.parse('$_baseUrl/study-plans/$planId/days/$dayNum/words/$word'),
+      Uri.parse('${ApiConfig.baseUrl}/study-plans/$planId/days/$dayNum/words/$word'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'status': status}),
     );

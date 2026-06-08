@@ -18,6 +18,7 @@ import 'language_preferences_screen.dart';
 import 'activity_log_screen.dart';
 import 'package:http/http.dart' as http;
 import '../../../auth/infrastructure/auth_repository.dart';
+import '../../../../core/config/api_config.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -275,7 +276,7 @@ class ProfileScreen extends ConsumerWidget {
                     // Clear cloud user data
                     final userId = ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
                     try {
-                      final response = await http.delete(Uri.parse('https://mnemonics-api-1078980357394.us-central1.run.app/reset/$userId'));
+                      final response = await http.delete(Uri.parse(ApiConfig.resetUser(userId)));
                       if (response.statusCode != 200) {
                         print('Failed to reset cloud data. Status code: ${response.statusCode}');
                       }
