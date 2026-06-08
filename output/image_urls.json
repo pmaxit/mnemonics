@@ -1,42 +1,54 @@
 [
   {
     "word": "obfuscate",
-    "image": "generated/obfuscate.png"
+    "image": "https://media.pollinations.ai/00be6a492df64493"
   },
   {
     "word": "lucid",
-    "image": "generated/lucid.png"
+    "image": "https://media.pollinations.ai/3be6db78b7751285"
   },
   {
     "word": "gregarious",
-    "image": "generated/gregarious.png"
+    "image": "https://media.pollinations.ai/1ac708c46348620e"
   },
   {
     "word": "ubiquitous",
-    "image": "generated/ubiquitous.png"
+    "image": "https://media.pollinations.ai/1d154be47609c997"
   },
   {
     "word": "ephemeral",
-    "image": "https://gen.pollinations.ai/image/Lasting for a very short time?model=flux"
+    "image": "https://media.pollinations.ai/a4ec8819d83fe6ea"
   },
   {
     "word": "altruistic",
-    "image": "https://gen.pollinations.ai/image/Showing a selfless concern for the well-being of o?model=flux"
+    "image": "https://media.pollinations.ai/1f022b0a663e8315"
   },
   {
     "word": "belligerent",
-    "image": "https://gen.pollinations.ai/image/Hostile and aggressive?model=flux"
+    "image": "https://media.pollinations.ai/daa70430f647dca5"
   },
   {
     "word": "cacophony",
-    "image": "https://gen.pollinations.ai/image/A harsh, discordant mixture of sounds?model=flux"
+    "image": "https://media.pollinations.ai/ae4f2ed9a56fc7d2"
   },
   {
     "word": "pristine",
-    "image": "https://gen.pollinations.ai/image/In its original condition; unspoiled?model=flux"
+    "image": "https://media.pollinations.ai/e86e13b9293d26c4"
   },
   {
     "word": "sagacious",
-    "image": "https://gen.pollinations.ai/image/Having or showing keen mental discernment and good?model=flux"
+    "image": "https://media.pollinations.ai/2d169d736b03f5ff"
+  },
+  {
+    "word": "lethargic",
+    "image": "https://media.pollinations.ai/836d5db9671432f7"
+  },
+  {
+    "word": "magnanimous",
+    "image": "https://media.pollinations.ai/e0460b9375b7e694"
+  },
+  {
+    "word": "quixotic",
+    "image": "https://media.pollinations.ai/19251b388d4c27cb"
   }
 ]

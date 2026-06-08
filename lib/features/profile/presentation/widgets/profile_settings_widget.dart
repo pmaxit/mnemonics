@@ -95,24 +95,35 @@ class ProfileSettingsWidget extends ConsumerWidget {
               'Practice Content',
               [
                 // Category Toggles
-                _buildWordSetToggle('SAT Prep', 'sat', isDarkMode, textColor, secondaryTextColor),
-                _buildWordSetToggle('GRE Prep', 'gre', isDarkMode, textColor, secondaryTextColor),
-                _buildWordSetToggle('Common Phrases', 'phrases', isDarkMode, textColor, secondaryTextColor),
-                _buildWordSetToggle('Emotions', 'emotions', isDarkMode, textColor, secondaryTextColor),
-                
+                _buildWordSetToggle('Character', 'character', isDarkMode,
+                    textColor, secondaryTextColor),
+                _buildWordSetToggle('Speech', 'speech', isDarkMode, textColor,
+                    secondaryTextColor),
+                _buildWordSetToggle('Intellect', 'intellect', isDarkMode,
+                    textColor, secondaryTextColor),
+                _buildWordSetToggle('Morality', 'morality', isDarkMode,
+                    textColor, secondaryTextColor),
+                _buildWordSetToggle('Conflict', 'conflict', isDarkMode,
+                    textColor, secondaryTextColor),
+                _buildWordSetToggle('Change', 'change', isDarkMode, textColor,
+                    secondaryTextColor),
+
                 const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: MnemonicsSpacing.m, vertical: MnemonicsSpacing.s),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: MnemonicsSpacing.m,
+                      vertical: MnemonicsSpacing.s),
                   child: Divider(),
                 ),
 
                 // Selected Summary Tags
                 _buildActiveSetsSummary(isDarkMode, textColor),
-                
+
                 const SizedBox(height: MnemonicsSpacing.m),
 
                 // Level Selector
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: MnemonicsSpacing.m),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: MnemonicsSpacing.m),
                   child: Text(
                     'Select the levels you want to practice',
                     style: MnemonicsTypography.bodyLarge.copyWith(
@@ -123,9 +134,10 @@ class ProfileSettingsWidget extends ConsumerWidget {
                 ),
                 const SizedBox(height: MnemonicsSpacing.xs),
                 _buildLevelSelector(isDarkMode, textColor),
-                
+
                 // Final Summary
-                _buildFinalSummary(isDarkMode, secondaryTextColor, generativeSummaryAsync),
+                _buildFinalSummary(
+                    isDarkMode, secondaryTextColor, generativeSummaryAsync),
               ],
               textColor,
             ),
@@ -365,6 +377,7 @@ class ProfileSettingsWidget extends ConsumerWidget {
       ),
     );
   }
+
   String _getThemeDisplayName(ThemeMode mode) {
     switch (mode) {
       case ThemeMode.light:
@@ -377,14 +390,19 @@ class ProfileSettingsWidget extends ConsumerWidget {
   }
 
   Widget _buildActiveSetsSummary(bool isDarkMode, Color textColor) {
-    final enabledSets = userProfile?.enabledWordSets.split(',').where((s) => s.isNotEmpty).toList() ?? [];
-    
+    final enabledSets = userProfile?.enabledWordSets
+            .split(',')
+            .where((s) => s.isNotEmpty)
+            .toList() ??
+        [];
+
     if (enabledSets.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: MnemonicsSpacing.m),
         child: Text(
           'No categories selected',
-          style: MnemonicsTypography.bodyRegular.copyWith(color: Colors.redAccent, fontSize: 13),
+          style: MnemonicsTypography.bodyRegular
+              .copyWith(color: Colors.redAccent, fontSize: 13),
         ),
       );
     }
@@ -397,7 +415,9 @@ class ProfileSettingsWidget extends ConsumerWidget {
           Text(
             'Active Categories',
             style: MnemonicsTypography.bodyRegular.copyWith(
-              color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+              color: isDarkMode
+                  ? MnemonicsColors.darkTextSecondary
+                  : MnemonicsColors.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -409,11 +429,13 @@ class ProfileSettingsWidget extends ConsumerWidget {
             children: enabledSets.map((setId) {
               final label = _getSetDisplayName(setId);
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: MnemonicsColors.primaryGreen.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
-                  border: Border.all(color: MnemonicsColors.primaryGreen.withOpacity(0.2)),
+                  border: Border.all(
+                      color: MnemonicsColors.primaryGreen.withOpacity(0.2)),
                 ),
                 child: Text(
                   label,
@@ -431,21 +453,25 @@ class ProfileSettingsWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildFinalSummary(bool isDarkMode, Color secondaryTextColor, AsyncValue<String> summaryAsync) {
+  Widget _buildFinalSummary(bool isDarkMode, Color secondaryTextColor,
+      AsyncValue<String> summaryAsync) {
     return Container(
       margin: const EdgeInsets.all(MnemonicsSpacing.m),
       padding: const EdgeInsets.all(MnemonicsSpacing.m),
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
+        color:
+            isDarkMode ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
         border: Border.all(
-          color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
+          color:
+              isDarkMode ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
         ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.auto_awesome_rounded, size: 18, color: MnemonicsColors.primaryGreen),
+          const Icon(Icons.auto_awesome_rounded,
+              size: 18, color: MnemonicsColors.primaryGreen),
           const SizedBox(width: MnemonicsSpacing.s),
           Expanded(
             child: summaryAsync.when(
@@ -461,7 +487,8 @@ class ProfileSettingsWidget extends ConsumerWidget {
               loading: () => const LinearProgressIndicator(minHeight: 2),
               error: (e, _) => Text(
                 'Could not generate summary.',
-                style: MnemonicsTypography.bodyRegular.copyWith(color: Colors.redAccent, fontSize: 13),
+                style: MnemonicsTypography.bodyRegular
+                    .copyWith(color: Colors.redAccent, fontSize: 13),
               ),
             ),
           ),
@@ -491,7 +518,8 @@ class ProfileSettingsWidget extends ConsumerWidget {
             .map((s) => int.tryParse(s.trim()))
             .where((l) => l != null)
             .cast<int>()
-            .toSet() ?? {1};
+            .toSet() ??
+        {1};
 
     return Container(
       height: 60,

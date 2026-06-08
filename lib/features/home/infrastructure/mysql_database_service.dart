@@ -50,16 +50,23 @@ class MysqlDatabaseService {
           if (word.isEmpty || meaning.isEmpty) continue;
 
           final mnemonic = row['mnemonic']?.toString().trim() ?? '';
-          final imageUrl = row['imageUrl']?.toString().trim() ?? '';
-          final videoUrl = row['videoUrl']?.toString().trim() ?? '';
+          final imageUrl =
+              (row['imageUrl'] ?? row['image_url'])?.toString().trim() ?? '';
+          final videoUrl =
+              (row['videoUrl'] ?? row['video_url'])?.toString().trim() ?? '';
           final example = row['example']?.toString().trim() ?? '';
           final synonyms = parseList(row['synonyms']?.toString());
           final antonyms = parseList(row['antonyms']?.toString());
           final difficulty = row['difficulty']?.toString().trim() ?? '';
           final category = row['category']?.toString().trim() ?? '';
-          final setIds = parseList(row['setIds']?.toString());
-          final aiMnemonic = row['aiMnemonic']?.toString().trim() ?? '';
-          final aiInsights = row['aiInsights']?.toString().trim() ?? '';
+          final setIds =
+              parseList((row['setIds'] ?? row['set_ids'])?.toString());
+          final aiMnemonic =
+              (row['aiMnemonic'] ?? row['ai_mnemonic'])?.toString().trim() ??
+                  '';
+          final aiInsights =
+              (row['aiInsights'] ?? row['ai_insights'])?.toString().trim() ??
+                  '';
           final definition = row['definition']?.toString().trim();
 
           List<String> parsedPhrases = [];
@@ -71,7 +78,11 @@ class MysqlDatabaseService {
                 parsedPhrases = List<String>.from(json.decode(rawPhrases));
               } else {
                 // Not JSON, treat as a single phrase or comma-separated list
-                parsedPhrases = rawPhrases.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+                parsedPhrases = rawPhrases
+                    .split(',')
+                    .map((e) => e.trim())
+                    .where((e) => e.isNotEmpty)
+                    .toList();
               }
             }
           } catch (e) {
@@ -95,7 +106,9 @@ class MysqlDatabaseService {
                 }).toList();
               } else {
                 // Not JSON, treat as single example sentence
-                parsedExampleSentences = [[rawExamples]];
+                parsedExampleSentences = [
+                  [rawExamples]
+                ];
               }
             }
           } catch (e) {
@@ -154,11 +167,13 @@ class MysqlDatabaseService {
 
   Future<List<String>> getAvailableWordSets() async {
     final words = await fetchVocabulary();
-    final wordSets = <String>{};
+    final categories = <String>{};
     for (final word in words) {
-      wordSets.addAll(word.setIds);
+      if (word.category.isNotEmpty) {
+        categories.add(word.category);
+      }
     }
-    final sortedWordSets = wordSets.toList();
+    final sortedWordSets = categories.toList();
     sortedWordSets.sort();
     return sortedWordSets;
   }

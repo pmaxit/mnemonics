@@ -37,28 +37,23 @@ def get_vocabulary():
             )
             user_profile = cursor.fetchone()
 
-            user_levels = user_profile['vocabulary_level'] if user_profile else "1"
             enabled_sets = user_profile['enabled_word_sets'] if user_profile and user_profile['enabled_word_sets'] else None
 
-            levels_list = [f"Level {l.strip()}" for l in str(user_levels).split(',') if l.strip()]
-            if not levels_list:
-                levels_list = ["Level 1"]
-
-            placeholders = ','.join(['%s'] * len(levels_list))
-            where_clauses = [f"category IN ({placeholders})"]
-            query_params = list(levels_list)
+            where_clauses = []
+            query_params = []
 
             if enabled_sets:
                 sets_list = [s.strip() for s in enabled_sets.split(',') if s.strip()]
                 if sets_list:
-                    set_clauses = []
-                    for s in sets_list:
-                        set_clauses.append("set_ids LIKE %s")
-                        query_params.append(f"%{s}%")
-                    where_clauses.append(f"({' OR '.join(set_clauses)})")
+                    placeholders = ','.join(['%s'] * len(sets_list))
+                    where_clauses.append(f"category IN ({placeholders})")
+                    query_params.extend(sets_list)
 
-            query = f"SELECT * FROM vocabulary WHERE {' AND '.join(where_clauses)}"
-            cursor.execute(query, query_params)
+            if where_clauses:
+                query = f"SELECT * FROM vocabulary WHERE {' AND '.join(where_clauses)}"
+                cursor.execute(query, query_params)
+            else:
+                cursor.execute("SELECT * FROM vocabulary")
         else:
             cursor.execute("SELECT * FROM vocabulary")
 
@@ -72,13 +67,21 @@ def get_vocabulary():
                 r['synonyms'] = r['synonyms'].split(',')
             if r.get('antonyms') and isinstance(r['antonyms'], str):
                 r['antonyms'] = r['antonyms'].split(',')
-            if r.get('set_ids') and isinstance(r['set_ids'], str):
-                r['set_ids'] = r['set_ids'].split(',')
             if r.get('phrases') and isinstance(r['phrases'], str):
                 try:
                     r['phrases'] = json.loads(r['phrases'])
                 except:
                     r['phrases'] = []
+            if r.get('example_sentences') and isinstance(r['example_sentences'], str):
+                try:
+                    r['exampleSentences'] = json.loads(r['example_sentences'])
+                except:
+                    r['exampleSentences'] = []
+            r['imageUrl'] = r.get('image_url')
+            r['videoUrl'] = r.get('video_url')
+            r['setIds'] = [r.get('category')] if r.get('category') else []
+            r['aiMnemonic'] = r.get('ai_mnemonic')
+            r['aiInsights'] = r.get('ai_insights')
             result.append(r)
 
         return jsonify(result)
@@ -284,7 +287,11 @@ def get_word_sets():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=extras.RealDictCursor)
-        cursor.execute("SELECT * FROM word_sets ORDER BY name")
+        category_ids = ['character', 'speech', 'intellect', 'conflict', 'morality', 'change']
+        cursor.execute(
+            "SELECT * FROM word_sets WHERE id = ANY(%s) ORDER BY name",
+            (category_ids,)
+        )
         rows = cursor.fetchall()
         cursor.close()
         conn.close()
@@ -494,7 +501,7 @@ def import_vocabulary():
             category = word_data.get('category', 'common')
             image_url = word_data.get('image', '')
             video_url = word_data.get('video', '')
-            set_ids = ','.join(word_data.get('setIds', [])) if isinstance(word_data.get('setIds'), list) else ''
+            set_ids = ''
             ai_mnemonic = word_data.get('aiMnemonic', '')
             ai_insights = word_data.get('aiInsights', '')
             definition = word_data.get('definition', '')
@@ -556,20 +563,12 @@ def import_word_sets():
 
         cursor.execute("""
             INSERT INTO word_sets (id, name, description)
-            VALUES ('sat', 'SAT', 'Words for SAT exam'),
-                   ('gre', 'GRE', 'Words for GRE exam'),
-                   ('emotions', 'Emotions', 'Words about feelings & emotional states'),
-                   ('character', 'Character', 'Words about personality & traits'),
+            VALUES ('character', 'Character', 'Words about personality & traits'),
                    ('speech', 'Speech', 'Words about communication & language'),
                    ('intellect', 'Intellect', 'Words about thinking & knowledge'),
                    ('conflict', 'Conflict', 'Words about opposition & struggle'),
-                   ('power', 'Power', 'Words about authority & control'),
                    ('morality', 'Morality', 'Words about ethics & right vs wrong'),
-                   ('criticism', 'Criticism', 'Words about judgment & evaluation'),
-                   ('abundance', 'Abundance', 'Words about quantity & scarcity'),
-                   ('change', 'Change', 'Words about transformation & transition'),
-                   ('mylist', 'MyList', 'Your custom list'),
-                   ('phrases', 'Phrases', 'Useful collocations & phrasal verbs')
+                   ('change', 'Change', 'Words about transformation & transition')
             ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description
         """)
 
@@ -577,7 +576,7 @@ def import_word_sets():
         cursor.close()
         conn.close()
 
-        return jsonify({"status": "imported", "count": 14})
+        return jsonify({"status": "imported", "count": 6})
     except Exception as e:
         import traceback
         traceback.print_exc()

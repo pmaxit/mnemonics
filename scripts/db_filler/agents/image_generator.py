@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import quote
 from services.openrouter_service import OpenRouterService
 
 logger = logging.getLogger(__name__)
@@ -8,11 +9,15 @@ class ImageGeneratorAgent:
         self.openrouter = openrouter_service
 
     def generate_image_prompt(self, word, meaning):
-        return f'A vivid, memorable illustration for the word "{word}" meaning "{meaning}". Style: colorful, clear, educational, memorable. No text in image.'
+        return f'''A 4-panel cartoon comic strip for Indian learners explaining the English vocabulary word "{word}" meaning "{meaning}".
+Show one continuous everyday Indian scene across all panels, not four unrelated images.
+Panel 1 introduces the situation, Panel 2 shows the problem, Panel 3 shows the key action or turning point, Panel 4 clearly reveals the meaning of "{word}" through the scene.
+Use English only for any speech bubbles, labels, or captions. Do not use Hindi or any other language.
+Style: colorful, clean educational cartoon, expressive Indian characters, memorable visual storytelling.'''
 
     def get_pollinations_url(self, prompt):
-        encoded_prompt = prompt.replace(' ', '+').replace('"', '')
-        return f'https://image.pollinations.ai/prompt/{encoded_prompt}?width=512&height=512&nologo=true'
+        encoded_prompt = quote(prompt)
+        return f'https://gen.pollinations.ai/image/{encoded_prompt}?model=gptimage&width=512&height=512&nologo=true'
 
     def generate_image_for_word(self, word_data):
         word = word_data['word']

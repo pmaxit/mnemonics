@@ -36,7 +36,7 @@ class LearnWordListScreen extends ConsumerStatefulWidget {
 class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
     with TickerProviderStateMixin {
   String _search = '';
-  String? _difficulty;
+  WordDifficulty? _difficulty;
   String? _category;
   SortOption _sortOption = SortOption.alphabeticalAsc;
   Set<String> _learnedWords = {};
@@ -74,7 +74,8 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
     final userId =
         ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
     try {
-      final response = await http.get(Uri.parse(ApiConfig.allLearnedStatus(userId)));
+      final response =
+          await http.get(Uri.parse(ApiConfig.allLearnedStatus(userId)));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (mounted) {
@@ -103,7 +104,7 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
     final vocabAsync = ref.watch(vocabularyListProvider);
     final vocabList = vocabAsync.asData?.value ?? [];
     final filtered = vocabList.where((word) {
-      final matchesSet = word.setIds.contains(widget.setId);
+      final matchesSet = word.category == widget.setId;
       final matchesSearch = _search.isEmpty ||
           word.word.toLowerCase().contains(_search.toLowerCase()) ||
           word.meaning.toLowerCase().contains(_search.toLowerCase()) ||
@@ -140,7 +141,11 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
           return a.word.toLowerCase().compareTo(b.word.toLowerCase());
       }
     });
-    final categories = vocabList.map((w) => w.category).toSet().toList();
+    final categories = vocabList
+        .where((w) => w.category == widget.setId)
+        .map((w) => w.category)
+        .toSet()
+        .toList();
 
     final wordSetsAsync = ref.watch(wordSetListProvider);
     String? setName;
@@ -151,7 +156,6 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
           .name;
     });
 
-    final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
@@ -196,273 +200,271 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
           ),
           Column(
             children: [
-              SizedBox(height: MediaQuery.of(context).padding.top + kToolbarHeight),
-                // Animated Header (only this slides up)
-                AnimatedBuilder(
-                  animation: _animationController,
-                  builder: (context, child) {
-                    return Transform.translate(
-                      offset: Offset(0, _slideAnimation.value),
-                      child: FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: _buildAnimatedHeader(
-                            setName ?? 'Word List', isDarkMode),
+              SizedBox(
+                  height: MediaQuery.of(context).padding.top + kToolbarHeight),
+              // Animated Header (only this slides up)
+              AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _slideAnimation.value),
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: _buildAnimatedHeader(
+                          setName ?? 'Word List', isDarkMode),
+                    ),
+                  );
+                },
+              ),
+
+              // Search Bar (static)
+              Container(
+                margin: const EdgeInsets.all(MnemonicsSpacing.m),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search words, meanings, or mnemonics',
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: isDarkMode
+                          ? MnemonicsColors.darkTextSecondary
+                          : MnemonicsColors.textSecondary,
+                    ),
+                    filled: true,
+                    fillColor:
+                        isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(MnemonicsSpacing.radiusL),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(MnemonicsSpacing.radiusL),
+                      borderSide: BorderSide(
+                        color: isDarkMode
+                            ? MnemonicsColors.darkBorder.withOpacity(0.3)
+                            : MnemonicsColors.surface,
                       ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(MnemonicsSpacing.radiusL),
+                      borderSide: const BorderSide(
+                        color: MnemonicsColors.primaryGreen,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  onChanged: (value) => setState(() => _search = value),
+                ),
+              ),
+
+              // Category Chip Filter Bar
+              SizedBox(
+                height: 48,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: MnemonicsSpacing.m),
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(width: MnemonicsSpacing.s),
+                  itemCount: categories.length + 1, // +1 for "All"
+                  itemBuilder: (context, index) {
+                    final isAll = index == 0;
+                    final label = isAll ? 'All' : categories[index - 1];
+                    final isSelected =
+                        isAll ? _category == null : _category == label;
+
+                    // Count words matching this category chip
+                    final chipCount = isAll
+                        ? vocabList
+                            .where((w) => w.category == widget.setId)
+                            .length
+                        : vocabList
+                            .where((w) =>
+                                w.category == widget.setId &&
+                                w.category == label)
+                            .length;
+
+                    return ChoiceChip(
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            isAll ? label : _formatCategoryLabel(label),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Colors.white.withOpacity(0.25)
+                                  : (isDarkMode
+                                      ? MnemonicsColors.darkBorder
+                                          .withOpacity(0.4)
+                                      : MnemonicsColors.surface),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '$chipCount',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDarkMode
+                                        ? MnemonicsColors.darkTextSecondary
+                                        : MnemonicsColors.textSecondary),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      selected: isSelected,
+                      onSelected: (_) {
+                        setState(() {
+                          _category = isAll ? null : label;
+                        });
+                      },
+                      selectedColor: MnemonicsColors.primaryGreen,
+                      backgroundColor: isDarkMode
+                          ? MnemonicsColors.darkSurface
+                          : Colors.white,
+                      labelStyle: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : (isDarkMode
+                                ? MnemonicsColors.darkTextPrimary
+                                : MnemonicsColors.textPrimary),
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(MnemonicsSpacing.radiusL),
+                        side: BorderSide(
+                          color: isSelected
+                              ? MnemonicsColors.primaryGreen
+                              : (isDarkMode
+                                  ? MnemonicsColors.darkBorder.withOpacity(0.3)
+                                  : MnemonicsColors.surface),
+                        ),
+                      ),
+                      showCheckmark: false,
+                      elevation: isSelected ? 2 : 0,
+                      pressElevation: 4,
                     );
                   },
                 ),
+              ),
+              const SizedBox(height: MnemonicsSpacing.s),
 
-                // Search Bar (static)
-                Container(
-                  margin: const EdgeInsets.all(MnemonicsSpacing.m),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search words, meanings, or mnemonics',
-                      prefixIcon: Icon(
-                        Icons.search,
+              // Sorting UI
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: MnemonicsSpacing.m),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${filtered.length} words',
+                      style: MnemonicsTypography.bodyRegular.copyWith(
                         color: isDarkMode
                             ? MnemonicsColors.darkTextSecondary
                             : MnemonicsColors.textSecondary,
                       ),
-                      filled: true,
-                      fillColor: isDarkMode
-                          ? MnemonicsColors.darkSurface
-                          : Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(MnemonicsSpacing.radiusL),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(MnemonicsSpacing.radiusL),
-                        borderSide: BorderSide(
-                          color: isDarkMode
-                              ? MnemonicsColors.darkBorder.withOpacity(0.3)
-                              : MnemonicsColors.surface,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(MnemonicsSpacing.radiusL),
-                        borderSide: const BorderSide(
-                          color: MnemonicsColors.primaryGreen,
-                          width: 2,
-                        ),
-                      ),
                     ),
-                    onChanged: (value) => setState(() => _search = value),
-                  ),
-                ),
-
-                // Category Chip Filter Bar
-                SizedBox(
-                  height: 48,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: MnemonicsSpacing.m),
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(width: MnemonicsSpacing.s),
-                    itemCount: categories.length + 1, // +1 for "All"
-                    itemBuilder: (context, index) {
-                      final isAll = index == 0;
-                      final label = isAll ? 'All' : categories[index - 1];
-                      final isSelected = isAll
-                          ? _category == null
-                          : _category == label;
-
-                      // Count words matching this category chip
-                      final chipCount = isAll
-                          ? vocabList
-                              .where((w) => w.setIds.contains(widget.setId))
-                              .length
-                          : vocabList
-                              .where((w) =>
-                                  w.setIds.contains(widget.setId) &&
-                                  w.category == label)
-                              .length;
-
-                      return ChoiceChip(
-                        label: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              isAll ? label : _formatCategoryLabel(label),
-                            ),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 1),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? Colors.white.withOpacity(0.25)
-                                    : (isDarkMode
-                                        ? MnemonicsColors.darkBorder
-                                            .withOpacity(0.4)
-                                        : MnemonicsColors.surface),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                '$chipCount',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : (isDarkMode
-                                          ? MnemonicsColors.darkTextSecondary
-                                          : MnemonicsColors.textSecondary),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        selected: isSelected,
-                        onSelected: (_) {
-                          setState(() {
-                            _category = isAll ? null : label;
-                          });
-                        },
-                        selectedColor: MnemonicsColors.primaryGreen,
-                        backgroundColor: isDarkMode
-                            ? MnemonicsColors.darkSurface
-                            : Colors.white,
-                        labelStyle: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : (isDarkMode
-                                  ? MnemonicsColors.darkTextPrimary
-                                  : MnemonicsColors.textPrimary),
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                              MnemonicsSpacing.radiusL),
-                          side: BorderSide(
-                            color: isSelected
-                                ? MnemonicsColors.primaryGreen
-                                : (isDarkMode
-                                    ? MnemonicsColors.darkBorder
-                                        .withOpacity(0.3)
-                                    : MnemonicsColors.surface),
-                          ),
-                        ),
-                        showCheckmark: false,
-                        elevation: isSelected ? 2 : 0,
-                        pressElevation: 4,
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: MnemonicsSpacing.s),
-
-                // Sorting UI
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: MnemonicsSpacing.m),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${filtered.length} words',
-                        style: MnemonicsTypography.bodyRegular.copyWith(
-                          color: isDarkMode
-                              ? MnemonicsColors.darkTextSecondary
-                              : MnemonicsColors.textSecondary,
-                        ),
+                    PopupMenuButton<SortOption>(
+                      initialValue: _sortOption,
+                      icon: Icon(
+                        Icons.sort,
+                        color: isDarkMode
+                            ? MnemonicsColors.darkTextPrimary
+                            : MnemonicsColors.textPrimary,
                       ),
-                      PopupMenuButton<SortOption>(
-                        initialValue: _sortOption,
-                        icon: Icon(
-                          Icons.sort,
-                          color: isDarkMode
-                              ? MnemonicsColors.darkTextPrimary
-                              : MnemonicsColors.textPrimary,
+                      onSelected: (SortOption result) {
+                        setState(() {
+                          _sortOption = result;
+                        });
+                      },
+                      itemBuilder: (BuildContext context) =>
+                          <PopupMenuEntry<SortOption>>[
+                        const PopupMenuItem<SortOption>(
+                          value: SortOption.alphabeticalAsc,
+                          child: Text('A to Z'),
                         ),
-                        onSelected: (SortOption result) {
-                          setState(() {
-                            _sortOption = result;
-                          });
-                        },
-                        itemBuilder: (BuildContext context) =>
-                            <PopupMenuEntry<SortOption>>[
-                          const PopupMenuItem<SortOption>(
-                            value: SortOption.alphabeticalAsc,
-                            child: Text('A to Z'),
-                          ),
-                          const PopupMenuItem<SortOption>(
-                            value: SortOption.alphabeticalDesc,
-                            child: Text('Z to A'),
-                          ),
-                          const PopupMenuItem<SortOption>(
-                            value: SortOption.unlearnedFirst,
-                            child: Text('Unlearned First'),
-                          ),
-                          const PopupMenuItem<SortOption>(
-                            value: SortOption.learnedFirst,
-                            child: Text('Learned First'),
-                          ),
-                          const PopupMenuItem<SortOption>(
-                            value: SortOption.difficultyEasyFirst,
-                            child: Text('Easiest First'),
-                          ),
-                          const PopupMenuItem<SortOption>(
-                            value: SortOption.difficultyHardFirst,
-                            child: Text('Hardest First'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        const PopupMenuItem<SortOption>(
+                          value: SortOption.alphabeticalDesc,
+                          child: Text('Z to A'),
+                        ),
+                        const PopupMenuItem<SortOption>(
+                          value: SortOption.unlearnedFirst,
+                          child: Text('Unlearned First'),
+                        ),
+                        const PopupMenuItem<SortOption>(
+                          value: SortOption.learnedFirst,
+                          child: Text('Learned First'),
+                        ),
+                        const PopupMenuItem<SortOption>(
+                          value: SortOption.difficultyEasyFirst,
+                          child: Text('Easiest First'),
+                        ),
+                        const PopupMenuItem<SortOption>(
+                          value: SortOption.difficultyHardFirst,
+                          child: Text('Hardest First'),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: vocabAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (e, _) => Center(child: Text('Error: $e')),
-                    data: (_) {
-                      if (filtered.isEmpty) {
-                        return _buildEmptyState(isDarkMode);
-                      }
+              ),
+              Expanded(
+                child: vocabAsync.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(child: Text('Error: $e')),
+                  data: (_) {
+                    if (filtered.isEmpty) {
+                      return _buildEmptyState(isDarkMode);
+                    }
 
-                      // Group words by category
-                      final Map<String, List<VocabularyWord>> grouped = {};
-                      for (var word in filtered) {
-                        final cat = word.category.isEmpty
-                            ? 'Uncategorized'
-                            : word.category;
-                        grouped.putIfAbsent(cat, () => []).add(word);
-                      }
-                      final sortedCategories = grouped.keys.toList()..sort();
+                    // Group words by category
+                    final Map<String, List<VocabularyWord>> grouped = {};
+                    for (var word in filtered) {
+                      final cat = word.category.isEmpty
+                          ? 'Uncategorized'
+                          : word.category;
+                      grouped.putIfAbsent(cat, () => []).add(word);
+                    }
+                    final sortedCategories = grouped.keys.toList()..sort();
 
-                      return ListView.builder(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: MnemonicsSpacing.l,
-                            vertical: MnemonicsSpacing.m),
-                        itemCount: sortedCategories.length,
-                        itemBuilder: (context, index) {
-                          final category = sortedCategories[index];
-                          final categoryWords = grouped[category]!;
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: MnemonicsSpacing.l,
+                          vertical: MnemonicsSpacing.m),
+                      itemCount: sortedCategories.length,
+                      itemBuilder: (context, index) {
+                        final category = sortedCategories[index];
+                        final categoryWords = grouped[category]!;
 
-                          return Padding(
-                            padding: const EdgeInsets.only(
-                                bottom: MnemonicsSpacing.m),
-                            child: _buildCategoryExpansionTile(
-                              category: category,
-                              categoryWords: categoryWords,
-                              filtered: filtered,
-                              isDarkMode: isDarkMode,
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
+                        return Padding(
+                          padding:
+                              const EdgeInsets.only(bottom: MnemonicsSpacing.m),
+                          child: _buildCategoryExpansionTile(
+                            category: category,
+                            categoryWords: categoryWords,
+                            filtered: filtered,
+                            isDarkMode: isDarkMode,
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
         ],
       ),
     );

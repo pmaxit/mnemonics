@@ -156,7 +156,7 @@ def import_vocabulary_json(conn, filepath):
         category = word_data.get('category', 'common')
         image_url = word_data.get('image', '')
         video_url = word_data.get('video', '')
-        set_ids = ','.join(word_data.get('setIds', [])) if isinstance(word_data.get('setIds'), list) else ''
+        set_ids = ''
         ai_mnemonic = word_data.get('aiMnemonic', '')
         ai_insights = word_data.get('aiInsights', '')
         definition = word_data.get('definition', '')
@@ -209,20 +209,12 @@ def import_word_sets(conn):
     cursor = conn.cursor()
 
     sets = [
-        ('sat', 'SAT', 'Words for SAT exam'),
-        ('gre', 'GRE', 'Words for GRE exam'),
-        ('emotions', 'Emotions', 'Words about feelings & emotional states'),
         ('character', 'Character', 'Words about personality & traits'),
         ('speech', 'Speech', 'Words about communication & language'),
         ('intellect', 'Intellect', 'Words about thinking & knowledge'),
         ('conflict', 'Conflict', 'Words about opposition & struggle'),
-        ('power', 'Power', 'Words about authority & control'),
         ('morality', 'Morality', 'Words about ethics & right vs wrong'),
-        ('criticism', 'Criticism', 'Words about judgment & evaluation'),
-        ('abundance', 'Abundance', 'Words about quantity & scarcity'),
-        ('change', 'Change', 'Words about transformation & transition'),
-        ('mylist', 'MyList', 'Your custom list'),
-        ('phrases', 'Phrases', 'Useful collocations & phrasal verbs')
+        ('change', 'Change', 'Words about transformation & transition')
     ]
 
     for set_id, name, description in sets:

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../common/design/design_system.dart';
 import '../../../../common/design/theme_provider.dart';
 import '../../providers/user_profile_provider.dart';
-import '../../domain/user_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../features/study_session/providers/study_session_providers.dart';
 
@@ -12,10 +11,12 @@ class OnboardingWizardScreen extends ConsumerStatefulWidget {
   const OnboardingWizardScreen({super.key});
 
   @override
-  ConsumerState<OnboardingWizardScreen> createState() => _OnboardingWizardScreenState();
+  ConsumerState<OnboardingWizardScreen> createState() =>
+      _OnboardingWizardScreenState();
 }
 
-class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen> {
+class _OnboardingWizardScreenState
+    extends ConsumerState<OnboardingWizardScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   String? _selectedGoal;
@@ -25,14 +26,36 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
   bool _isGeneratingPlan = false;
 
   final List<Map<String, String>> _goals = [
-    {'id': 'sat', 'title': 'SAT Prep', 'desc': 'Master high-frequency college entrance words.'},
-    {'id': 'gre', 'title': 'GRE Prep', 'desc': 'Advanced academic vocabulary for grad school.'},
-    {'id': 'phrases', 'title': 'Common Phrases', 'desc': 'Useful collocations & phrasal verbs.'},
-    {'id': 'emotions', 'title': 'Emotions', 'desc': 'Words about feelings & emotional states.'},
-    {'id': 'character', 'title': 'Character', 'desc': 'Words about personality & traits.'},
-    {'id': 'intellect', 'title': 'Intellect', 'desc': 'Words about thinking & knowledge.'},
-    {'id': 'power', 'title': 'Power', 'desc': 'Words about authority & control.'},
-    {'id': 'morality', 'title': 'Morality', 'desc': 'Words about ethics & right vs wrong.'},
+    {
+      'id': 'character',
+      'title': 'Character',
+      'desc': 'Words about personality & traits.'
+    },
+    {
+      'id': 'speech',
+      'title': 'Speech',
+      'desc': 'Words about communication & language.'
+    },
+    {
+      'id': 'intellect',
+      'title': 'Intellect',
+      'desc': 'Words about thinking & knowledge.'
+    },
+    {
+      'id': 'morality',
+      'title': 'Morality',
+      'desc': 'Words about ethics & right vs wrong.'
+    },
+    {
+      'id': 'conflict',
+      'title': 'Conflict',
+      'desc': 'Words about opposition & struggle.'
+    },
+    {
+      'id': 'change',
+      'title': 'Change',
+      'desc': 'Words about transformation & transition.'
+    },
   ];
 
   // Mock quiz questions for assessment
@@ -119,11 +142,13 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
           content: const Row(children: [
             Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
             SizedBox(width: 10),
-            Text('Welcome! Your plan is ready.', style: TextStyle(fontWeight: FontWeight.w600)),
+            Text('Welcome! Your plan is ready.',
+                style: TextStyle(fontWeight: FontWeight.w600)),
           ]),
           backgroundColor: MnemonicsColors.primaryGreen,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -137,7 +162,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     return Scaffold(
-      backgroundColor: isDarkMode ? MnemonicsColors.darkBackground : MnemonicsColors.surface,
+      backgroundColor:
+          isDarkMode ? MnemonicsColors.darkBackground : MnemonicsColors.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -175,7 +201,9 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             decoration: BoxDecoration(
               color: isActive
                   ? MnemonicsColors.primaryGreen
-                  : (isDarkMode ? MnemonicsColors.darkBorder : Colors.grey.shade300),
+                  : (isDarkMode
+                      ? MnemonicsColors.darkBorder
+                      : Colors.grey.shade300),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -190,12 +218,15 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.auto_awesome_rounded, size: 80, color: MnemonicsColors.primaryGreen),
+          const Icon(Icons.auto_awesome_rounded,
+              size: 80, color: MnemonicsColors.primaryGreen),
           const SizedBox(height: MnemonicsSpacing.xl),
           Text(
             'Master Your Vocabulary',
             style: MnemonicsTypography.headingLarge.copyWith(
-              color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+              color: isDarkMode
+                  ? MnemonicsColors.darkTextPrimary
+                  : MnemonicsColors.textPrimary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -203,7 +234,9 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
           Text(
             'Personalized word lists, AI-powered study plans, and interactive practice sessions tailored to your level.',
             style: MnemonicsTypography.bodyRegular.copyWith(
-              color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+              color: isDarkMode
+                  ? MnemonicsColors.darkTextSecondary
+                  : MnemonicsColors.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -223,21 +256,26 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
           Text(
             'What is your goal?',
             style: MnemonicsTypography.headingMedium.copyWith(
-              color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+              color: isDarkMode
+                  ? MnemonicsColors.darkTextPrimary
+                  : MnemonicsColors.textPrimary,
             ),
           ),
           const SizedBox(height: MnemonicsSpacing.m),
           Text(
             'We will tailor your word lists and plans based on your objective.',
             style: MnemonicsTypography.bodyRegular.copyWith(
-              color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+              color: isDarkMode
+                  ? MnemonicsColors.darkTextSecondary
+                  : MnemonicsColors.textSecondary,
             ),
           ),
           const SizedBox(height: MnemonicsSpacing.xl),
           Expanded(
             child: ListView.separated(
               itemCount: _goals.length,
-              separatorBuilder: (_, __) => const SizedBox(height: MnemonicsSpacing.m),
+              separatorBuilder: (_, __) =>
+                  const SizedBox(height: MnemonicsSpacing.m),
               itemBuilder: (context, index) {
                 final goal = _goals[index];
                 final isSelected = _selectedGoal == goal['id'];
@@ -246,15 +284,22 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                   child: Container(
                     padding: const EdgeInsets.all(MnemonicsSpacing.m),
                     decoration: BoxDecoration(
-                      color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
-                      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                      color: isDarkMode
+                          ? MnemonicsColors.darkSurface
+                          : Colors.white,
+                      borderRadius:
+                          BorderRadius.circular(MnemonicsSpacing.radiusXL),
                       border: Border.all(
                         color: isSelected
                             ? MnemonicsColors.primaryGreen
-                            : (isDarkMode ? MnemonicsColors.darkBorder : Colors.transparent),
+                            : (isDarkMode
+                                ? MnemonicsColors.darkBorder
+                                : Colors.transparent),
                         width: 2,
                       ),
-                      boxShadow: isDarkMode ? MnemonicsColors.darkCardShadow : MnemonicsColors.cardShadow,
+                      boxShadow: isDarkMode
+                          ? MnemonicsColors.darkCardShadow
+                          : MnemonicsColors.cardShadow,
                     ),
                     child: Row(
                       children: [
@@ -265,14 +310,18 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                               Text(
                                 goal['title']!,
                                 style: MnemonicsTypography.bodyLarge.copyWith(
-                                  color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                                  color: isDarkMode
+                                      ? MnemonicsColors.darkTextPrimary
+                                      : MnemonicsColors.textPrimary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
                                 goal['desc']!,
                                 style: MnemonicsTypography.bodyRegular.copyWith(
-                                  color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                                  color: isDarkMode
+                                      ? MnemonicsColors.darkTextSecondary
+                                      : MnemonicsColors.textSecondary,
                                   fontSize: 14,
                                 ),
                               ),
@@ -280,7 +329,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                           ),
                         ),
                         if (isSelected)
-                          const Icon(Icons.check_circle_rounded, color: MnemonicsColors.primaryGreen),
+                          const Icon(Icons.check_circle_rounded,
+                              color: MnemonicsColors.primaryGreen),
                       ],
                     ),
                   ),
@@ -288,7 +338,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
               },
             ),
           ),
-          _buildPrimaryButton('Continue', _selectedGoal != null ? _nextPage : null),
+          _buildPrimaryButton(
+              'Continue', _selectedGoal != null ? _nextPage : null),
         ],
       ),
     );
@@ -304,7 +355,9 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
           Text(
             'Quick Assessment',
             style: MnemonicsTypography.headingMedium.copyWith(
-              color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+              color: isDarkMode
+                  ? MnemonicsColors.darkTextPrimary
+                  : MnemonicsColors.textPrimary,
             ),
           ),
           const SizedBox(height: MnemonicsSpacing.s),
@@ -320,7 +373,9 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             child: Text(
               'What is the best synonym for:',
               style: MnemonicsTypography.bodyRegular.copyWith(
-                color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                color: isDarkMode
+                    ? MnemonicsColors.darkTextSecondary
+                    : MnemonicsColors.textSecondary,
               ),
             ),
           ),
@@ -335,7 +390,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             ),
           ),
           const SizedBox(height: MnemonicsSpacing.xxl),
-          ... (question['options'] as List<String>).map((option) {
+          ...(question['options'] as List<String>).map((option) {
             return Padding(
               padding: const EdgeInsets.only(bottom: MnemonicsSpacing.m),
               child: SizedBox(
@@ -344,10 +399,13 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(
-                      color: isDarkMode ? MnemonicsColors.darkBorder : Colors.grey.shade300,
+                      color: isDarkMode
+                          ? MnemonicsColors.darkBorder
+                          : Colors.grey.shade300,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                      borderRadius:
+                          BorderRadius.circular(MnemonicsSpacing.radiusXL),
                     ),
                   ),
                   onPressed: () {
@@ -365,7 +423,9 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                   child: Text(
                     option,
                     style: MnemonicsTypography.bodyLarge.copyWith(
-                      color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                      color: isDarkMode
+                          ? MnemonicsColors.darkTextPrimary
+                          : MnemonicsColors.textPrimary,
                     ),
                   ),
                 ),
@@ -384,28 +444,36 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (_isGeneratingPlan) ...[
-            const CircularProgressIndicator(color: MnemonicsColors.primaryGreen),
+            const CircularProgressIndicator(
+                color: MnemonicsColors.primaryGreen),
             const SizedBox(height: MnemonicsSpacing.xl),
             Text(
               'Creating your personalized plan...',
               style: MnemonicsTypography.bodyLarge.copyWith(
-                color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                color: isDarkMode
+                    ? MnemonicsColors.darkTextPrimary
+                    : MnemonicsColors.textPrimary,
               ),
             ),
           ] else ...[
-            const Icon(Icons.emoji_events_rounded, size: 80, color: Color(0xFFFFD700)),
+            const Icon(Icons.emoji_events_rounded,
+                size: 80, color: Color(0xFFFFD700)),
             const SizedBox(height: MnemonicsSpacing.xl),
             Text(
               'Assessment Complete!',
               style: MnemonicsTypography.headingLarge.copyWith(
-                color: isDarkMode ? MnemonicsColors.darkTextPrimary : MnemonicsColors.textPrimary,
+                color: isDarkMode
+                    ? MnemonicsColors.darkTextPrimary
+                    : MnemonicsColors.textPrimary,
               ),
             ),
             const SizedBox(height: MnemonicsSpacing.m),
             Text(
               'We have identified your level and prepared a custom roadmap for you.',
               style: MnemonicsTypography.bodyRegular.copyWith(
-                color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                color: isDarkMode
+                    ? MnemonicsColors.darkTextSecondary
+                    : MnemonicsColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -429,10 +497,12 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
           ),
-          disabledBackgroundColor: MnemonicsColors.primaryGreen.withOpacity(0.5),
+          disabledBackgroundColor:
+              MnemonicsColors.primaryGreen.withOpacity(0.5),
         ),
         onPressed: onPressed,
-        child: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+        child: Text(label,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
       ),
     );
   }

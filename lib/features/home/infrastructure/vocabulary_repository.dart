@@ -64,7 +64,9 @@ class VocabularyRepository {
       final words = await _loadVocabularyFromJson();
       final wordSets = <String>{};
       for (final word in words) {
-        wordSets.addAll(word.setIds);
+        if (word.category.isNotEmpty) {
+          wordSets.add(word.category);
+        }
       }
       final sortedWordSets = wordSets.toList();
       sortedWordSets.sort();
