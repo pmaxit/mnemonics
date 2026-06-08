@@ -1,0 +1,42 @@
+[
+  {
+    "word": "obfuscate",
+    "image": "generated/obfuscate.png"
+  },
+  {
+    "word": "lucid",
+    "image": "generated/lucid.png"
+  },
+  {
+    "word": "gregarious",
+    "image": "generated/gregarious.png"
+  },
+  {
+    "word": "ubiquitous",
+    "image": "generated/ubiquitous.png"
+  },
+  {
+    "word": "ephemeral",
+    "image": "https://gen.pollinations.ai/image/Lasting for a very short time?model=flux"
+  },
+  {
+    "word": "altruistic",
+    "image": "https://gen.pollinations.ai/image/Showing a selfless concern for the well-being of o?model=flux"
+  },
+  {
+    "word": "belligerent",
+    "image": "https://gen.pollinations.ai/image/Hostile and aggressive?model=flux"
+  },
+  {
+    "word": "cacophony",
+    "image": "https://gen.pollinations.ai/image/A harsh, discordant mixture of sounds?model=flux"
+  },
+  {
+    "word": "pristine",
+    "image": "https://gen.pollinations.ai/image/In its original condition; unspoiled?model=flux"
+  },
+  {
+    "word": "sagacious",
+    "image": "https://gen.pollinations.ai/image/Having or showing keen mental discernment and good?model=flux"
+  }
+]

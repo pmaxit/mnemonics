@@ -1,0 +1,223 @@
+[
+  {
+    "word": "obfuscate",
+    "meaning": "to confuse or make unclear",
+    "mnemonic": "अफसाने सुने और कन्फ्यूज हो गया",
+    "example": "The guide obfuscated the real path to keep us safe.",
+    "synonyms": [
+      "confuse",
+      "blur",
+      "befuddle"
+    ],
+    "antonyms": [
+      "clarify",
+      "explain"
+    ],
+    "difficulty": "advanced",
+    "category": "academic",
+    "setIds": [
+      "sat"
+    ],
+    "aiMnemonic": "To **obfuscate** (confuse) our travel plans, an **OB**noxious, **FUS**sy **CAT** **ATE** the map. \n\nPicture a bloated, smug kitty coughing up shredded paper while you spin around utterly lost!",
+    "aiInsights": "{\n  \"definition\": \"To deliberately make something unclear, obscure, or difficult to understand.\",\n  \"common_phrases\": [\n    \"obfuscate the truth\",\n    \"obfuscate the facts\",\n    \"try to obfuscate\",\n    \"obfuscate the issue\",\n    \"obfuscate the meaning\",\n    \"tendency to obfuscate\",\n    \"obfuscate the code\",\n    \"to obfuscate reality\",\n    \"obfuscate with jargon\",\n    \"obfuscate the details\"\n  ],\n  \"example_sentences\": [\n    \"The politician used vague language to obfuscate the truth during the debate.\",\n    \"Instead of giving a direct answer, the lawyer tried to obfuscate the contract's terms.\",\n    \"Software developers sometimes obfuscate their code to protect it from being copied.\"\n  ],\n  \"synonyms\": [\n    \"obscure\",\n    \"confuse\",\n    \"complicate\"\n  ],\n  \"memory_tip\": \"Think of the letters 'ob' as in 'obstacle' and 'fusc' which sounds like 'confuse'. To obfuscate is to put up an obstacle to make things confusing.\"\n}",
+    "image": "generated/obfuscate.png"
+  },
+  {
+    "word": "lucid",
+    "meaning": "expressed clearly; easy to understand",
+    "mnemonic": "लुसीड = लाइट = क्लियर",
+    "example": "She gave a lucid presentation on the topic.",
+    "synonyms": [
+      "clear",
+      "intelligible"
+    ],
+    "antonyms": [
+      "confusing",
+      "obscure"
+    ],
+    "difficulty": "intermediate",
+    "category": "common",
+    "setIds": [
+      "sat"
+    ],
+    "aiMnemonic": "Picture **Sid** the sloth drinking a glowing **blue** potion (**Lu-cid**), causing him to suddenly explain quantum physics in a crystal-**clear, easy-to-understand** voice.",
+    "aiInsights": "{\"definition\":\"Expressed clearly, easy to understand, or thinking rationally.\",\"common_phrases\":[\"lucid dream\",\"lucid explanation\",\"remain lucid\",\"lucid writing style\",\"a lucid moment\",\"highly lucid presentation\",\"lucid thought process\",\"clear and lucid\",\"lucid intervals\",\"perfectly lucid\"],\"example_sentences\":[\"The scientist gave a lucid explanation of the complex chemical reaction, making it easy for the students to grasp.\",\"Despite his advanced age and illness, he remained lucid and could recognize all his family members.\",\"She is known for her lucid writing style, which turns dry academic topics into engaging reads.\"],\"synonyms\":[\"Clear\",\"Coherent\",\"Intelligible\"],\"memory_tip\":\"Think of the 'luc-' root in 'lucid' which relates to light. A lucid explanation shines a light on a topic, making it bright, visible, and easy to see.\"}",
+    "image": "generated/lucid.png"
+  },
+  {
+    "word": "gregarious",
+    "meaning": "fond of company; sociable",
+    "mnemonic": "गाँव में ग्रेगरी सबका दोस्त है",
+    "example": "He was a popular and gregarious man.",
+    "synonyms": [
+      "sociable",
+      "outgoing"
+    ],
+    "antonyms": [
+      "reserved",
+      "unsociable"
+    ],
+    "difficulty": "basic",
+    "category": "common",
+    "setIds": [
+      "sat"
+    ],
+    "aiMnemonic": "Picture **Greg** packing a wild, clown-filled party into his tiny living **area** just so he can be close to **us**. He is incredibly **greg**-**area**-**us**!",
+    "aiInsights": "{\"definition\":\"Extremely sociable, outgoing, and enjoying the company of other people.\",\"common_phrases\":[\"a gregarious personality\",\"naturally gregarious nature\",\"gregarious party host\",\"gregarious social butterfly\",\"gregarious and outgoing\",\"highly gregarious species\",\"warm and gregarious\",\"gregarious by nature\",\"a gregarious classmate\",\"active gregarious lifestyle\"],\"example_sentences\":[\"As a gregarious person, Sarah loved hosting large dinner parties for her friends every weekend.\",\"Dolphins are highly gregarious animals that travel and hunt in large social groups called pods.\",\"Leo's gregarious disposition made him the perfect candidate for the public relations role.\"],\"synonyms\":[\"Sociable\",\"Outgoing\",\"Companionable\"],\"memory_tip\":\"Think of a guy named 'Greg' who loves to con-GREG-ate with people at parties because he is so social.\",\"social.\\\"\":\"sociable.\\\"\"}",
+    "image": "generated/gregarious.png"
+  },
+  {
+    "word": "ubiquitous",
+    "meaning": "Present, appearing, or found everywhere",
+    "mnemonic": "यू बिक गया हर जगह",
+    "example": "Mobile phones are ubiquitous these days.",
+    "synonyms": [
+      "omnipresent",
+      "pervasive"
+    ],
+    "antonyms": [
+      "rare",
+      "scarce"
+    ],
+    "difficulty": "intermediate",
+    "category": "academic",
+    "setIds": [
+      "sat"
+    ],
+    "aiMnemonic": "If **U** **BIK**e **with us** (*U-biq-uitous*), you will see neon-pink squirrels riding unicycles *everywhere* you look!",
+    "aiInsights": "{\n  \"definition\": \"Present, appearing, or found everywhere.\",\n  \"common_phrases\": [\n    \"ubiquitous smartphones\",\n    \"become ubiquitous\",\n    \"ubiquitous presence\",\n    \"ubiquitous technology\",\n    \"nearly ubiquitous\",\n    \"ubiquitous advertising\",\n    \"virtually ubiquitous\",\n    \"increasingly ubiquitous\",\n    \"ubiquitous influence\",\n    \"ubiquitous nature of\"\n  ],\n  \"example_sentences\": [\n    \"Smartphones have become ubiquitous in modern society.\",\n    \"The ubiquitous fog rolled in, covering the entire city.\",\n    \"Plastic waste is unfortunately ubiquitous in our oceans today.\"\n  ],\n  \"synonyms\": [\n    \"Omnipresent\",\n    \"Pervasive\",\n    \"Universal\"\n  ],\n  \"memory_tip\": \"Think of \\\"USB\\\" ports—they are ubiquitous because you can find them on almost every electronic device.\"\n}",
+    "image": "generated/ubiquitous.png"
+  },
+  {
+    "word": "ephemeral",
+    "meaning": "Lasting for a very short time",
+    "mnemonic": "इफ ए मेल आया, तुरंत चला गया",
+    "example": "Fame in the film industry is often ephemeral.",
+    "synonyms": [
+      "fleeting",
+      "transient"
+    ],
+    "antonyms": [
+      "permanent",
+      "lasting"
+    ],
+    "difficulty": "advanced",
+    "category": "academic",
+    "setIds": [
+      "sat"
+    ],
+    "aiMnemonic": "To remember **ephemeral** (lasting for a very short time), picture this:\n\nAn **FM** radio host named **Earl** (**Ephem-eral**) only gets to broadcast his show for a **very short time** before his microphone explodes.",
+    "aiInsights": "{\"definition\":\"Lasting for a very short time; fleeting or transient.\",\"common_phrases\":[\"ephemeral beauty\",\"ephemeral nature\",\"ephemeral art form\",\"highly ephemeral moments\",\"ephemeral internet trends\",\"ephemeral joy\",\"ephemeral summer days\",\"ephemeral morning mist\",\"ephemeral success\",\"ephemeral digital content\"],\"example_sentences\":[\"Fame in the digital age is often ephemeral, lasting only until the next viral trend emerges.\",\"The cherry blossoms are beautiful but ephemeral, blooming for just a few short days each spring.\",\"He realized that material wealth is ephemeral, but true friendships can last a lifetime.\"],\"synonyms\":[\"fleeting\",\"transient\",\"temporary\"],\"memory_tip\":\"Think of 'ephemeral' as starting with 'E-Ph', like an 'Effervescent' bubble that pops and disappears almost instantly.\"}",
+    "image": "https://gen.pollinations.ai/image/Lasting for a very short time?model=flux"
+  },
+  {
+    "word": "altruistic",
+    "meaning": "Showing a selfless concern for the well-being of others",
+    "mnemonic": "All true stick together for others",
+    "example": "Her altruistic nature made her popular among her friends.",
+    "synonyms": [
+      "selfless",
+      "charitable"
+    ],
+    "antonyms": [
+      "selfish",
+      "self-centered"
+    ],
+    "difficulty": "intermediate",
+    "category": "common",
+    "setIds": [
+      "gre"
+    ],
+    "aiMnemonic": "Picture **Al** putting **true lipstick** on a sad, crying pig just to make it feel beautiful. Al is incredibly **altru**-**istic** (Al-true-lip-stick) because he always puts others first!",
+    "aiInsights": "{\n  \"definition\": \"Unselfishly concerned for or devoted to the welfare of others.\",\n  \"common_phrases\": [\n    \"altruistic behavior\",\n    \"an altruistic motive\",\n    \"purely altruistic reasons\",\n    \"altruistic donation\",\n    \"highly altruistic individuals\",\n    \"altruistic love\",\n    \"altruistic tendencies\",\n    \"not entirely altruistic\",\n    \"seek altruistic goals\",\n    \"altruistic act of kindness\"\n  ],\n  \"example_sentences\": [\n    \"His decision to donate his kidney to a stranger was a purely altruistic act.\",\n    \"Many volunteers are motivated by altruistic desires to help their local community.\",\n    \"Scientists debate whether true altruistic behavior exists in the animal kingdom.\"\n  ],\n  \"synonyms\": [\n    \"selfless\",\n    \"philanthropic\",\n    \"charitable\"\n  ],\n  \"memory_tip\": \"Think of 'al-tru-istic' as acting with 'all true' goodness to help others selflessly.\"\n}",
+    "image": "https://gen.pollinations.ai/image/Showing a selfless concern for the well-being of o?model=flux"
+  },
+  {
+    "word": "belligerent",
+    "meaning": "Hostile and aggressive",
+    "mnemonic": "बेल (bell) बजाते ही लड़ाई शुरू",
+    "example": "His belligerent attitude caused many problems.",
+    "synonyms": [
+      "aggressive",
+      "hostile"
+    ],
+    "antonyms": [
+      "peaceful",
+      "friendly"
+    ],
+    "difficulty": "intermediate",
+    "category": "academic",
+    "setIds": [
+      "gre"
+    ],
+    "aiMnemonic": "To remember **belligerent**, picture a giant, hairy **belly** growling **\"GRRR!\"** as it aggressively picks a fight with a tiny **ant**.",
+    "aiInsights": "{\n  \"definition\": \"Hostile, aggressive, and eager to fight.\",\n  \"common_phrases\": [\n    \"belligerent attitude\",\n    \"highly belligerent tone\",\n    \"a belligerent nation\",\n    \"became increasingly belligerent\",\n    \"belligerent drunk\",\n    \"belligerent behavior\",\n    \"confronted by belligerent protesters\",\n    \"belligerent response\",\n    \"belligerent look\",\n    \"avoid belligerent interactions\"\n  ],\n  \"example_sentences\": [\n    \"The coach was ejected from the game after making belligerent remarks to the referee.\",\n    \"Despite their disagreements, the diplomats urged both countries to stop their belligerent posturing.\",\n    \"The customer became belligerent when the store refused to accept her expired coupon.\"\n  ],\n  \"synonyms\": [\n    \"Hostile\",\n    \"Pugnacious\",\n    \"Combative\"\n  ],\n  \"memory_tip\": \"The prefix 'belli-' comes from the Latin word for war (just like in 'antebellum' or 'bellicose'). Think of a belligerent person as someone who is always ready to go to war.\"\n}",
+    "image": "https://gen.pollinations.ai/image/Hostile and aggressive?model=flux"
+  },
+  {
+    "word": "cacophony",
+    "meaning": "A harsh, discordant mixture of sounds",
+    "mnemonic": "काका फनी आवाज़ में गाते हैं",
+    "example": "The cacophony in the market made it hard to concentrate.",
+    "synonyms": [
+      "din",
+      "racket"
+    ],
+    "antonyms": [
+      "harmony",
+      "silence"
+    ],
+    "difficulty": "advanced",
+    "category": "academic",
+    "setIds": [
+      "gre"
+    ],
+    "aiMnemonic": "Picture a screaming **cac**tus on a **phony** phone making a horribly harsh, discordant racket.",
+    "aiInsights": "{\"definition\":\"A harsh, discordant, and unpleasant mixture of loud sounds.\",\"common_phrases\":[\"a deafening cacophony\",\"cacophony of voices\",\"city traffic cacophony\",\"cacophony of alarms\",\"absolute cacophony\",\"a chaotic cacophony\",\"cacophony of noise\",\"into the cacophony\",\"drowned by cacophony\",\"midst of cacophony\"],\"example_sentences\":[\"The classroom descended into a cacophony of shouting and laughter as soon as the teacher left the room.\",\"Walking into the busy market, she was greeted by a cacophony of shouting street vendors, honking horns, and barking dogs.\",\"The band's first rehearsal was a cacophony of instruments tuning and musicians playing different tunes out of sync.\"],\"synonyms\":[\"din\",\"discord\",\"clamor\"],\"memory_tip\":\"Think of a 'coughing symphony'—instead of beautiful music, it is just a harsh, unpleasant racket of people coughing.\"}",
+    "image": "https://gen.pollinations.ai/image/A harsh, discordant mixture of sounds?model=flux"
+  },
+  {
+    "word": "pristine",
+    "meaning": "In its original condition; unspoiled",
+    "mnemonic": "Priya's teen room is always clean",
+    "example": "The mountains are still in pristine condition.",
+    "synonyms": [
+      "pure",
+      "spotless"
+    ],
+    "antonyms": [
+      "dirty",
+      "spoiled"
+    ],
+    "difficulty": "intermediate",
+    "category": "common",
+    "setIds": [
+      "gre"
+    ],
+    "aiMnemonic": "Imagine a manic **priest** vacuuming a messy **teen** to keep his holy carpet absolutely **pristine** (unspoiled).",
+    "aiInsights": "{\"definition\":\"In its original condition; completely clean, fresh, or unspoiled.\",\"common_phrases\":[\"pristine wilderness\",\"in pristine condition\",\"pristine white snow\",\"pristine beaches\",\"keep it pristine\",\"pristine mountain air\",\"pristine waters\",\"remain pristine\",\"pristine environment\",\"absolutely pristine\"],\"example_sentences\":[\"The vintage car was kept in pristine condition inside a climate-controlled garage.\",\"We hiked through the pristine forest, where no trees had ever been logged.\",\"She wore a pristine white dress that seemed to repel any speck of dirt.\"],\"synonyms\":[\"unspoiled\",\"immaculate\",\"untarnished\"],\"memory_tip\":\"Associate 'pristine' with 'priest' in clean, white robes, representing ultimate spotlessness and purity.\"}",
+    "image": "https://gen.pollinations.ai/image/In its original condition; unspoiled?model=flux"
+  },
+  {
+    "word": "sagacious",
+    "meaning": "Having or showing keen mental discernment and good judgment",
+    "mnemonic": "सगा (relative) always gives wise advice",
+    "example": "The sagacious leader guided the team to success.",
+    "synonyms": [
+      "wise",
+      "prudent"
+    ],
+    "antonyms": [
+      "foolish",
+      "ignorant"
+    ],
+    "difficulty": "advanced",
+    "category": "academic",
+    "setIds": [
+      "gre"
+    ],
+    "aiMnemonic": "Picture a wise old **SAGE** wearing mind-reading **SHOES** that vibrate to steer him away from bad decisions. Those **sagacious** (*sage-shoes*) sneakers ensure he always makes the smartest choices!",
+    "aiInsights": "{\n  \"definition\": \"Wise, shrewd, and showing keen mental discernment and good judgment.\",\n  \"common_phrases\": [\n    \"sagacious advice\",\n    \"a sagacious leader\",\n    \"sagacious business decisions\",\n    \"her sagacious mind\",\n    \"a sagacious investor\",\n    \"their sagacious counsel\",\n    \"highly sagacious observation\",\n    \"sagacious old judge\",\n    \"make sagacious choices\",\n    \"sagacious and witty\"\n  ],\n  \"example_sentences\": [\n    \"The president relied on the sagacious advice of her senior cabinet members.\",\n    \"His sagacious investment strategy allowed him to double his wealth in just three years.\",\n    \"Only a sagacious detective could have solved such a complex and confusing case.\"\n  ],\n  \"synonyms\": [\n    \"wise\",\n    \"shrewd\",\n    \"astute\"\n  ],\n  \"memory_tip\": \"Connect 'sagacious' to the word 'sage' (which means a very wise person). A sagacious person acts like a sage.\"\n}",
+    "image": "https://gen.pollinations.ai/image/Having or showing keen mental discernment and good?model=flux"
+  }
+]
