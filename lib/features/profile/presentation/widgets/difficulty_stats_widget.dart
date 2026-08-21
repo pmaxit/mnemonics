@@ -15,7 +15,7 @@ class DifficultyStatsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(MnemonicsSpacing.m),
+      margin: const EdgeInsets.symmetric(vertical: MnemonicsSpacing.m),
       padding: const EdgeInsets.all(MnemonicsSpacing.l),
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xFF1E1E1E) : MnemonicsColors.background,

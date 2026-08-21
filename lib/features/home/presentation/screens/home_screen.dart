@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/design/design_system.dart';
 import '../../../../common/design/theme_provider.dart';
 import '../../../../common/widgets/course_card.dart';
+import '../../../../common/layout/tab_screen_layout.dart';
+import '../../../../common/widgets/animated_tab_header_card.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers.dart';
 import 'dart:math';
-import '../../../../common/widgets/animated_wave_background.dart';
 import '../../../profile/providers/user_info_provider.dart';
 import '../../../profile/domain/user_info.dart';
 import '../widgets/knowledge_tree_widget.dart';
@@ -22,13 +23,7 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _slideAnimation;
-
-  static const List<String> _tabRoutes = ['/learn', '/progress', '/profile'];
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const List<String> _quotes = [
     'Small steps every day lead to big results.',
     'Consistency is the key to mastery.',
@@ -36,36 +31,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     'Learning never exhausts the mind.',
     'Push yourself, because no one else is going to do it for you.'
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
-    ));
-    _slideAnimation = Tween<double>(
-      begin: 50.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
-    ));
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
 
   static const List<IconData> setIcons = [
     Icons.school,                // SAT
@@ -105,156 +70,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return _quotes[random.nextInt(_quotes.length)];
   }
 
+  Widget _buildLogoLeading() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+      child: Image.asset(
+        'assets/images/logo.jpg',
+        width: TabScreenLayout.leadingSize,
+        height: TabScreenLayout.leadingSize,
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
   Widget _buildAnimatedHeader(bool isDarkMode) {
     final userInfoAsync = ref.watch(currentUserProvider);
     final now = DateTime.now();
     final hour = now.hour;
-    String greeting;
+    final greeting = hour < 12
+        ? 'Good Morning'
+        : hour < 17
+            ? 'Good Afternoon'
+            : 'Good Evening';
 
-    if (hour < 12) {
-      greeting = 'Good Morning';
-    } else if (hour < 17) {
-      greeting = 'Good Afternoon';
-    } else {
-      greeting = 'Good Evening';
-    }
+    final fallback = AnimatedTabHeaderCard(
+      isDarkMode: isDarkMode,
+      leading: _buildLogoLeading(),
+      title: 'Vocabulary Learning',
+      subtitle: 'Master words through mnemonics',
+      trailing: const TabHeaderTrailingIcon(
+        icon: Icons.auto_awesome,
+        color: MnemonicsColors.secondaryOrange,
+      ),
+    );
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-          MnemonicsSpacing.m, 0, MnemonicsSpacing.m, MnemonicsSpacing.s),
-      padding: const EdgeInsets.all(MnemonicsSpacing.l),
-      decoration: BoxDecoration(
-        color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-        boxShadow: isDarkMode
-            ? MnemonicsColors.darkCardShadow
-            : MnemonicsColors.cardShadow,
-        border: isDarkMode
-            ? Border.all(
-                color: MnemonicsColors.darkBorder.withOpacity(0.3),
-                width: 1,
-              )
-            : null,
+    return userInfoAsync.when(
+      data: (userInfo) => AnimatedTabHeaderCard(
+        isDarkMode: isDarkMode,
+        leading: _buildLogoLeading(),
+        title: '$greeting, ${userInfo.displayName.split(' ').first}!',
+        subtitle: 'Ready to expand your vocabulary?',
+        trailing: const TabHeaderTrailingIcon(
+          icon: Icons.auto_awesome,
+          color: MnemonicsColors.secondaryOrange,
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                  child: Image.asset(
-                    'assets/images/logo.jpg',
-                    width: 48,
-                    height: 48,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              const SizedBox(width: MnemonicsSpacing.m),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Vocabulary Learning',
-                      style: MnemonicsTypography.headingMedium.copyWith(
-                        color: isDarkMode
-                            ? MnemonicsColors.darkTextPrimary
-                            : MnemonicsColors.textPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'Master words through mnemonics',
-                      style: MnemonicsTypography.bodyRegular.copyWith(
-                        color: isDarkMode
-                            ? MnemonicsColors.darkTextSecondary
-                            : MnemonicsColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: MnemonicsSpacing.m),
-          userInfoAsync.when(
-            data: (userInfo) => Container(
-              padding: const EdgeInsets.all(MnemonicsSpacing.m),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    MnemonicsColors.primaryGreen.withOpacity(0.8),
-                    MnemonicsColors.secondaryOrange.withOpacity(0.8),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-                boxShadow: [
-                  BoxShadow(
-                    color: MnemonicsColors.primaryGreen.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '$greeting, ${userInfo.displayName.split(' ').first}!',
-                          style: MnemonicsTypography.headingMedium.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: MnemonicsSpacing.xs),
-                        Text(
-                          'Ready to expand your vocabulary?',
-                          style: MnemonicsTypography.bodyRegular.copyWith(
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(MnemonicsSpacing.s),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius:
-                          BorderRadius.circular(MnemonicsSpacing.radiusM),
-                    ),
-                    child: const Icon(
-                      Icons.auto_awesome,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            loading: () => const SizedBox.shrink(),
-            error: (error, stack) => const SizedBox.shrink(),
-          ),
-        ],
-      ),
+      loading: () => fallback,
+      error: (error, stack) => fallback,
     );
   }
 
@@ -408,32 +269,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final statsAsync = ref
         .watch(profileStatisticsProvider); // Fetch real user stats for the Tree
     final vocabAsync = ref.watch(vocabularyListProvider);
-    final screenHeight = MediaQuery.of(context).size.height;
     final themeMode = ref.watch(themeNotifierProvider);
     final isDarkMode = themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     return ListView(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + kToolbarHeight,
-        bottom: 120, // Space for CustomBottomNavBar
-      ),
+      padding: TabScreenLayout.paddedScrollPadding(context),
       children: [
-        // Animated Header (only this slides up)
-        AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) {
-            return Transform.translate(
-              offset: Offset(0, _slideAnimation.value),
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: _buildAnimatedHeader(isDarkMode),
-              ),
-            );
-          },
-        ),
-        // Card Content (static)
+        _buildAnimatedHeader(isDarkMode),
+        const SizedBox(height: TabScreenLayout.afterHeaderGap),
         wordSetsAsync.when(
           loading: () => const SizedBox(
               height: 200, child: Center(child: CircularProgressIndicator())),
@@ -454,16 +299,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: MnemonicsSpacing.m),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
                       // Knowledge Tree Header Widget
                       statsAsync.when(
                         data: (stats) {
                           return Padding(
+                            key: TabScreenLayout.nextCardKey,
                             padding: const EdgeInsets.only(
                                 bottom: MnemonicsSpacing.l),
                             child: KnowledgeTreeWidget(
@@ -481,6 +321,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           );
                         },
                         loading: () => const SizedBox(
+                            key: TabScreenLayout.nextCardKey,
                             height: 250,
                             child: Center(child: CircularProgressIndicator())),
                         error: (_, __) => const SizedBox.shrink(),
@@ -627,14 +468,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         ),
                       ),
                       const SizedBox(height: MnemonicsSpacing.m),
-                    ],
-                  ),
-                ),
                 ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: MnemonicsSpacing.m),
+                  padding: EdgeInsets.zero,
                   itemCount: filteredSets.length,
                   itemBuilder: (context, index) {
                     final set = filteredSets[index];

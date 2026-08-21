@@ -3,13 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../common/design/design_system.dart';
 import '../../../../common/design/theme_provider.dart';
+import '../../../../common/layout/tab_screen_layout.dart';
+import '../../../../common/widgets/animated_tab_header_card.dart';
 import '../../providers/statistics_provider.dart';
 import '../../domain/statistics_data.dart';
 import '../widgets/animated_progress_chart.dart';
 import '../widgets/animated_stat_card.dart';
 import '../../../profile/providers/user_info_provider.dart';
 import '../../../profile/domain/user_info.dart';
-import 'package:intl/intl.dart';
 import '../../../study_session/providers/study_session_providers.dart';
 import '../../../study_session/domain/study_plan.dart';
 import '../../../study_session/domain/study_plan_day.dart';
@@ -22,41 +23,7 @@ class ProgressOverviewScreen extends ConsumerStatefulWidget {
       _ProgressOverviewScreenState();
 }
 
-class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _slideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
-    ));
-    _slideAnimation = Tween<double>(
-      begin: 50.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
-    ));
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
+class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen> {
 
   @override
   Widget build(BuildContext context) {
@@ -80,32 +47,18 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
     }
 
     return SingleChildScrollView(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + kToolbarHeight,
-        left: MnemonicsSpacing.l,
-        right: MnemonicsSpacing.l,
-        bottom: 120, // Space for CustomBottomNavBar
-      ),
+      padding: TabScreenLayout.paddedScrollPadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Animated header matching Profile style (only this slides up)
-          AnimatedBuilder(
-            animation: _animationController,
-            builder: (context, child) {
-              return Transform.translate(
-                offset: Offset(0, _slideAnimation.value),
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: _buildAnimatedHeader(isDarkMode),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: MnemonicsSpacing.l),
+          _buildAnimatedHeader(isDarkMode),
+          const SizedBox(height: TabScreenLayout.afterHeaderGap),
 
           // Motivational tagline with animation
-          _buildMotivationalTagline(statistics),
+          KeyedSubtree(
+            key: TabScreenLayout.nextCardKey,
+            child: _buildMotivationalTagline(statistics),
+          ),
           const SizedBox(height: MnemonicsSpacing.xl),
 
           // Main statistics grid
@@ -441,125 +394,35 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
   Widget _buildAnimatedHeader(bool isDarkMode) {
     final userInfoAsync = ref.watch(currentUserProvider);
 
-    return Container(
-      padding: const EdgeInsets.all(MnemonicsSpacing.l),
-      decoration: BoxDecoration(
-        color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-        boxShadow: isDarkMode
-            ? MnemonicsColors.darkCardShadow
-            : MnemonicsColors.cardShadow,
-        border: isDarkMode
-            ? Border.all(
-                color: MnemonicsColors.darkBorder.withOpacity(0.3),
-                width: 1,
-              )
-            : null,
+    return AnimatedTabHeaderCard(
+      isDarkMode: isDarkMode,
+      margin: EdgeInsets.zero,
+      leading: TabHeaderBadge(
+        child: userInfoAsync.when(
+          data: (userInfo) => Text(
+            userInfo.initials,
+            style: MnemonicsTypography.bodyLarge.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          loading: () => const Icon(
+            Icons.person,
+            color: Colors.white,
+            size: 22,
+          ),
+          error: (error, stack) => const Icon(
+            Icons.person,
+            color: Colors.white,
+            size: 22,
+          ),
+        ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  MnemonicsColors.primaryGreen,
-                  MnemonicsColors.primaryGreen.withOpacity(0.7),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: MnemonicsColors.primaryGreen.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Center(
-              child: userInfoAsync.when(
-                data: (userInfo) => Text(
-                  userInfo.initials,
-                  style: MnemonicsTypography.headingMedium.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                loading: () => const Icon(
-                  Icons.person,
-                  color: Colors.white,
-                  size: 24,
-                ),
-                error: (error, stack) => const Icon(
-                  Icons.person,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: MnemonicsSpacing.m),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                userInfoAsync.when(
-                  data: (userInfo) => Text(
-                    'Your Progress',
-                    style: MnemonicsTypography.headingMedium.copyWith(
-                      color: isDarkMode
-                          ? MnemonicsColors.darkTextPrimary
-                          : MnemonicsColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  loading: () => Text(
-                    'Your Progress',
-                    style: MnemonicsTypography.headingMedium.copyWith(
-                      color: isDarkMode
-                          ? MnemonicsColors.darkTextPrimary
-                          : MnemonicsColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  error: (error, stack) => Text(
-                    'Your Progress',
-                    style: MnemonicsTypography.headingMedium.copyWith(
-                      color: isDarkMode
-                          ? MnemonicsColors.darkTextPrimary
-                          : MnemonicsColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: MnemonicsSpacing.xs),
-                Text(
-                  'Track your learning journey',
-                  style: MnemonicsTypography.bodyRegular.copyWith(
-                    color: isDarkMode
-                        ? MnemonicsColors.darkTextSecondary
-                        : MnemonicsColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(MnemonicsSpacing.s),
-            decoration: BoxDecoration(
-              color: MnemonicsColors.secondaryOrange.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
-            ),
-            child: const Icon(
-              Icons.analytics,
-              color: MnemonicsColors.secondaryOrange,
-              size: 20,
-            ),
-          ),
-        ],
+      title: 'Your Progress',
+      subtitle: 'Track your learning journey',
+      trailing: const TabHeaderTrailingIcon(
+        icon: Icons.analytics,
+        color: MnemonicsColors.secondaryOrange,
       ),
     );
   }

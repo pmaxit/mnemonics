@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/design/design_system.dart';
 import '../../../../common/design/theme_provider.dart';
+import '../../../../common/layout/tab_screen_layout.dart';
 import '../../providers/unified_statistics_provider.dart';
 import '../widgets/profile_header_widget.dart';
 import '../widgets/statistics_overview_widget.dart';
@@ -52,50 +53,49 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
             MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     return Padding(
-      padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top + kToolbarHeight,
-          bottom: 120,
+      padding: TabScreenLayout.paddedScrollPadding(context),
+      child: profileStatsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Text('Error loading stats: $error'),
         ),
-        child: profileStatsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Text('Error loading stats: $error'),
-          ),
-          data: (profileStats) => FadeTransition(
-            opacity: _fadeAnimation,
-            child: CustomScrollView(
-              slivers: [
-                // Profile Header
-                SliverToBoxAdapter(
-                  child: ProfileHeaderWidget(
-                    profileStats: profileStats,
-                    isDarkMode: isDarkMode,
-                  ),
+        data: (profileStats) => FadeTransition(
+          opacity: _fadeAnimation,
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    ProfileHeaderWidget(
+                      profileStats: profileStats,
+                      isDarkMode: isDarkMode,
+                    ),
+                    const SizedBox(height: TabScreenLayout.afterHeaderGap),
+                  ],
                 ),
-
-                // Stats Overview
-                SliverToBoxAdapter(
+              ),
+              SliverToBoxAdapter(
+                child: KeyedSubtree(
+                  key: TabScreenLayout.nextCardKey,
                   child: StatisticsOverviewWidget(
                     profileStats: profileStats,
                     isDarkMode: isDarkMode,
                   ),
                 ),
-
-                // Difficulty Stats
-                SliverToBoxAdapter(
-                  child: DifficultyStatsWidget(
-                    difficultyStats: profileStats.difficultyStats,
-                    isDarkMode: isDarkMode,
-                  ),
+              ),
+              SliverToBoxAdapter(
+                child: DifficultyStatsWidget(
+                  difficultyStats: profileStats.difficultyStats,
+                  isDarkMode: isDarkMode,
                 ),
-
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: MnemonicsSpacing.xxl),
-                ),
-              ],
-            ),
+              ),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: MnemonicsSpacing.xxl),
+              ),
+            ],
           ),
         ),
+      ),
     );
   }
 }
