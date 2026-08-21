@@ -1,10 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'common/design/theme_provider.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'features/home/domain/user_word_data.dart';
 import 'features/home/domain/user_settings.dart';
@@ -18,8 +19,14 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await dotenv.load(fileName: ".env");
-  final appDocDir = await getApplicationDocumentsDirectory();
-  Hive.init(appDocDir.path);
+  // path_provider has no web implementation, so use Hive's Flutter
+  // initializer (IndexedDB-backed) on web and a documents directory elsewhere.
+  if (kIsWeb) {
+    await Hive.initFlutter();
+  } else {
+    final appDocDir = await getApplicationDocumentsDirectory();
+    Hive.init(appDocDir.path);
+  }
   // Clear old user_word_data box to prevent type errors from legacy data
   //await Hive.deleteBoxFromDisk('user_word_data');
   Hive.registerAdapter(UserWordDataAdapter());
