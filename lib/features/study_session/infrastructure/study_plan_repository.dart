@@ -4,9 +4,24 @@ import 'package:http/http.dart' as http;
 import '../domain/study_plan.dart';
 import '../domain/study_plan_day.dart';
 import '../../../core/config/api_config.dart';
+import '../../../core/platform/desktop_compat.dart';
 
 class StudyPlanRepository {
-  String? get _userId => FirebaseAuth.instance.currentUser?.uid;
+  String? get _userId {
+    if (desktopAuthBypass) return desktopLocalUserId;
+    return FirebaseAuth.instance.currentUser?.uid;
+  }
+
+  String _shortError(String prefix, http.Response response) {
+    final body = response.body.trim();
+    if (body.isEmpty ||
+        body.startsWith('<') ||
+        body.toLowerCase().contains('<!doctype')) {
+      return '$prefix (HTTP ${response.statusCode})';
+    }
+    final clipped = body.length > 160 ? '${body.substring(0, 160)}…' : body;
+    return '$prefix: $clipped';
+  }
 
   // -------------------------------------------------------------------------
   // Create plan (agentic)
@@ -33,7 +48,7 @@ class StudyPlanRepository {
     );
 
     if (response.statusCode != 201) {
-      throw Exception('Failed to create study plan: ${response.body}');
+      throw Exception(_shortError('Failed to create study plan', response));
     }
 
     final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -51,11 +66,16 @@ class StudyPlanRepository {
       Uri.parse('${ApiConfig.baseUrl}/study-plan/$uid'),
     );
 
+    if (response.statusCode == 404) return [];
     if (response.statusCode != 200) {
-      throw Exception('Failed to load study plans: ${response.body}');
+      throw Exception(_shortError('Failed to load study plans', response));
     }
 
-    final list = jsonDecode(response.body) as List<dynamic>;
+    final decoded = jsonDecode(response.body);
+    if (decoded is! List) {
+      throw Exception('Failed to load study plans');
+    }
+    final list = decoded;
     final plans = <StudyPlan>[];
     for (final item in list) {
       try {
@@ -80,7 +100,7 @@ class StudyPlanRepository {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to load day $dayNumber: ${response.body}');
+      throw Exception(_shortError('Failed to load day $dayNumber', response));
     }
 
     final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -103,7 +123,7 @@ class StudyPlanRepository {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to update day status: ${response.body}');
+      throw Exception(_shortError('Failed to update day status', response));
     }
   }
 
@@ -116,7 +136,7 @@ class StudyPlanRepository {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to delete study plan: ${response.body}');
+      throw Exception(_shortError('Failed to delete study plan', response));
     }
   }
 }

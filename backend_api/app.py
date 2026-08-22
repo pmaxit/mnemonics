@@ -1,12 +1,171 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory, make_response
 from flask_cors import CORS
 import psycopg2
 from psycopg2 import extras
 import os
 import json
+import re
+from datetime import date, datetime
+from pathlib import Path
 
 app = Flask(__name__)
 CORS(app)
+
+# Persistent volume mount (Railway): /app/word_images
+IMAGE_DIR = Path(os.environ.get('WORD_IMAGES_DIR', './word_images')).resolve()
+PUBLIC_BASE_URL = os.environ.get(
+    'PUBLIC_BASE_URL',
+    'https://mnemonics-api-production.up.railway.app',
+).rstrip('/')
+IMAGE_UPLOAD_TOKEN = os.environ.get('IMAGE_UPLOAD_TOKEN', '')
+
+SLUG_RE = re.compile(r'[^a-z0-9]+')
+
+
+def word_slug(word: str) -> str:
+    slug = SLUG_RE.sub('_', (word or '').strip().lower()).strip('_')
+    return slug or 'unknown'
+
+
+def ensure_image_dir() -> None:
+    IMAGE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def public_word_image_url(slug: str) -> str:
+    return f'{PUBLIC_BASE_URL}/word_images/{slug}.jpg'
+
+
+def resolve_image_url(row: dict) -> str | None:
+    """Prefer volume-backed comic image; fall back to stored URL."""
+    word = (row.get('word') or '').strip()
+    slug = word_slug(word)
+    local_path = IMAGE_DIR / f'{slug}.jpg'
+    if local_path.is_file() and local_path.stat().st_size > 0:
+        return public_word_image_url(slug)
+
+    stored = (row.get('image_url') or '').strip()
+    if not stored:
+        return None
+    # Rewrite legacy relative paths
+    if stored.startswith('/word_images/'):
+        return f'{PUBLIC_BASE_URL}{stored}'
+    return stored
+
+
+def _iso(value):
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, date):
+        return value.isoformat()
+    return str(value)
+
+
+def _word_list(value):
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+        except (TypeError, json.JSONDecodeError):
+            return [part.strip() for part in value.split(',') if part.strip()]
+        if isinstance(parsed, list):
+            return [str(item).strip() for item in parsed if str(item).strip()]
+    return []
+
+
+def ensure_study_plan_tables(cursor) -> None:
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS study_plans (
+            id SERIAL PRIMARY KEY,
+            user_id VARCHAR(128) NOT NULL,
+            title VARCHAR(255),
+            total_words INTEGER,
+            num_days INTEGER,
+            words_per_day INTEGER,
+            status VARCHAR(50) DEFAULT 'active',
+            start_date DATE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS study_plan_days (
+            id SERIAL PRIMARY KEY,
+            plan_id INTEGER REFERENCES study_plans(id) ON DELETE CASCADE,
+            day_number INTEGER NOT NULL,
+            words JSONB,
+            status VARCHAR(50) DEFAULT 'not_attempted',
+            started_at TIMESTAMP,
+            done_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+
+def serialize_study_plan_day(row) -> dict:
+    return {
+        'day_number': int(row['day_number']),
+        'words': _word_list(row.get('words')),
+        'status': row.get('status') or 'not_attempted',
+        'started_at': _iso(row.get('started_at')),
+        'done_at': _iso(row.get('done_at')),
+    }
+
+
+def serialize_study_plan(plan_row, day_rows) -> dict:
+    title = (plan_row.get('title') or '').strip()
+    total_words = int(plan_row.get('total_words') or 0)
+    num_days = int(plan_row.get('num_days') or 0)
+    if not title:
+        title = f'{total_words}-Word {num_days}-Day Plan'
+    return {
+        'id': str(plan_row['id']),
+        'user_id': plan_row['user_id'],
+        'title': title,
+        'total_words': total_words,
+        'num_days': num_days,
+        'words_per_day': int(plan_row.get('words_per_day') or 0),
+        'start_date': _iso(plan_row.get('start_date')) or date.today().isoformat(),
+        'status': plan_row.get('status') or 'active',
+        'days': [serialize_study_plan_day(day) for day in day_rows],
+    }
+
+
+def fetch_plan_days(cursor, plan_id):
+    cursor.execute(
+        """
+        SELECT day_number, words, status, started_at, done_at
+        FROM study_plan_days
+        WHERE plan_id = %s
+        ORDER BY day_number ASC
+        """,
+        (plan_id,),
+    )
+    return cursor.fetchall()
+
+
+def load_serialized_plan(cursor, plan_id):
+    cursor.execute("SELECT * FROM study_plans WHERE id = %s", (plan_id,))
+    plan_row = cursor.fetchone()
+    if not plan_row:
+        return None
+    return serialize_study_plan(plan_row, fetch_plan_days(cursor, plan_id))
+
+
+def require_upload_auth() -> tuple[bool, tuple | None]:
+    if not IMAGE_UPLOAD_TOKEN:
+        return False, (jsonify({"error": "IMAGE_UPLOAD_TOKEN not configured"}), 503)
+    auth = request.headers.get('Authorization', '')
+    token = request.headers.get('X-Upload-Token', '')
+    if auth.startswith('Bearer '):
+        token = auth[7:].strip() or token
+    if token != IMAGE_UPLOAD_TOKEN:
+        return False, (jsonify({"error": "unauthorized"}), 401)
+    return True, None
 
 def get_db_connection():
     conn = psycopg2.connect(
@@ -77,7 +236,7 @@ def get_vocabulary():
                     r['exampleSentences'] = json.loads(r['example_sentences'])
                 except:
                     r['exampleSentences'] = []
-            r['imageUrl'] = r.get('image_url')
+            r['imageUrl'] = resolve_image_url(r)
             r['videoUrl'] = r.get('video_url')
             r['setIds'] = [r.get('category')] if r.get('category') else []
             r['aiMnemonic'] = r.get('ai_mnemonic')
@@ -582,6 +741,368 @@ def import_word_sets():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
+@app.route('/study-plan/create', methods=['POST'])
+def create_study_plan():
+    """Create a study plan and assign vocabulary words across days."""
+    data = request.get_json(silent=True) or {}
+    user_id = str(data.get('user_id') or '').strip()
+    if not user_id:
+        return jsonify({"error": "user_id is required"}), 400
+
+    try:
+        total_words = int(data.get('total_words') or 0)
+        num_days = int(data.get('num_days') or 0)
+        words_per_day = int(data.get('words_per_day') or 0)
+    except (TypeError, ValueError):
+        return jsonify({"error": "total_words, num_days, and words_per_day must be integers"}), 400
+
+    if total_words <= 0 or num_days <= 0:
+        return jsonify({"error": "total_words and num_days must be positive"}), 400
+    if words_per_day <= 0:
+        words_per_day = max(1, (total_words + num_days - 1) // num_days)
+
+    title = str(data.get('title') or '').strip() or f'{total_words}-Word {num_days}-Day Plan'
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.RealDictCursor)
+        ensure_study_plan_tables(cursor)
+
+        cursor.execute(
+            """
+            SELECT DISTINCT jsonb_array_elements_text(spd.words) AS word
+            FROM study_plan_days spd
+            JOIN study_plans sp ON sp.id = spd.plan_id
+            WHERE sp.user_id = %s AND sp.status = 'active' AND spd.words IS NOT NULL
+            """,
+            (user_id,),
+        )
+        assigned = {row['word'] for row in cursor.fetchall() if row.get('word')}
+
+        cursor.execute(
+            """
+            SELECT word FROM user_learned_words
+            WHERE user_id = %s AND is_learned = TRUE
+            """,
+            (user_id,),
+        )
+        learned = {row['word'] for row in cursor.fetchall() if row.get('word')}
+
+        cursor.execute("SELECT word FROM vocabulary ORDER BY word ASC")
+        all_words = [row['word'] for row in cursor.fetchall() if row.get('word')]
+        unused = [word for word in all_words if word not in assigned and word not in learned]
+        if len(unused) < total_words:
+            unused.extend(
+                word for word in all_words
+                if word not in unused and word not in assigned
+            )
+        selected = unused[:total_words]
+        if not selected:
+            return jsonify({"error": "no vocabulary words available to build a plan"}), 400
+
+        actual_total = len(selected)
+        actual_days = min(num_days, actual_total)
+        actual_per_day = max(1, (actual_total + actual_days - 1) // actual_days)
+
+        cursor.execute(
+            """
+            INSERT INTO study_plans
+                (user_id, title, total_words, num_days, words_per_day, status, start_date)
+            VALUES (%s, %s, %s, %s, %s, 'active', CURRENT_DATE)
+            RETURNING *
+            """,
+            (user_id, title, actual_total, actual_days, actual_per_day),
+        )
+        plan_row = cursor.fetchone()
+        plan_id = plan_row['id']
+
+        idx = 0
+        for day_number in range(1, actual_days + 1):
+            chunk = selected[idx:idx + actual_per_day]
+            idx += actual_per_day
+            if day_number == actual_days and idx < len(selected):
+                chunk = chunk + selected[idx:]
+            cursor.execute(
+                """
+                INSERT INTO study_plan_days (plan_id, day_number, words, status)
+                VALUES (%s, %s, %s, 'not_attempted')
+                """,
+                (plan_id, day_number, extras.Json(chunk)),
+            )
+
+        conn.commit()
+        serialized = load_serialized_plan(cursor, plan_id)
+        cursor.close()
+        return jsonify(serialized), 201
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        if conn:
+            conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.route('/study-plan/<user_id>', methods=['GET'])
+def get_study_plans(user_id):
+    """Return active study plans (with days) for a user."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.RealDictCursor)
+        ensure_study_plan_tables(cursor)
+        cursor.execute(
+            """
+            SELECT * FROM study_plans
+            WHERE user_id = %s AND status = 'active'
+            ORDER BY created_at DESC, id DESC
+            """,
+            (user_id,),
+        )
+        plans = cursor.fetchall()
+        result = [
+            serialize_study_plan(plan, fetch_plan_days(cursor, plan['id']))
+            for plan in plans
+        ]
+        cursor.close()
+        return jsonify(result)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.route('/study-plan/<user_id>/day/<int:day_number>', methods=['GET'])
+def get_study_plan_day(user_id, day_number):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.RealDictCursor)
+        ensure_study_plan_tables(cursor)
+        cursor.execute(
+            """
+            SELECT spd.day_number, spd.words, spd.status, spd.started_at, spd.done_at
+            FROM study_plan_days spd
+            JOIN study_plans sp ON sp.id = spd.plan_id
+            WHERE sp.user_id = %s AND sp.status = 'active' AND spd.day_number = %s
+            ORDER BY sp.created_at DESC, sp.id DESC
+            LIMIT 1
+            """,
+            (user_id, day_number),
+        )
+        row = cursor.fetchone()
+        cursor.close()
+        if not row:
+            return jsonify({"error": f"day {day_number} not found"}), 404
+        return jsonify(serialize_study_plan_day(row))
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.route('/study-plan/<user_id>/day/<int:day_number>/status', methods=['POST'])
+def update_study_plan_day_status(user_id, day_number):
+    data = request.get_json(silent=True) or {}
+    status = str(data.get('status') or '').strip()
+    if status not in {'not_attempted', 'in_progress', 'done'}:
+        return jsonify({"error": "status must be not_attempted, in_progress, or done"}), 400
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.RealDictCursor)
+        ensure_study_plan_tables(cursor)
+        cursor.execute(
+            """
+            SELECT spd.id
+            FROM study_plan_days spd
+            JOIN study_plans sp ON sp.id = spd.plan_id
+            WHERE sp.user_id = %s AND sp.status = 'active' AND spd.day_number = %s
+            ORDER BY sp.created_at DESC, sp.id DESC
+            LIMIT 1
+            """,
+            (user_id, day_number),
+        )
+        row = cursor.fetchone()
+        if not row:
+            cursor.close()
+            return jsonify({"error": f"day {day_number} not found"}), 404
+
+        if status == 'done':
+            cursor.execute(
+                """
+                UPDATE study_plan_days
+                SET status = %s,
+                    started_at = COALESCE(started_at, NOW()),
+                    done_at = NOW()
+                WHERE id = %s
+                """,
+                (status, row['id']),
+            )
+        elif status == 'in_progress':
+            cursor.execute(
+                """
+                UPDATE study_plan_days
+                SET status = %s,
+                    started_at = COALESCE(started_at, NOW()),
+                    done_at = NULL
+                WHERE id = %s
+                """,
+                (status, row['id']),
+            )
+        else:
+            cursor.execute(
+                """
+                UPDATE study_plan_days
+                SET status = %s, started_at = NULL, done_at = NULL
+                WHERE id = %s
+                """,
+                (status, row['id']),
+            )
+        conn.commit()
+        cursor.close()
+        return jsonify({"status": status, "day_number": day_number})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        if conn:
+            conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.route('/study-plan/<plan_id>', methods=['DELETE'])
+def delete_study_plan(plan_id):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.RealDictCursor)
+        ensure_study_plan_tables(cursor)
+        cursor.execute("DELETE FROM study_plans WHERE id = %s RETURNING id", (plan_id,))
+        deleted = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+        if not deleted:
+            return jsonify({"error": "plan not found"}), 404
+        return jsonify({"status": "deleted", "id": str(deleted['id'])})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        if conn:
+            conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/word_images/<path:filename>', methods=['GET'])
+def get_word_image(filename):
+    """Serve comic word images from the persistent volume."""
+    ensure_image_dir()
+    # Only allow simple jpg filenames
+    safe = Path(filename).name
+    if not re.fullmatch(r'[a-z0-9_]+\.jpe?g', safe, flags=re.I):
+        return jsonify({"error": "invalid filename"}), 400
+    path = IMAGE_DIR / safe
+    if not path.is_file():
+        return jsonify({"error": "not found"}), 404
+    resp = make_response(send_from_directory(IMAGE_DIR, safe, mimetype='image/jpeg'))
+    resp.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    return resp
+
+
+@app.route('/admin/word_images/<slug>', methods=['PUT'])
+def upload_word_image(slug):
+    """Upload a JPEG comic image for a vocabulary word slug."""
+    ok, err = require_upload_auth()
+    if not ok:
+        return err
+
+    safe_slug = word_slug(slug)
+    if safe_slug != slug.strip().lower().replace('-', '_'):
+        # Accept raw slug-ish input after normalization
+        safe_slug = word_slug(slug)
+
+    if not re.fullmatch(r'[a-z0-9_]+', safe_slug):
+        return jsonify({"error": "invalid slug"}), 400
+
+    data = request.get_data()
+    if not data or len(data) < 1000:
+        return jsonify({"error": "empty or too-small body"}), 400
+    # Basic JPEG magic check
+    if not (data[:2] == b'\xff\xd8' or data[:8] == b'\x89PNG\r\n\x1a\n'):
+        return jsonify({"error": "body must be JPEG/PNG bytes"}), 400
+
+    ensure_image_dir()
+    dest = IMAGE_DIR / f'{safe_slug}.jpg'
+    # Convert PNG uploads to stored .jpg name (bytes kept as-is; browsers handle it).
+    # Prefer rewriting JPEG only; if PNG, still store under .jpg extension for stable URLs.
+    dest.write_bytes(data)
+
+    # Optionally update DB image_url for matching word(s)
+    updated = 0
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        url = public_word_image_url(safe_slug)
+        cursor.execute(
+            """
+            UPDATE vocabulary
+            SET image_url = %s
+            WHERE regexp_replace(lower(word), '[^a-z0-9]+', '_', 'g') = %s
+            """,
+            (url, safe_slug),
+        )
+        updated = cursor.rowcount
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        # File is saved even if DB update fails
+        return jsonify({
+            "status": "saved",
+            "slug": safe_slug,
+            "url": public_word_image_url(safe_slug),
+            "db_updated": 0,
+            "db_error": str(e),
+        }), 201
+
+    return jsonify({
+        "status": "saved",
+        "slug": safe_slug,
+        "url": public_word_image_url(safe_slug),
+        "db_updated": updated,
+        "bytes": len(data),
+    }), 201
+
+
+@app.route('/admin/word_images', methods=['GET'])
+def list_word_images():
+    ok, err = require_upload_auth()
+    if not ok:
+        return err
+    ensure_image_dir()
+    files = sorted(p.name for p in IMAGE_DIR.glob('*.jpg'))
+    return jsonify({"count": len(files), "files": files})
+
+
+@app.errorhandler(404)
+def handle_not_found(_e):
+    return jsonify({"error": "not found"}), 404
+
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
+    ensure_image_dir()
     app.run(host='0.0.0.0', port=port)

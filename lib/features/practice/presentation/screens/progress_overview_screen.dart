@@ -465,7 +465,7 @@ class _StudyPlanSection extends ConsumerWidget {
 
         plansAsync.when(
           loading: () => _loadingCard(),
-          error: (err, __) => _errorCard(err),
+          error: (err, __) => _errorCard(ref),
           data: (plans) => plans.isEmpty
               ? _emptyCard(context)
               : Column(
@@ -483,7 +483,46 @@ class _StudyPlanSection extends ConsumerWidget {
   }
 
   Widget _loadingCard() => const Center(child: CircularProgressIndicator());
-  Widget _errorCard(dynamic err) => Center(child: Text('Error: $err'));
+
+  Widget _errorCard(WidgetRef ref) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(MnemonicsSpacing.l),
+      decoration: _cardDecoration(),
+      child: Column(
+        children: [
+          Icon(
+            Icons.cloud_off_outlined,
+            color: isDarkMode
+                ? MnemonicsColors.darkTextSecondary
+                : MnemonicsColors.textSecondary,
+            size: 28,
+          ),
+          const SizedBox(height: MnemonicsSpacing.s),
+          Text(
+            "Couldn't load study plans",
+            style: MnemonicsTypography.bodyLarge
+                .copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: MnemonicsSpacing.xs),
+          Text(
+            'Tap retry, or create a new plan.',
+            textAlign: TextAlign.center,
+            style: MnemonicsTypography.bodyRegular.copyWith(
+              color: isDarkMode
+                  ? MnemonicsColors.darkTextSecondary
+                  : MnemonicsColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: MnemonicsSpacing.m),
+          TextButton(
+            onPressed: () => ref.invalidate(activePlansProvider),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _emptyCard(BuildContext context) {
     return GestureDetector(
