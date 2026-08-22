@@ -20,19 +20,22 @@ class UserSettingsAdapter extends TypeAdapter<UserSettings> {
       dailyGoal: fields[0] as int,
       languageCodes: (fields[1] as List).cast<String>(),
       reviewFrequency: fields[2] as int,
+      showMyWords: fields[3] == null ? true : fields[3] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserSettings obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.dailyGoal)
       ..writeByte(1)
       ..write(obj.languageCodes)
       ..writeByte(2)
-      ..write(obj.reviewFrequency);
+      ..write(obj.reviewFrequency)
+      ..writeByte(3)
+      ..write(obj.showMyWords);
   }
 
   @override

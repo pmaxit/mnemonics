@@ -34,13 +34,15 @@ mixin _$StudyPlan {
   String get startDate => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
   List<StudyPlanDay> get days => throw _privateConstructorUsedError;
+  @JsonKey(name: 'total_xp')
+  int get totalXp => throw _privateConstructorUsedError;
+  @JsonKey(name: 'difficulty_pref')
+  String get difficultyPref => throw _privateConstructorUsedError;
+  @JsonKey(name: 'daily_commitment')
+  String get dailyCommitment => throw _privateConstructorUsedError;
 
-  /// Serializes this StudyPlan to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of StudyPlan
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $StudyPlanCopyWith<StudyPlan> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -59,7 +61,10 @@ abstract class $StudyPlanCopyWith<$Res> {
       @JsonKey(name: 'words_per_day') int wordsPerDay,
       @JsonKey(name: 'start_date') String startDate,
       String status,
-      List<StudyPlanDay> days});
+      List<StudyPlanDay> days,
+      @JsonKey(name: 'total_xp') int totalXp,
+      @JsonKey(name: 'difficulty_pref') String difficultyPref,
+      @JsonKey(name: 'daily_commitment') String dailyCommitment});
 }
 
 /// @nodoc
@@ -72,8 +77,6 @@ class _$StudyPlanCopyWithImpl<$Res, $Val extends StudyPlan>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of StudyPlan
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -86,6 +89,9 @@ class _$StudyPlanCopyWithImpl<$Res, $Val extends StudyPlan>
     Object? startDate = null,
     Object? status = null,
     Object? days = null,
+    Object? totalXp = null,
+    Object? difficultyPref = null,
+    Object? dailyCommitment = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -124,6 +130,18 @@ class _$StudyPlanCopyWithImpl<$Res, $Val extends StudyPlan>
           ? _value.days
           : days // ignore: cast_nullable_to_non_nullable
               as List<StudyPlanDay>,
+      totalXp: null == totalXp
+          ? _value.totalXp
+          : totalXp // ignore: cast_nullable_to_non_nullable
+              as int,
+      difficultyPref: null == difficultyPref
+          ? _value.difficultyPref
+          : difficultyPref // ignore: cast_nullable_to_non_nullable
+              as String,
+      dailyCommitment: null == dailyCommitment
+          ? _value.dailyCommitment
+          : dailyCommitment // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -145,7 +163,10 @@ abstract class _$$StudyPlanImplCopyWith<$Res>
       @JsonKey(name: 'words_per_day') int wordsPerDay,
       @JsonKey(name: 'start_date') String startDate,
       String status,
-      List<StudyPlanDay> days});
+      List<StudyPlanDay> days,
+      @JsonKey(name: 'total_xp') int totalXp,
+      @JsonKey(name: 'difficulty_pref') String difficultyPref,
+      @JsonKey(name: 'daily_commitment') String dailyCommitment});
 }
 
 /// @nodoc
@@ -156,8 +177,6 @@ class __$$StudyPlanImplCopyWithImpl<$Res>
       _$StudyPlanImpl _value, $Res Function(_$StudyPlanImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of StudyPlan
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -170,6 +189,9 @@ class __$$StudyPlanImplCopyWithImpl<$Res>
     Object? startDate = null,
     Object? status = null,
     Object? days = null,
+    Object? totalXp = null,
+    Object? difficultyPref = null,
+    Object? dailyCommitment = null,
   }) {
     return _then(_$StudyPlanImpl(
       id: null == id
@@ -208,13 +230,25 @@ class __$$StudyPlanImplCopyWithImpl<$Res>
           ? _value._days
           : days // ignore: cast_nullable_to_non_nullable
               as List<StudyPlanDay>,
+      totalXp: null == totalXp
+          ? _value.totalXp
+          : totalXp // ignore: cast_nullable_to_non_nullable
+              as int,
+      difficultyPref: null == difficultyPref
+          ? _value.difficultyPref
+          : difficultyPref // ignore: cast_nullable_to_non_nullable
+              as String,
+      dailyCommitment: null == dailyCommitment
+          ? _value.dailyCommitment
+          : dailyCommitment // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$StudyPlanImpl implements _StudyPlan {
+class _$StudyPlanImpl extends _StudyPlan {
   const _$StudyPlanImpl(
       {required this.id,
       @JsonKey(name: 'user_id') required this.userId,
@@ -224,8 +258,12 @@ class _$StudyPlanImpl implements _StudyPlan {
       @JsonKey(name: 'words_per_day') required this.wordsPerDay,
       @JsonKey(name: 'start_date') required this.startDate,
       this.status = 'active',
-      final List<StudyPlanDay> days = const <StudyPlanDay>[]})
-      : _days = days;
+      final List<StudyPlanDay> days = const <StudyPlanDay>[],
+      @JsonKey(name: 'total_xp') this.totalXp = 0,
+      @JsonKey(name: 'difficulty_pref') this.difficultyPref = 'balanced',
+      @JsonKey(name: 'daily_commitment') this.dailyCommitment = 'standard'})
+      : _days = days,
+        super._();
 
   factory _$StudyPlanImpl.fromJson(Map<String, dynamic> json) =>
       _$$StudyPlanImplFromJson(json);
@@ -262,8 +300,18 @@ class _$StudyPlanImpl implements _StudyPlan {
   }
 
   @override
+  @JsonKey(name: 'total_xp')
+  final int totalXp;
+  @override
+  @JsonKey(name: 'difficulty_pref')
+  final String difficultyPref;
+  @override
+  @JsonKey(name: 'daily_commitment')
+  final String dailyCommitment;
+
+  @override
   String toString() {
-    return 'StudyPlan(id: $id, userId: $userId, title: $title, totalWords: $totalWords, numDays: $numDays, wordsPerDay: $wordsPerDay, startDate: $startDate, status: $status, days: $days)';
+    return 'StudyPlan(id: $id, userId: $userId, title: $title, totalWords: $totalWords, numDays: $numDays, wordsPerDay: $wordsPerDay, startDate: $startDate, status: $status, days: $days, totalXp: $totalXp, difficultyPref: $difficultyPref, dailyCommitment: $dailyCommitment)';
   }
 
   @override
@@ -282,10 +330,15 @@ class _$StudyPlanImpl implements _StudyPlan {
             (identical(other.startDate, startDate) ||
                 other.startDate == startDate) &&
             (identical(other.status, status) || other.status == status) &&
-            const DeepCollectionEquality().equals(other._days, _days));
+            const DeepCollectionEquality().equals(other._days, _days) &&
+            (identical(other.totalXp, totalXp) || other.totalXp == totalXp) &&
+            (identical(other.difficultyPref, difficultyPref) ||
+                other.difficultyPref == difficultyPref) &&
+            (identical(other.dailyCommitment, dailyCommitment) ||
+                other.dailyCommitment == dailyCommitment));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -297,11 +350,12 @@ class _$StudyPlanImpl implements _StudyPlan {
       wordsPerDay,
       startDate,
       status,
-      const DeepCollectionEquality().hash(_days));
+      const DeepCollectionEquality().hash(_days),
+      totalXp,
+      difficultyPref,
+      dailyCommitment);
 
-  /// Create a copy of StudyPlan
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$StudyPlanImplCopyWith<_$StudyPlanImpl> get copyWith =>
@@ -315,17 +369,22 @@ class _$StudyPlanImpl implements _StudyPlan {
   }
 }
 
-abstract class _StudyPlan implements StudyPlan {
+abstract class _StudyPlan extends StudyPlan {
   const factory _StudyPlan(
-      {required final String id,
-      @JsonKey(name: 'user_id') required final String userId,
-      required final String title,
-      @JsonKey(name: 'total_words') required final int totalWords,
-      @JsonKey(name: 'num_days') required final int numDays,
-      @JsonKey(name: 'words_per_day') required final int wordsPerDay,
-      @JsonKey(name: 'start_date') required final String startDate,
-      final String status,
-      final List<StudyPlanDay> days}) = _$StudyPlanImpl;
+          {required final String id,
+          @JsonKey(name: 'user_id') required final String userId,
+          required final String title,
+          @JsonKey(name: 'total_words') required final int totalWords,
+          @JsonKey(name: 'num_days') required final int numDays,
+          @JsonKey(name: 'words_per_day') required final int wordsPerDay,
+          @JsonKey(name: 'start_date') required final String startDate,
+          final String status,
+          final List<StudyPlanDay> days,
+          @JsonKey(name: 'total_xp') final int totalXp,
+          @JsonKey(name: 'difficulty_pref') final String difficultyPref,
+          @JsonKey(name: 'daily_commitment') final String dailyCommitment}) =
+      _$StudyPlanImpl;
+  const _StudyPlan._() : super._();
 
   factory _StudyPlan.fromJson(Map<String, dynamic> json) =
       _$StudyPlanImpl.fromJson;
@@ -353,11 +412,17 @@ abstract class _StudyPlan implements StudyPlan {
   String get status;
   @override
   List<StudyPlanDay> get days;
-
-  /// Create a copy of StudyPlan
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(name: 'total_xp')
+  int get totalXp;
+  @override
+  @JsonKey(name: 'difficulty_pref')
+  String get difficultyPref;
+  @override
+  @JsonKey(name: 'daily_commitment')
+  String get dailyCommitment;
+  @override
+  @JsonKey(ignore: true)
   _$$StudyPlanImplCopyWith<_$StudyPlanImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -473,7 +473,15 @@ def get_categories():
 
 @app.route('/onboarding/curate', methods=['POST'])
 def curate_onboarding():
-    """Curate onboarding content based on user goal and score."""
+    """Curate onboarding content based on user goal and assessment score.
+
+    The assessment quiz has 5 questions. Level mapping:
+      0-1 correct -> level 1 (beginner)
+      2-3 correct -> level 2 (intermediate)
+      4-5 correct -> level 3 (advanced)
+    The selected goal category is persisted as the user's enabled word set so
+    the vocabulary feed and "My Words" recommendations stay focused.
+    """
     data = request.json
     user_id = data.get('user_id', '')
     goal = data.get('goal', '')
@@ -484,24 +492,41 @@ def curate_onboarding():
         cursor = conn.cursor()
 
         vocabulary_level = "1"
-        if score >= 8:
+        if score >= 4:
             vocabulary_level = "3"
-        elif score >= 5:
+        elif score >= 2:
             vocabulary_level = "2"
+
+        # Persist the chosen goal as the enabled word set when it matches a
+        # known vocabulary category.
+        enabled_sets = ''
+        if goal:
+            cursor.execute(
+                "SELECT COUNT(*) FROM vocabulary WHERE category = %s", (goal,)
+            )
+            row = cursor.fetchone()
+            if row and row[0] > 0:
+                enabled_sets = goal
 
         cursor.execute('''
             INSERT INTO user_profiles (user_id, vocabulary_level, learning_goal, has_completed_onboarding, enabled_word_sets)
-            VALUES (%s, %s, %s, TRUE, '')
+            VALUES (%s, %s, %s, TRUE, %s)
             ON CONFLICT (user_id) DO UPDATE SET
                 vocabulary_level = %s,
                 learning_goal = %s,
-                has_completed_onboarding = TRUE
-        ''', (user_id, vocabulary_level, goal, vocabulary_level, goal))
+                has_completed_onboarding = TRUE,
+                enabled_word_sets = %s
+        ''', (user_id, vocabulary_level, goal, enabled_sets,
+              vocabulary_level, goal, enabled_sets))
 
         conn.commit()
         cursor.close()
         conn.close()
-        return jsonify({"status": "ok", "vocabulary_level": vocabulary_level})
+        return jsonify({
+            "status": "ok",
+            "vocabulary_level": vocabulary_level,
+            "enabled_word_sets": enabled_sets,
+        })
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -743,7 +768,12 @@ def import_word_sets():
 
 @app.route('/study-plan/create', methods=['POST'])
 def create_study_plan():
-    """Create a study plan and assign vocabulary words across days."""
+    """Create a study plan with an intelligent difficulty-curve algorithm.
+
+    The algorithm groups words by difficulty, applies a progressive
+    difficulty curve across days, inserts review days every 4th day,
+    and assigns XP values to each day for gamification.
+    """
     data = request.get_json(silent=True) or {}
     user_id = str(data.get('user_id') or '').strip()
     if not user_id:
@@ -761,6 +791,8 @@ def create_study_plan():
     if words_per_day <= 0:
         words_per_day = max(1, (total_words + num_days - 1) // num_days)
 
+    difficulty_pref = str(data.get('difficulty_pref') or 'balanced').strip()
+    daily_commitment = str(data.get('daily_commitment') or 'standard').strip()
     title = str(data.get('title') or '').strip() or f'{total_words}-Word {num_days}-Day Plan'
     conn = None
     try:
@@ -768,6 +800,7 @@ def create_study_plan():
         cursor = conn.cursor(cursor_factory=extras.RealDictCursor)
         ensure_study_plan_tables(cursor)
 
+        # ── Exclude already-assigned and learned words ───────────────────
         cursor.execute(
             """
             SELECT DISTINCT jsonb_array_elements_text(spd.words) AS word
@@ -788,22 +821,137 @@ def create_study_plan():
         )
         learned = {row['word'] for row in cursor.fetchall() if row.get('word')}
 
-        cursor.execute("SELECT word FROM vocabulary ORDER BY word ASC")
-        all_words = [row['word'] for row in cursor.fetchall() if row.get('word')]
-        unused = [word for word in all_words if word not in assigned and word not in learned]
+        # ── Fetch all words WITH difficulty + category ───────────────────
+        cursor.execute(
+            "SELECT word, difficulty, category FROM vocabulary ORDER BY word ASC"
+        )
+        all_rows = cursor.fetchall()
+        all_words = [
+            {
+                'word': row['word'],
+                'difficulty': (row.get('difficulty') or 'intermediate').lower(),
+                'category': row.get('category') or 'common',
+            }
+            for row in all_rows if row.get('word')
+        ]
+
+        unused = [w for w in all_words if w['word'] not in assigned and w['word'] not in learned]
         if len(unused) < total_words:
-            unused.extend(
-                word for word in all_words
-                if word not in unused and word not in assigned
-            )
-        selected = unused[:total_words]
-        if not selected:
+            extra = [w for w in all_words if w['word'] not in learned and w['word'] not in assigned]
+            unused.extend(extra)
+            seen = set()
+            deduped = []
+            for w in unused:
+                if w['word'] not in seen:
+                    seen.add(w['word'])
+                    deduped.append(w)
+            unused = deduped
+
+        if not unused:
             return jsonify({"error": "no vocabulary words available to build a plan"}), 400
 
+        selected = unused[:total_words]
         actual_total = len(selected)
         actual_days = min(num_days, actual_total)
         actual_per_day = max(1, (actual_total + actual_days - 1) // actual_days)
 
+        # ── Group by difficulty ──────────────────────────────────────────
+        import random as _rng
+        rng = _rng.Random()
+        by_diff = {'basic': [], 'intermediate': [], 'advanced': []}
+        for w in selected:
+            d = w['difficulty'] if w['difficulty'] in by_diff else 'intermediate'
+            by_diff[d].append(w)
+        for d in by_diff:
+            rng.shuffle(by_diff[d])
+
+        # ── Difficulty curve ──────────────────────────────────────────────
+        def curve_ratio(frac, pref):
+            if pref == 'easy_start':
+                b = 0.50 - 0.30 * frac
+                a = 0.10 + 0.30 * frac
+            elif pref == 'challenging':
+                b = 0.35 - 0.25 * frac
+                a = 0.25 + 0.35 * frac
+            else:
+                b = 0.35 - 0.10 * frac
+                a = 0.25 + 0.15 * frac
+            b = max(0.0, b)
+            a = max(0.0, a)
+            i = max(0.0, 1.0 - b - a)
+            return b, i, a
+
+        # ── Build day assignments ───────────────────────────────────────
+        used_words = set()
+        day_assignments = []
+
+        for day_num in range(1, actual_days + 1):
+            frac = (day_num - 1) / max(1, actual_days - 1)
+            is_review = (day_num % 4 == 0 and day_num < actual_days)
+
+            if is_review:
+                pool = list(used_words)
+                rng.shuffle(pool)
+                chunk = pool[:actual_per_day]
+                if len(chunk) < actual_per_day:
+                    needed = actual_per_day - len(chunk)
+                    for w in by_diff.get('intermediate', []):
+                        if needed <= 0:
+                            break
+                        if w['word'] not in used_words:
+                            chunk.append(w['word'])
+                            used_words.add(w['word'])
+                            needed -= 1
+                xp = 15 + len(chunk) * 3
+                day_assignments.append((day_num, chunk, True, xp))
+            else:
+                b_r, i_r, a_r = curve_ratio(frac, difficulty_pref)
+                target = actual_per_day
+                b_cnt = round(target * b_r)
+                a_cnt = round(target * a_r)
+                i_cnt = target - b_cnt - a_cnt
+
+                chunk = []
+                for _ in range(b_cnt):
+                    while by_diff['basic']:
+                        w = by_diff['basic'].pop(0)
+                        if w['word'] not in used_words:
+                            chunk.append(w['word'])
+                            used_words.add(w['word'])
+                            break
+                for _ in range(i_cnt):
+                    while by_diff['intermediate']:
+                        w = by_diff['intermediate'].pop(0)
+                        if w['word'] not in used_words:
+                            chunk.append(w['word'])
+                            used_words.add(w['word'])
+                            break
+                for _ in range(a_cnt):
+                    while by_diff['advanced']:
+                        w = by_diff['advanced'].pop(0)
+                        if w['word'] not in used_words:
+                            chunk.append(w['word'])
+                            used_words.add(w['word'])
+                            break
+
+                # Fill gaps from remaining
+                if len(chunk) < target:
+                    remaining = [w for w in selected if w['word'] not in used_words]
+                    rng.shuffle(remaining)
+                    for w in remaining:
+                        if len(chunk) >= target:
+                            break
+                        chunk.append(w['word'])
+                        used_words.add(w['word'])
+
+                if len(chunk) < target and day_num == actual_days:
+                    filler = [w for w in [x['word'] for x in selected] if w not in chunk]
+                    chunk.extend(filler[:target - len(chunk)])
+
+                xp = 10 + len(chunk) * 2
+                day_assignments.append((day_num, chunk, False, xp))
+
+        # ── Insert plan + days ───────────────────────────────────────────
         cursor.execute(
             """
             INSERT INTO study_plans
@@ -816,23 +964,28 @@ def create_study_plan():
         plan_row = cursor.fetchone()
         plan_id = plan_row['id']
 
-        idx = 0
-        for day_number in range(1, actual_days + 1):
-            chunk = selected[idx:idx + actual_per_day]
-            idx += actual_per_day
-            if day_number == actual_days and idx < len(selected):
-                chunk = chunk + selected[idx:]
+        for day_num, chunk, _is_rev, xp in day_assignments:
             cursor.execute(
                 """
                 INSERT INTO study_plan_days (plan_id, day_number, words, status)
                 VALUES (%s, %s, %s, 'not_attempted')
                 """,
-                (plan_id, day_number, extras.Json(chunk)),
+                (plan_id, day_num, extras.Json(chunk)),
             )
 
         conn.commit()
         serialized = load_serialized_plan(cursor, plan_id)
         cursor.close()
+
+        # ── Gamification metadata ────────────────────────────────────────
+        total_xp = sum(xp for _, _, _, xp in day_assignments)
+        serialized['total_xp'] = total_xp
+        serialized['difficulty_pref'] = difficulty_pref
+        serialized['daily_commitment'] = daily_commitment
+        day_xp = {dn: xp for dn, _, _, xp in day_assignments}
+        for day in serialized.get('days', []):
+            day['xp_value'] = day_xp.get(day['day_number'], 10)
+
         return jsonify(serialized), 201
     except Exception as e:
         import traceback

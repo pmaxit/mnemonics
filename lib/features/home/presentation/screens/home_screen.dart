@@ -11,6 +11,7 @@ import '../../providers.dart';
 import 'dart:math';
 import '../../../profile/providers/user_info_provider.dart';
 import '../../../profile/domain/user_info.dart';
+import '../../domain/word_recommendation.dart';
 import '../widgets/knowledge_tree_widget.dart';
 import '../../../profile/providers/profile_statistics_provider.dart';
 import '../../infrastructure/user_word_data_repository.dart';
@@ -79,6 +80,220 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         height: TabScreenLayout.leadingSize,
         fit: BoxFit.cover,
       ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // "My Words" — level-aware recommended practice list
+  // ---------------------------------------------------------------------------
+  String _levelLabel(String? vocabularyLevel) {
+    final levels = WordRecommendation.parseLevels(vocabularyLevel);
+    if (levels.length == 1) {
+      switch (levels.first) {
+        case 1:
+          return 'Beginner';
+        case 2:
+          return 'Intermediate';
+        default:
+          return 'Advanced';
+      }
+    }
+    return 'Levels ${levels.join(', ')}';
+  }
+
+  Widget _buildMyWordsSection(bool isDarkMode) {
+    final settings = ref.watch(userSettingsProvider);
+    if (settings == null || !settings.showMyWords) {
+      return const SizedBox.shrink();
+    }
+
+    final recommendedAsync = ref.watch(recommendedWordsProvider);
+    final profile = ref.watch(userProfileProvider).value;
+
+    return recommendedAsync.when(
+      loading: () => Container(
+        margin: const EdgeInsets.only(bottom: TabScreenLayout.afterHeaderGap),
+        padding: const EdgeInsets.all(MnemonicsSpacing.l),
+        decoration: BoxDecoration(
+          color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+          borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+          boxShadow: isDarkMode
+              ? MnemonicsColors.darkCardShadow
+              : MnemonicsColors.cardShadow,
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(
+              color: MnemonicsColors.primaryGreen),
+        ),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (words) {
+        if (words.isEmpty) return const SizedBox.shrink();
+
+        final accent = const Color(0xFF7E57C2);
+        final preview = words.take(3).toList();
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: TabScreenLayout.afterHeaderGap),
+          decoration: BoxDecoration(
+            color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
+            borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+            boxShadow: isDarkMode
+                ? MnemonicsColors.darkCardShadow
+                : MnemonicsColors.cardShadow,
+            border: isDarkMode
+                ? Border.all(
+                    color: MnemonicsColors.darkBorder.withOpacity(0.3),
+                    width: 1)
+                : null,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                GoRouter.of(context).push('/flashcards', extra: {
+                  'words': words,
+                  'initialIndex': 0,
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(MnemonicsSpacing.l),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(MnemonicsSpacing.s),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [accent, accent.withOpacity(0.7)],
+                            ),
+                            borderRadius: BorderRadius.circular(
+                                MnemonicsSpacing.radiusL),
+                          ),
+                          child: const Icon(Icons.school_rounded,
+                              color: Colors.white, size: 22),
+                        ),
+                        const SizedBox(width: MnemonicsSpacing.m),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'My Words',
+                                style: MnemonicsTypography.headingMedium
+                                    .copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: isDarkMode
+                                      ? MnemonicsColors.darkTextPrimary
+                                      : MnemonicsColors.textPrimary,
+                                ),
+                              ),
+                              Text(
+                                'Personalized for you • ${_levelLabel(profile?.vocabularyLevel)}',
+                                style:
+                                    MnemonicsTypography.bodyRegular.copyWith(
+                                  color: isDarkMode
+                                      ? MnemonicsColors.darkTextSecondary
+                                      : MnemonicsColors.textSecondary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: accent.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(
+                                MnemonicsSpacing.radiusM),
+                          ),
+                          child: Text(
+                            '${words.length} words',
+                            style: MnemonicsTypography.bodyRegular.copyWith(
+                              color: accent,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: MnemonicsSpacing.m),
+                    Wrap(
+                      spacing: MnemonicsSpacing.s,
+                      runSpacing: MnemonicsSpacing.s,
+                      children: [
+                        ...preview.map((w) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: isDarkMode
+                                    ? Colors.white.withOpacity(0.06)
+                                    : MnemonicsColors.surface,
+                                borderRadius: BorderRadius.circular(
+                                    MnemonicsSpacing.radiusM),
+                              ),
+                              child: Text(
+                                w.word,
+                                style: MnemonicsTypography.bodyRegular
+                                    .copyWith(
+                                  color: isDarkMode
+                                      ? MnemonicsColors.darkTextPrimary
+                                      : MnemonicsColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            )),
+                        if (words.length > preview.length)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: accent.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(
+                                  MnemonicsSpacing.radiusM),
+                            ),
+                            child: Text(
+                              '+${words.length - preview.length} more',
+                              style: MnemonicsTypography.bodyRegular.copyWith(
+                                color: accent,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: MnemonicsSpacing.m),
+                    Row(
+                      children: [
+                        Icon(Icons.play_circle_filled_rounded,
+                            color: accent, size: 20),
+                        const SizedBox(width: MnemonicsSpacing.xs),
+                        Text(
+                          'Start practicing your level',
+                          style: MnemonicsTypography.bodyRegular.copyWith(
+                            color: accent,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -279,6 +494,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       children: [
         _buildAnimatedHeader(isDarkMode),
         const SizedBox(height: TabScreenLayout.afterHeaderGap),
+        _buildMyWordsSection(isDarkMode),
         wordSetsAsync.when(
           loading: () => const SizedBox(
               height: 200, child: Center(child: CircularProgressIndicator())),

@@ -593,92 +593,116 @@ class _StudyPlanSection extends ConsumerWidget {
     final total = days.length;
     final progress = total == 0 ? 0.0 : done / total;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(MnemonicsSpacing.l),
-      decoration: _cardDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: MnemonicsColors.primaryGreen.withOpacity(0.12),
-              borderRadius:
-                  BorderRadius.circular(MnemonicsSpacing.radiusM),
+    return GestureDetector(
+      onTap: () => context.push('/study-plan/calendar'),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(MnemonicsSpacing.l),
+        decoration: _cardDecoration(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: MnemonicsColors.primaryGreen.withOpacity(0.12),
+                borderRadius:
+                    BorderRadius.circular(MnemonicsSpacing.radiusM),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.calendar_month,
+                          color: MnemonicsColors.primaryGreen, size: 14),
+                      const SizedBox(width: 4),
+                      Text('Active Plan',
+                          style: MnemonicsTypography.bodyRegular.copyWith(
+                            color: MnemonicsColors.primaryGreen,
+                            fontWeight: FontWeight.w600,
+                          )),
+                    ],
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete_outline_rounded, 
+                      color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                      size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => _confirmDelete(context, ref, plan),
+                  ),
+                ],
+              ),
             ),
-            child: Row(
+            const SizedBox(height: MnemonicsSpacing.s),
+            Text(
+              plan.title,
+              style: MnemonicsTypography.bodyLarge.copyWith(
+                  fontWeight: FontWeight.w700, fontSize: 17),
+            ),
+            const SizedBox(height: MnemonicsSpacing.s),
+            Row(
+              children: [
+                _chip('$done done', MnemonicsColors.primaryGreen),
+                const SizedBox(width: MnemonicsSpacing.s),
+                _chip('$inProgress in progress',
+                    MnemonicsColors.secondaryOrange),
+                const SizedBox(width: MnemonicsSpacing.s),
+                _chip('${total - done} left',
+                    MnemonicsColors.textSecondary),
+              ],
+            ),
+            const SizedBox(height: MnemonicsSpacing.m),
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.calendar_month,
-                        color: MnemonicsColors.primaryGreen, size: 14),
-                    const SizedBox(width: 4),
-                    Text('Active Plan',
-                        style: MnemonicsTypography.bodyRegular.copyWith(
-                          color: MnemonicsColors.primaryGreen,
-                          fontWeight: FontWeight.w600,
-                        )),
-                  ],
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete_outline_rounded, 
-                    color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
-                    size: 20),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: () => _confirmDelete(context, ref, plan),
+                Text('Progress',
+                    style: MnemonicsTypography.bodyRegular
+                        .copyWith(fontWeight: FontWeight.w500)),
+                Text('${(progress * 100).round()}%',
+                    style: MnemonicsTypography.bodyRegular.copyWith(
+                        color: MnemonicsColors.primaryGreen,
+                        fontWeight: FontWeight.w700)),
+              ],
+            ),
+            const SizedBox(height: MnemonicsSpacing.s),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 8,
+                backgroundColor:
+                    MnemonicsColors.primaryGreen.withOpacity(0.12),
+                valueColor: const AlwaysStoppedAnimation(
+                    MnemonicsColors.primaryGreen),
+              ),
+            ),
+            const SizedBox(height: MnemonicsSpacing.m),
+            // Tap-to-open hint
+            Row(
+              children: [
+                Icon(Icons.touch_app_rounded,
+                    size: 14,
+                    color: isDarkMode
+                        ? MnemonicsColors.darkTextSecondary
+                        : MnemonicsColors.textSecondary),
+                const SizedBox(width: 4),
+                Text(
+                  'Tap to open calendar & start practising',
+                  style: MnemonicsTypography.bodyRegular.copyWith(
+                    color: isDarkMode
+                        ? MnemonicsColors.darkTextSecondary
+                        : MnemonicsColors.textSecondary,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: MnemonicsSpacing.s),
-          Text(
-            plan.title ?? '${plan.totalWords}-Word ${plan.numDays}-Day Plan',
-            style: MnemonicsTypography.bodyLarge.copyWith(
-                fontWeight: FontWeight.w700, fontSize: 17),
-          ),
-          const SizedBox(height: MnemonicsSpacing.s),
-          Row(
-            children: [
-              _chip('$done done', MnemonicsColors.primaryGreen),
-              const SizedBox(width: MnemonicsSpacing.s),
-              _chip('$inProgress in progress',
-                  MnemonicsColors.secondaryOrange),
-              const SizedBox(width: MnemonicsSpacing.s),
-              _chip('${total - done} left',
-                  MnemonicsColors.textSecondary),
-            ],
-          ),
-          const SizedBox(height: MnemonicsSpacing.m),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Progress',
-                  style: MnemonicsTypography.bodyRegular
-                      .copyWith(fontWeight: FontWeight.w500)),
-              Text('${(progress * 100).round()}%',
-                  style: MnemonicsTypography.bodyRegular.copyWith(
-                      color: MnemonicsColors.primaryGreen,
-                      fontWeight: FontWeight.w700)),
-            ],
-          ),
-          const SizedBox(height: MnemonicsSpacing.s),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor:
-                  MnemonicsColors.primaryGreen.withOpacity(0.12),
-              valueColor: const AlwaysStoppedAnimation(
-                  MnemonicsColors.primaryGreen),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

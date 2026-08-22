@@ -20,6 +20,13 @@ class StudyDayDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final vocabAsync = ref.watch(vocabularyListProvider);
     final dayStatusState = ref.watch(dayStatusNotifierProvider);
+    final learnedWords = ref
+        .watch(allUserWordDataProvider)
+        .asData
+        ?.value
+        .where((d) => d.isLearned)
+        .map((d) => d.word)
+        .toSet() ?? <String>{};
     final themeMode = ref.watch(themeNotifierProvider);
     final isDarkMode = themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system &&
@@ -48,7 +55,7 @@ class StudyDayDetailScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Day ${day.dayNumber}',
+              day.isReviewDay ? 'Review Day ${day.dayNumber}' : 'Day ${day.dayNumber}',
               style: MnemonicsTypography.headingMedium.copyWith(
                 color: isDarkMode
                     ? MnemonicsColors.darkTextPrimary
@@ -61,17 +68,46 @@ class StudyDayDetailScreen extends ConsumerWidget {
               Text(
                 DateFormat('EEEE, MMMM d').format(date!),
                 style: MnemonicsTypography.bodyRegular.copyWith(
-                  color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                  color: isDarkMode
+                      ? MnemonicsColors.darkTextSecondary
+                      : MnemonicsColors.textSecondary,
                   fontSize: 12,
                 ),
               ),
           ],
         ),
         actions: [
+          // XP badge
           Container(
             margin: const EdgeInsets.only(right: MnemonicsSpacing.m),
-            padding: const EdgeInsets.symmetric(
-                horizontal: MnemonicsSpacing.m, vertical: MnemonicsSpacing.xs),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: MnemonicsColors.primaryGreen.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.stars_rounded,
+                    color: MnemonicsColors.primaryGreen, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  '+${day.xpValue} XP',
+                  style: MnemonicsTypography.bodyRegular.copyWith(
+                    color: MnemonicsColors.primaryGreen,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Status badge
+          Container(
+            margin: const EdgeInsets.only(right: MnemonicsSpacing.s),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: _statusColor(day.status).withOpacity(0.12),
               borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
@@ -119,13 +155,23 @@ class StudyDayDetailScreen extends ConsumerWidget {
           final wordSet = day.words.toSet();
           final dayWords =
               allWords.where((w) => wordSet.contains(w.word)).toList();
+          final dayDone = day.status == DayStatus.done;
+          final learnedCount = dayWords
+              .where((w) =>
+                  dayDone || learnedWords.contains(w.word))
+              .length;
 
           return Column(
             children: [
-              // Stat bar
+              // Stat bar with word count, XP, and review status
               Padding(
                 padding: const EdgeInsets.all(MnemonicsSpacing.m),
-                child: _StatBar(day: day, wordCount: dayWords.length, isDarkMode: isDarkMode),
+                child: _StatBar(
+                  day: day,
+                  wordCount: dayWords.length,
+                  learnedCount: learnedCount,
+                  isDarkMode: isDarkMode,
+                ),
               ),
 
               // Word list
@@ -145,6 +191,8 @@ class StudyDayDetailScreen extends ConsumerWidget {
                           word: dayWords[index],
                           index: index,
                           isDarkMode: isDarkMode,
+                          isLearned: dayDone ||
+                              learnedWords.contains(dayWords[index].word),
                         ),
                       ),
               ),
@@ -153,8 +201,15 @@ class StudyDayDetailScreen extends ConsumerWidget {
         },
       ),
       bottomNavigationBar: day.status != DayStatus.done
-          ? _MarkDoneBar(dayNumber: day.dayNumber, state: dayStatusState, isDarkMode: isDarkMode)
-          : null,
+          ? _MarkDoneBar(
+              dayNumber: day.dayNumber,
+              state: dayStatusState,
+              isDarkMode: isDarkMode,
+              wordCount: day.words.length,
+              xpValue: day.xpValue,
+              dayWords: day.words,
+            )
+          : _CompletedBar(isDarkMode: isDarkMode, xpValue: day.xpValue),
     );
   }
 
@@ -202,12 +257,21 @@ class StudyDayDetailScreen extends ConsumerWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Stat Bar — shows word count, XP, and review day badge
+// ---------------------------------------------------------------------------
 class _StatBar extends StatelessWidget {
   final StudyPlanDay day;
   final int wordCount;
+  final int learnedCount;
   final bool isDarkMode;
 
-  const _StatBar({required this.day, required this.wordCount, required this.isDarkMode});
+  const _StatBar({
+    required this.day,
+    required this.wordCount,
+    required this.learnedCount,
+    required this.isDarkMode,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -230,11 +294,14 @@ class _StatBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _statItem('$wordCount', 'Words today'),
+          _statItem('$learnedCount/$wordCount', 'Learned'),
           _divider(),
-          _statItem(day.startedAt != null ? '✓' : '—', 'Started'),
+          _statItem('+${day.xpValue}', 'XP'),
           _divider(),
-          _statItem(day.doneAt != null ? '✓' : '—', 'Completed'),
+          _statItem(
+            day.isReviewDay ? '🔄' : '📖',
+            day.isReviewDay ? 'Review' : 'New',
+          ),
         ],
       ),
     );
@@ -276,16 +343,25 @@ class _StatBar extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Word Card — tappable to view flashcard detail
+// ---------------------------------------------------------------------------
 class _WordCard extends StatelessWidget {
   final VocabularyWord word;
   final int index;
   final bool isDarkMode;
+  final bool isLearned;
 
-  const _WordCard({required this.word, required this.index, required this.isDarkMode});
+  const _WordCard({
+    required this.word,
+    required this.index,
+    required this.isDarkMode,
+    this.isLearned = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final accent = _difficultyColor(word.difficulty);
+    final accent = isLearned ? MnemonicsColors.primaryGreen : _difficultyColor(word.difficulty);
 
     return GestureDetector(
       onTap: () => context.push('/flashcards', extra: {
@@ -316,14 +392,20 @@ class _WordCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusM),
               ),
               alignment: Alignment.center,
-              child: Text(
-                '${index + 1}',
-                style: MnemonicsTypography.bodyRegular.copyWith(
-                  color: accent,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
-                ),
-              ),
+              child: isLearned
+                  ? const Icon(
+                      Icons.check_circle_rounded,
+                      color: MnemonicsColors.primaryGreen,
+                      size: 20,
+                    )
+                  : Text(
+                      '${index + 1}',
+                      style: MnemonicsTypography.bodyRegular.copyWith(
+                        color: accent,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
             ),
             const SizedBox(width: MnemonicsSpacing.m),
             Expanded(
@@ -346,7 +428,9 @@ class _WordCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: MnemonicsTypography.bodyRegular.copyWith(
-                      color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                      color: isDarkMode
+                          ? MnemonicsColors.darkTextSecondary
+                          : MnemonicsColors.textSecondary,
                       fontSize: 13,
                       height: 1.4,
                     ),
@@ -356,14 +440,14 @@ class _WordCard extends StatelessWidget {
             ),
             const SizedBox(width: MnemonicsSpacing.s),
             Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 8, vertical: 4),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: accent.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusS),
               ),
               child: Text(
-                word.difficulty.name.toUpperCase(),
+                isLearned ? 'LEARNED' : word.difficulty.name.toUpperCase(),
                 style: MnemonicsTypography.bodyRegular.copyWith(
                   color: accent,
                   fontSize: 10,
@@ -398,12 +482,25 @@ class _WordCard extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Mark Done Bar — with practice button and XP reward display
+// ---------------------------------------------------------------------------
 class _MarkDoneBar extends ConsumerWidget {
   final int dayNumber;
   final AsyncValue<void> state;
   final bool isDarkMode;
+  final int wordCount;
+  final int xpValue;
+  final List<String> dayWords;
 
-  const _MarkDoneBar({required this.dayNumber, required this.state, required this.isDarkMode});
+  const _MarkDoneBar({
+    required this.dayNumber,
+    required this.state,
+    required this.isDarkMode,
+    required this.wordCount,
+    required this.xpValue,
+    required this.dayWords,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -416,52 +513,186 @@ class _MarkDoneBar extends ConsumerWidget {
       ),
       decoration: BoxDecoration(
         color: isDarkMode ? MnemonicsColors.darkBackground : Colors.white,
-        border: Border(top: BorderSide(color: isDarkMode ? MnemonicsColors.darkBorder.withOpacity(0.3) : MnemonicsColors.surface)),
+        border: Border(
+          top: BorderSide(
+            color: isDarkMode
+                ? MnemonicsColors.darkBorder.withOpacity(0.3)
+                : MnemonicsColors.surface,
+          ),
+        ),
       ),
-      child: SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: MnemonicsColors.primaryGreen,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Practice button
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(
+                    color: MnemonicsColors.primaryGreen.withOpacity(0.5)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
+                ),
+              ),
+              onPressed: () {
+                // Pass the day's words to the flashcards screen
+                final vocabAsync = ref.read(vocabularyListProvider);
+                final allWords = vocabAsync.asData?.value ?? [];
+                final wordSet = dayWords.toSet();
+                final matchedWords =
+                    allWords.where((w) => wordSet.contains(w.word)).toList();
+                if (matchedWords.isNotEmpty) {
+                  context.push('/flashcards', extra: {
+                    'words': matchedWords,
+                    'initialIndex': 0,
+                  });
+                } else {
+                  // Fallback to timer screen
+                  context.go('/main/timer');
+                }
+              },
+              icon: const Icon(Icons.play_arrow_rounded,
+                  color: MnemonicsColors.primaryGreen),
+              label: Text(
+                'Practice $wordCount Words',
+                style: TextStyle(
+                  color: MnemonicsColors.primaryGreen,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
-          onPressed: state is AsyncLoading
-              ? null
-              : () async {
-                  await ref
-                      .read(dayStatusNotifierProvider.notifier)
-                      .markDone(dayNumber);
-                  if (context.mounted) context.pop();
-                },
-          child: state is AsyncLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
-              : const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.check_circle_rounded, size: 20),
-                    SizedBox(width: 10),
-                    Text(
-                      'Mark Day Complete',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
+          const SizedBox(height: MnemonicsSpacing.s),
+          // Mark complete button
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: MnemonicsColors.primaryGreen,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
                 ),
+              ),
+              onPressed: state is AsyncLoading
+                  ? null
+                  : () async {
+                      await ref
+                          .read(dayStatusNotifierProvider.notifier)
+                          .markDone(dayNumber);
+                      if (context.mounted) {
+                        // Show XP celebration
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(Icons.stars_rounded,
+                                    color: Colors.white, size: 20),
+                                const SizedBox(width: 10),
+                                Text(
+                                  'Day $dayNumber complete! +$xpValue XP earned! 🎉',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: MnemonicsColors.primaryGreen,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                        context.pop();
+                      }
+                    },
+              icon: state is AsyncLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Icon(Icons.check_circle_rounded, size: 20),
+              label: Text(
+                state is AsyncLoading
+                    ? 'Saving...'
+                    : 'Mark Complete (+$xpValue XP)',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Completed Bar — shows celebration when day is done
+// ---------------------------------------------------------------------------
+class _CompletedBar extends StatelessWidget {
+  final bool isDarkMode;
+  final int xpValue;
+
+  const _CompletedBar({required this.isDarkMode, required this.xpValue});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        MnemonicsSpacing.m,
+        MnemonicsSpacing.m,
+        MnemonicsSpacing.m,
+        MnemonicsSpacing.l,
+      ),
+      decoration: BoxDecoration(
+        color: isDarkMode ? MnemonicsColors.darkBackground : Colors.white,
+        border: Border(
+          top: BorderSide(
+            color: isDarkMode
+                ? MnemonicsColors.darkBorder.withOpacity(0.3)
+                : MnemonicsColors.surface,
+          ),
         ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: MnemonicsColors.primaryGreen.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.celebration_rounded,
+                    color: MnemonicsColors.primaryGreen, size: 20),
+                const SizedBox(width: 10),
+                Text(
+                  'Completed! +$xpValue XP earned 🎉',
+                  style: MnemonicsTypography.bodyLarge.copyWith(
+                    color: MnemonicsColors.primaryGreen,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

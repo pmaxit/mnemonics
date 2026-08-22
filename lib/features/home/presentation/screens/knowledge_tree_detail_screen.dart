@@ -8,6 +8,7 @@ import '../../../home/providers.dart';
 import '../../../home/domain/vocabulary_word.dart';
 import '../../../profile/domain/user_statistics.dart' as stats;
 import '../../../../common/widgets/animated_wave_background.dart';
+import '../widgets/knowledge_tree_widget.dart';
 
 class KnowledgeTreeDetailScreen extends ConsumerStatefulWidget {
   const KnowledgeTreeDetailScreen({super.key});
@@ -174,32 +175,21 @@ class _KnowledgeTreeDetailScreenState
     final health =
         profStats != null ? _calculateHealth(profStats.lastStudyDate) : 1.0;
 
-    // Group learned words by category
+    // Group learned words by their common meaning (vocabulary category) —
+    // each meaning group becomes one branch of the tree.
     final learnedWordsData = userData
         .where((d) => d.hasBeenTested || d.isLearned || d.reviewCount > 0)
         .toList();
+    final wordToCategory = {for (final v in vocab) v.word: v.category};
+    final branches = buildTreeBranches(
+      learnedWords: learnedWordsData.map((d) => d.word).toList(),
+      wordToCategory: wordToCategory,
+    );
+    // Words per branch, for labelling the canopy.
     final Map<String, List<String>> categoryToWords = {};
-
     for (var uwd in learnedWordsData) {
-      final vWord = vocab.firstWhere(
-        (v) => v.word == uwd.word,
-        orElse: () => VocabularyWord(
-          word: uwd.word,
-          meaning: '',
-          mnemonic: '',
-          example: '',
-          synonyms: [],
-          antonyms: [],
-          category: 'General',
-          difficulty: stats.WordDifficulty.intermediate,
-        ),
-      );
-
-      final cat = vWord.category;
-      if (!categoryToWords.containsKey(cat)) {
-        categoryToWords[cat] = [];
-      }
-      categoryToWords[cat]!.add(vWord.word);
+      final cat = wordToCategory[uwd.word] ?? 'General';
+      categoryToWords.putIfAbsent(cat, () => []).add(uwd.word);
     }
 
     return Scaffold(
@@ -246,12 +236,58 @@ class _KnowledgeTreeDetailScreenState
               child: CustomPaint(
                 painter: SemanticTreePainter(
                   categoryToWords: categoryToWords,
+                  branches: branches,
                   health: health,
                   seed: 42,
                 ),
               ),
             ),
           ),
+          // Branch legend — one chip per meaning group with its word count
+          if (branches.isNotEmpty)
+            Positioned(
+              left: MnemonicsSpacing.m,
+              right: MnemonicsSpacing.m,
+              bottom: MnemonicsSpacing.xl,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(MnemonicsSpacing.m),
+                  decoration: BoxDecoration(
+                    color: MnemonicsColors.surface.withOpacity(0.92),
+                    borderRadius:
+                        BorderRadius.circular(MnemonicsSpacing.radiusXL),
+                    boxShadow: MnemonicsColors.cardShadow,
+                  ),
+                  child: Wrap(
+                    spacing: MnemonicsSpacing.s,
+                    runSpacing: MnemonicsSpacing.xs,
+                    alignment: WrapAlignment.center,
+                    children: branches
+                        .map((b) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: b.color.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(
+                                    MnemonicsSpacing.radiusM),
+                                border:
+                                    Border.all(color: b.color.withOpacity(0.4)),
+                              ),
+                              child: Text(
+                                '${b.category} • ${b.wordCount}',
+                                style: MnemonicsTypography.bodyRegular
+                                    .copyWith(
+                                  color: b.color,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -268,11 +304,13 @@ class _KnowledgeTreeDetailScreenState
 
 class SemanticTreePainter extends CustomPainter {
   final Map<String, List<String>> categoryToWords;
+  final List<TreeBranchSpec> branches;
   final double health;
   final int seed;
 
   SemanticTreePainter({
     required this.categoryToWords,
+    required this.branches,
     required this.health,
     required this.seed,
   });
@@ -304,8 +342,9 @@ class SemanticTreePainter extends CustomPainter {
     final rootX = size.width / 2;
     final rootY = size.height - 400; // Leave space at bottom
 
-    // Draw main trunk
-    final trunkLength = 300.0;
+    // Draw main trunk — grows taller with the number of meaning groups.
+    final trunkLength =
+        300.0 + min(categoryToWords.length, 6) * 40.0;
     final trunkEndX = rootX;
     final trunkEndY = rootY - trunkLength;
 
@@ -314,48 +353,51 @@ class SemanticTreePainter extends CustomPainter {
         Offset(rootX, rootY), Offset(trunkEndX, trunkEndY), trunkPaint);
 
     // If no words yet
-    if (categoryToWords.isEmpty) {
+    if (branches.isEmpty) {
       return;
     }
 
-    final categories = categoryToWords.keys.toList();
-    final int numCategories = categories.length;
+    // Branch order & sizes come from the meaning-based specs (biggest first),
+    // so the strongest meanings anchor the widest part of the canopy.
+    final maxWords = branches
+        .map((b) => b.wordCount)
+        .fold<int>(1, (a, b) => max<int>(a, b));
 
-    // Spread categories roughly between -pi/2 to pi/2, with root spreading upwards
+    final int numBranches = branches.length;
     final angleSpread = pi * 0.7; // 126 degrees total spread
     final startAngle = -angleSpread / 2;
 
-    for (int i = 0; i < numCategories; i++) {
-      final category = categories[i];
-      final words = categoryToWords[category]!;
+    for (int i = 0; i < numBranches; i++) {
+      final branch = branches[i];
+      final words = categoryToWords[branch.category] ?? [];
 
       // Angle for this primary branch
       double branchAngle = 0;
-      if (numCategories > 1) {
-        branchAngle = startAngle + (i * (angleSpread / (numCategories - 1)));
+      if (numBranches > 1) {
+        branchAngle = startAngle + (i * (angleSpread / (numBranches - 1)));
       }
 
       branchAngle += (random.nextDouble() * 0.2 - 0.1);
 
-      // Primary branch length
-      // Longer if it has more words, but capped
-      final branchLength =
-          250.0 + min(words.length * 20.0, 300.0) + random.nextDouble() * 50;
-
+      // Primary branch length & width scale with the meaning group's depth:
+      // more learned words with this common meaning → a stronger branch.
+      final growth = 0.45 + 0.55 * (branch.wordCount / maxWords);
+      final branchLength = (250.0 + min(words.length * 20.0, 300.0)) * growth +
+          random.nextDouble() * 50;
       final branchEndX = trunkEndX + branchLength * sin(branchAngle);
       final branchEndY = trunkEndY - branchLength * cos(branchAngle);
 
-      trunkPaint.strokeWidth = 20.0;
+      trunkPaint.strokeWidth = 12.0 + min(branch.wordCount * 1.2, 14.0);
 
       // Draw primary branch
       _drawCurvedBranch(canvas, Offset(trunkEndX, trunkEndY),
           Offset(branchEndX, branchEndY), trunkPaint);
 
-      // Draw Category Label
-      _drawTextLeaf(canvas, category, branchEndX, branchEndY,
-          isCategory: true, leafColor: leafColor);
+      // Draw Category Label (the common meaning of this branch)
+      _drawTextLeaf(canvas, branch.category, branchEndX, branchEndY,
+          isCategory: true, leafColor: leafColor, accent: branch.color);
 
-      // Now draw sub-branches for words
+      // Sub-branches: one per learned word in this meaning group.
       final numWords = words.length;
       final wordAngleSpread = pi * 0.8;
       double wordStartAngle = branchAngle - wordAngleSpread / 2;
@@ -382,7 +424,7 @@ class SemanticTreePainter extends CustomPainter {
 
         // Draw Word Leaf
         _drawTextLeaf(canvas, word, subEndX, subEndY,
-            isCategory: false, leafColor: leafColor);
+            isCategory: false, leafColor: leafColor, accent: branch.color);
       }
     }
   }
@@ -401,7 +443,9 @@ class SemanticTreePainter extends CustomPainter {
   }
 
   void _drawTextLeaf(Canvas canvas, String text, double x, double y,
-      {required bool isCategory, required Color leafColor}) {
+      {required bool isCategory,
+      required Color leafColor,
+      required Color accent}) {
     final textStyle = isCategory
         ? const TextStyle(
             color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)
@@ -423,7 +467,7 @@ class SemanticTreePainter extends CustomPainter {
         RRect.fromRectAndRadius(leafRect, Radius.circular(height / 2));
 
     final bgPaint = Paint()
-      ..color = isCategory ? const Color(0xFF2C3E50) : leafColor
+      ..color = isCategory ? const Color(0xFF2C3E50) : accent
       ..style = PaintingStyle.fill;
 
     // Shadow
@@ -441,6 +485,8 @@ class SemanticTreePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant SemanticTreePainter oldDelegate) {
-    return true; // Always repaint for simplicity when stats change
+    return oldDelegate.categoryToWords != categoryToWords ||
+        oldDelegate.branches != branches ||
+        oldDelegate.health != health;
   }
 }

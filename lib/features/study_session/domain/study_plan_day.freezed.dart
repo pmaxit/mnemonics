@@ -28,13 +28,11 @@ mixin _$StudyPlanDay {
   DateTime? get startedAt => throw _privateConstructorUsedError;
   @JsonKey(name: 'done_at')
   DateTime? get doneAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'xp_value')
+  int get xpValue => throw _privateConstructorUsedError;
 
-  /// Serializes this StudyPlanDay to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of StudyPlanDay
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $StudyPlanDayCopyWith<StudyPlanDay> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -50,7 +48,8 @@ abstract class $StudyPlanDayCopyWith<$Res> {
       List<String> words,
       DayStatus status,
       @JsonKey(name: 'started_at') DateTime? startedAt,
-      @JsonKey(name: 'done_at') DateTime? doneAt});
+      @JsonKey(name: 'done_at') DateTime? doneAt,
+      @JsonKey(name: 'xp_value') int xpValue});
 }
 
 /// @nodoc
@@ -63,8 +62,6 @@ class _$StudyPlanDayCopyWithImpl<$Res, $Val extends StudyPlanDay>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of StudyPlanDay
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -73,6 +70,7 @@ class _$StudyPlanDayCopyWithImpl<$Res, $Val extends StudyPlanDay>
     Object? status = null,
     Object? startedAt = freezed,
     Object? doneAt = freezed,
+    Object? xpValue = null,
   }) {
     return _then(_value.copyWith(
       dayNumber: null == dayNumber
@@ -95,6 +93,10 @@ class _$StudyPlanDayCopyWithImpl<$Res, $Val extends StudyPlanDay>
           ? _value.doneAt
           : doneAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      xpValue: null == xpValue
+          ? _value.xpValue
+          : xpValue // ignore: cast_nullable_to_non_nullable
+              as int,
     ) as $Val);
   }
 }
@@ -112,7 +114,8 @@ abstract class _$$StudyPlanDayImplCopyWith<$Res>
       List<String> words,
       DayStatus status,
       @JsonKey(name: 'started_at') DateTime? startedAt,
-      @JsonKey(name: 'done_at') DateTime? doneAt});
+      @JsonKey(name: 'done_at') DateTime? doneAt,
+      @JsonKey(name: 'xp_value') int xpValue});
 }
 
 /// @nodoc
@@ -123,8 +126,6 @@ class __$$StudyPlanDayImplCopyWithImpl<$Res>
       _$StudyPlanDayImpl _value, $Res Function(_$StudyPlanDayImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of StudyPlanDay
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -133,6 +134,7 @@ class __$$StudyPlanDayImplCopyWithImpl<$Res>
     Object? status = null,
     Object? startedAt = freezed,
     Object? doneAt = freezed,
+    Object? xpValue = null,
   }) {
     return _then(_$StudyPlanDayImpl(
       dayNumber: null == dayNumber
@@ -155,20 +157,26 @@ class __$$StudyPlanDayImplCopyWithImpl<$Res>
           ? _value.doneAt
           : doneAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      xpValue: null == xpValue
+          ? _value.xpValue
+          : xpValue // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$StudyPlanDayImpl implements _StudyPlanDay {
+class _$StudyPlanDayImpl extends _StudyPlanDay {
   const _$StudyPlanDayImpl(
       {@JsonKey(name: 'day_number') required this.dayNumber,
       required final List<String> words,
       this.status = DayStatus.notAttempted,
       @JsonKey(name: 'started_at') this.startedAt,
-      @JsonKey(name: 'done_at') this.doneAt})
-      : _words = words;
+      @JsonKey(name: 'done_at') this.doneAt,
+      @JsonKey(name: 'xp_value') this.xpValue = 10})
+      : _words = words,
+        super._();
 
   factory _$StudyPlanDayImpl.fromJson(Map<String, dynamic> json) =>
       _$$StudyPlanDayImplFromJson(json);
@@ -193,10 +201,13 @@ class _$StudyPlanDayImpl implements _StudyPlanDay {
   @override
   @JsonKey(name: 'done_at')
   final DateTime? doneAt;
+  @override
+  @JsonKey(name: 'xp_value')
+  final int xpValue;
 
   @override
   String toString() {
-    return 'StudyPlanDay(dayNumber: $dayNumber, words: $words, status: $status, startedAt: $startedAt, doneAt: $doneAt)';
+    return 'StudyPlanDay(dayNumber: $dayNumber, words: $words, status: $status, startedAt: $startedAt, doneAt: $doneAt, xpValue: $xpValue)';
   }
 
   @override
@@ -210,17 +221,22 @@ class _$StudyPlanDayImpl implements _StudyPlanDay {
             (identical(other.status, status) || other.status == status) &&
             (identical(other.startedAt, startedAt) ||
                 other.startedAt == startedAt) &&
-            (identical(other.doneAt, doneAt) || other.doneAt == doneAt));
+            (identical(other.doneAt, doneAt) || other.doneAt == doneAt) &&
+            (identical(other.xpValue, xpValue) || other.xpValue == xpValue));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, dayNumber,
-      const DeepCollectionEquality().hash(_words), status, startedAt, doneAt);
+  int get hashCode => Object.hash(
+      runtimeType,
+      dayNumber,
+      const DeepCollectionEquality().hash(_words),
+      status,
+      startedAt,
+      doneAt,
+      xpValue);
 
-  /// Create a copy of StudyPlanDay
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$StudyPlanDayImplCopyWith<_$StudyPlanDayImpl> get copyWith =>
@@ -234,13 +250,15 @@ class _$StudyPlanDayImpl implements _StudyPlanDay {
   }
 }
 
-abstract class _StudyPlanDay implements StudyPlanDay {
+abstract class _StudyPlanDay extends StudyPlanDay {
   const factory _StudyPlanDay(
       {@JsonKey(name: 'day_number') required final int dayNumber,
       required final List<String> words,
       final DayStatus status,
       @JsonKey(name: 'started_at') final DateTime? startedAt,
-      @JsonKey(name: 'done_at') final DateTime? doneAt}) = _$StudyPlanDayImpl;
+      @JsonKey(name: 'done_at') final DateTime? doneAt,
+      @JsonKey(name: 'xp_value') final int xpValue}) = _$StudyPlanDayImpl;
+  const _StudyPlanDay._() : super._();
 
   factory _StudyPlanDay.fromJson(Map<String, dynamic> json) =
       _$StudyPlanDayImpl.fromJson;
@@ -258,11 +276,11 @@ abstract class _StudyPlanDay implements StudyPlanDay {
   @override
   @JsonKey(name: 'done_at')
   DateTime? get doneAt;
-
-  /// Create a copy of StudyPlanDay
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(name: 'xp_value')
+  int get xpValue;
+  @override
+  @JsonKey(ignore: true)
   _$$StudyPlanDayImplCopyWith<_$StudyPlanDayImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

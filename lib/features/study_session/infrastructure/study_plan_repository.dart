@@ -4,13 +4,9 @@ import 'package:http/http.dart' as http;
 import '../domain/study_plan.dart';
 import '../domain/study_plan_day.dart';
 import '../../../core/config/api_config.dart';
-import '../../../core/platform/desktop_compat.dart';
 
 class StudyPlanRepository {
-  String? get _userId {
-    if (desktopAuthBypass) return desktopLocalUserId;
-    return FirebaseAuth.instance.currentUser?.uid;
-  }
+  String? get _userId => FirebaseAuth.instance.currentUser?.uid;
 
   String _shortError(String prefix, http.Response response) {
     final body = response.body.trim();
@@ -23,14 +19,16 @@ class StudyPlanRepository {
     return '$prefix: $clipped';
   }
 
-  // -------------------------------------------------------------------------
-  // Create plan (agentic)
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // Create plan (AI-powered with difficulty curve)
+  // ---------------------------------------------------------------------------
   Future<StudyPlan> createStudyPlan({
     required int totalWords,
     required int numDays,
     required int wordsPerDay,
     String? title,
+    String difficultyPref = 'balanced',
+    String dailyCommitment = 'standard',
   }) async {
     final uid = _userId;
     if (uid == null) throw Exception('User not authenticated');
@@ -44,6 +42,8 @@ class StudyPlanRepository {
         'num_days': numDays,
         'words_per_day': wordsPerDay,
         if (title != null) 'title': title,
+        'difficulty_pref': difficultyPref,
+        'daily_commitment': dailyCommitment,
       }),
     );
 
@@ -55,9 +55,9 @@ class StudyPlanRepository {
     return StudyPlan.fromJson(json);
   }
 
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Get active plan(s)
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   Future<List<StudyPlan>> getActivePlans() async {
     final uid = _userId;
     if (uid == null) return [];
@@ -81,16 +81,15 @@ class StudyPlanRepository {
       try {
         plans.add(StudyPlan.fromJson(item as Map<String, dynamic>));
       } catch (e) {
-        // Log the error and continue to the next plan
         print('Error parsing study plan: $e');
       }
     }
     return plans;
   }
 
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Get a specific day's words
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   Future<StudyPlanDay> getDay(int dayNumber) async {
     final uid = _userId;
     if (uid == null) throw Exception('User not authenticated');
@@ -107,9 +106,9 @@ class StudyPlanRepository {
     return StudyPlanDay.fromJson(json);
   }
 
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Update day status
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   Future<void> updateDayStatus(int dayNumber, DayStatus status) async {
     final uid = _userId;
     if (uid == null) throw Exception('User not authenticated');
@@ -127,9 +126,9 @@ class StudyPlanRepository {
     }
   }
 
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Delete plan
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   Future<void> deletePlan(String planId) async {
     final response = await http.delete(
       Uri.parse('${ApiConfig.baseUrl}/study-plan/$planId'),

@@ -18,6 +18,7 @@ _$StudyPlanDayImpl _$$StudyPlanDayImplFromJson(Map<String, dynamic> json) =>
       doneAt: json['done_at'] == null
           ? null
           : DateTime.parse(json['done_at'] as String),
+      xpValue: (json['xp_value'] as num?)?.toInt() ?? 10,
     );
 
 Map<String, dynamic> _$$StudyPlanDayImplToJson(_$StudyPlanDayImpl instance) =>
@@ -27,6 +28,7 @@ Map<String, dynamic> _$$StudyPlanDayImplToJson(_$StudyPlanDayImpl instance) =>
       'status': _$DayStatusEnumMap[instance.status]!,
       'started_at': instance.startedAt?.toIso8601String(),
       'done_at': instance.doneAt?.toIso8601String(),
+      'xp_value': instance.xpValue,
     };
 
 const _$DayStatusEnumMap = {

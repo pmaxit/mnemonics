@@ -6,7 +6,7 @@ part of 'theme_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$lightThemeHash() => r'a09c6ffd38943ebf03c7d81d0a0507fb50b81397';
+String _$lightThemeHash() => r'6769430a64e2ffadacb3973fb2e3535cb9a46683';
 
 /// See also [lightTheme].
 @ProviderFor(lightTheme)
@@ -19,10 +19,8 @@ final lightThemeProvider = AutoDisposeProvider<ThemeData>.internal(
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef LightThemeRef = AutoDisposeProviderRef<ThemeData>;
-String _$darkThemeHash() => r'1734834b1bc2957cc298f781db341e0f6d344299';
+String _$darkThemeHash() => r'9e4007d6354a503d04cc6325510d1348ce22513f';
 
 /// See also [darkTheme].
 @ProviderFor(darkTheme)
@@ -35,10 +33,8 @@ final darkThemeProvider = AutoDisposeProvider<ThemeData>.internal(
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef DarkThemeRef = AutoDisposeProviderRef<ThemeData>;
-String _$themeNotifierHash() => r'883391504b1204ae992eb5c37f41e2d07e82833c';
+String _$themeNotifierHash() => r'324ecb0f915aa92d9f4083b9300ecd06690aadac';
 
 /// See also [ThemeNotifier].
 @ProviderFor(ThemeNotifier)
@@ -55,4 +51,4 @@ final themeNotifierProvider =
 
 typedef _$ThemeNotifier = AutoDisposeNotifier<ThemeMode>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

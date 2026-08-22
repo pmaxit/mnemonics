@@ -65,6 +65,8 @@ class StudyPlanCreationNotifier extends StateNotifier<StudyPlanCreationState> {
     required int numDays,
     required int wordsPerDay,
     String? title,
+    String difficultyPref = 'balanced',
+    String dailyCommitment = 'standard',
   }) async {
     state = const StudyPlanCreationState(isLoading: true);
     try {
@@ -73,6 +75,8 @@ class StudyPlanCreationNotifier extends StateNotifier<StudyPlanCreationState> {
         numDays: numDays,
         wordsPerDay: wordsPerDay,
         title: title,
+        difficultyPref: difficultyPref,
+        dailyCommitment: dailyCommitment,
       );
       // Invalidate the active plans cache so the calendar refreshes
       _ref.invalidate(activePlansProvider);

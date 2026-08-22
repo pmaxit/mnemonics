@@ -20,8 +20,17 @@ class StudyPlanDay with _$StudyPlanDay {
     @Default(DayStatus.notAttempted) DayStatus status,
     @JsonKey(name: 'started_at') DateTime? startedAt,
     @JsonKey(name: 'done_at') DateTime? doneAt,
+    @JsonKey(name: 'xp_value') @Default(10) int xpValue,
   }) = _StudyPlanDay;
 
   factory StudyPlanDay.fromJson(Map<String, dynamic> json) =>
       _$StudyPlanDayFromJson(json);
+
+  const StudyPlanDay._();
+
+  /// Whether this is a review day (4th, 8th, 12th...)
+  bool get isReviewDay => dayNumber % 4 == 0;
+
+  /// Label for display
+  String get dayLabel => isReviewDay ? 'Review Day $dayNumber' : 'Day $dayNumber';
 }

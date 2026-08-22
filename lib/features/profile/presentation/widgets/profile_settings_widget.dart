@@ -85,6 +85,59 @@ class ProfileSettingsWidget extends ConsumerWidget {
                 textColor: textColor,
                 secondaryTextColor: secondaryTextColor,
               ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: MnemonicsSpacing.m,
+                    vertical: MnemonicsSpacing.xs),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(MnemonicsSpacing.s),
+                      decoration: BoxDecoration(
+                        color: isDarkMode
+                            ? MnemonicsColors.darkBorder
+                            : MnemonicsColors.surface,
+                        borderRadius:
+                            BorderRadius.circular(MnemonicsSpacing.radiusL),
+                      ),
+                      child: const Icon(
+                        Icons.school_rounded,
+                        color: MnemonicsColors.primaryGreen,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: MnemonicsSpacing.m),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'My Words section',
+                            style: MnemonicsTypography.bodyLarge.copyWith(
+                              color: textColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: MnemonicsSpacing.xs),
+                          Text(
+                            'Show a personalized word list for practice on the home screen',
+                            style: MnemonicsTypography.bodyRegular.copyWith(
+                              color: secondaryTextColor,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: userSettings.showMyWords,
+                      activeColor: MnemonicsColors.primaryGreen,
+                      onChanged: (value) =>
+                          onSettingChanged('toggleMyWords', value),
+                    ),
+                  ],
+                ),
+              ),
             ],
             textColor,
           ),

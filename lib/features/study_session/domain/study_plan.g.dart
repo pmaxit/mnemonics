@@ -20,6 +20,9 @@ _$StudyPlanImpl _$$StudyPlanImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => StudyPlanDay.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const <StudyPlanDay>[],
+      totalXp: (json['total_xp'] as num?)?.toInt() ?? 0,
+      difficultyPref: json['difficulty_pref'] as String? ?? 'balanced',
+      dailyCommitment: json['daily_commitment'] as String? ?? 'standard',
     );
 
 Map<String, dynamic> _$$StudyPlanImplToJson(_$StudyPlanImpl instance) =>
@@ -33,4 +36,7 @@ Map<String, dynamic> _$$StudyPlanImplToJson(_$StudyPlanImpl instance) =>
       'start_date': instance.startDate,
       'status': instance.status,
       'days': instance.days,
+      'total_xp': instance.totalXp,
+      'difficulty_pref': instance.difficultyPref,
+      'daily_commitment': instance.dailyCommitment,
     };

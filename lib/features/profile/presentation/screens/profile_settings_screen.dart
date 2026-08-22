@@ -119,6 +119,13 @@ class ProfileSettingsScreen extends ConsumerWidget {
       case 'theme':
         ref.read(themeNotifierProvider.notifier).setThemeMode(value as ThemeMode);
         break;
+      case 'toggleMyWords':
+        final settings = ref.read(userSettingsProvider);
+        if (settings != null) {
+          settings.showMyWords = value as bool;
+          ref.read(userSettingsProvider.notifier).saveSettings(settings);
+        }
+        break;
       case 'resetProgress':
         _handleProgressReset(context, ref);
         break;

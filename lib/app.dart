@@ -205,6 +205,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const StudyPlanWizardScreen(),
       ),
       GoRoute(
+        path: '/study-plan/calendar',
+        builder: (context, state) => const StudyCalendarScreen(),
+      ),
+      GoRoute(
         path: '/study-plan/day/:dayNum',
         builder: (context, state) {
           if (state.extra is StudyPlanDay) {
