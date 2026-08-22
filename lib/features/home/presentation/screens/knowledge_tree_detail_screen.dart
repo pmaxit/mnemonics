@@ -5,8 +5,6 @@ import '../../../../common/design/design_system.dart';
 import '../../../../core/services/ai_service.dart';
 import '../../../profile/providers/profile_statistics_provider.dart';
 import '../../../home/providers.dart';
-import '../../../home/domain/vocabulary_word.dart';
-import '../../../profile/domain/user_statistics.dart' as stats;
 import '../../../../common/widgets/animated_wave_background.dart';
 import '../widgets/knowledge_tree_widget.dart';
 

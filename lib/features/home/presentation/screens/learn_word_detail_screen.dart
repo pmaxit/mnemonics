@@ -371,6 +371,14 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
             color: isDarkMode ? Colors.white : MnemonicsColors.textPrimary,
           ),
         ),
+        actions: [
+          if (widget.words.length > 1)
+            IconButton(
+              tooltip: 'Next word',
+              icon: const Icon(Icons.arrow_forward_ios_rounded, size: 18),
+              onPressed: _goToNextWord,
+            ),
+        ],
       ),
       body: Stack(
         children: [
@@ -1102,6 +1110,18 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
       // Learned words drop out of the queue automatically.
       _advanceToNextUnlearned();
     }
+  }
+
+  /// Moves the pager to the next word in the set (wrapping around).
+  /// Used by the next button in the top bar — always advances one card.
+  void _goToNextWord() {
+    if (widget.words.length <= 1) return;
+    final next = (_currentIndex + 1) % widget.words.length;
+    _pageController.animateToPage(
+      next,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+    );
   }
 
   /// Moves the pager to the next card that is not marked as learned,

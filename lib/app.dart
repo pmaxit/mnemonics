@@ -27,6 +27,7 @@ import 'features/study_session/presentation/screens/study_plan_wizard_screen.dar
 import 'features/study_session/presentation/screens/study_day_detail_screen.dart';
 import 'features/study_session/domain/study_plan_day.dart';
 import 'features/auth/presentation/screens/onboarding_wizard_screen.dart';
+import 'features/home/presentation/screens/my_words_list_screen.dart';
 import 'features/auth/providers/user_profile_provider.dart';
 import 'package:flutter/material.dart';
 
@@ -105,6 +106,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingWizardScreen(),
+      ),
+      GoRoute(
+        path: '/my-words',
+        builder: (context, state) => const MyWordsListScreen(),
       ),
       GoRoute(
         path: '/knowledge-tree',

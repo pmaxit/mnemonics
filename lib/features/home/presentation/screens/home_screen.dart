@@ -153,10 +153,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
               onTap: () {
                 HapticFeedback.lightImpact();
-                GoRouter.of(context).push('/flashcards', extra: {
-                  'words': words,
-                  'initialIndex': 0,
-                });
+                GoRouter.of(context).push('/my-words');
               },
               child: Padding(
                 padding: const EdgeInsets.all(MnemonicsSpacing.l),
