@@ -21,6 +21,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../../auth/infrastructure/auth_repository.dart';
 import '../../../../core/config/api_config.dart';
+import '../../../../common/widgets/vocabulary_word_image.dart';
 
 class LearnWordDetailScreen extends ConsumerStatefulWidget {
   final List<VocabularyWord> words;
@@ -433,41 +434,13 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                               style: MnemonicsTypography.bodyRegular),
                           const SizedBox(height: MnemonicsSpacing.l),
 
-                          if (word.image != null && word.image!.isNotEmpty)
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(
-                                  MnemonicsSpacing.radiusL),
-                              child: Image.network(
-                                word.image!,
-                                width: double.infinity,
-                                fit: BoxFit.fitWidth,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                  height: 160,
-                                  color: MnemonicsColors.surface,
-                                  child: const Center(
-                                      child: Icon(Icons.broken_image,
-                                          size: 48,
-                                          color:
-                                              MnemonicsColors.textSecondary)),
-                                ),
-                              ),
-                            )
-                          else
-                            Container(
-                              height: 160,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                color: MnemonicsColors.surface,
-                                borderRadius: BorderRadius.circular(
-                                    MnemonicsSpacing.radiusL),
-                              ),
-                              child: const Center(
-                                child: Icon(Icons.image,
-                                    size: 48,
-                                    color: MnemonicsColors.textSecondary),
-                              ),
-                            ),
+                          VocabularyWordImage(
+                            word: word,
+                            width: double.infinity,
+                            fit: BoxFit.fitWidth,
+                            borderRadius: BorderRadius.circular(
+                                MnemonicsSpacing.radiusL),
+                          ),
                           const SizedBox(height: MnemonicsSpacing.m),
                           // Video Player
                           /*

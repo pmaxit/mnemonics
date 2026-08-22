@@ -20,34 +20,46 @@ static void my_application_activate(GApplication* application) {
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
 
-  // Use a header bar when running in GNOME as this is the common style used
-  // by applications and is the setup most users will be using (e.g. Ubuntu
-  // desktop).
-  // If running on X and not using GNOME then just use a traditional title bar
-  // in case the window manager does more exotic layout, e.g. tiling.
-  // If running on Wayland assume the header bar will work (may need changing
-  // if future cases occur).
-  gboolean use_header_bar = TRUE;
-#ifdef GDK_WINDOWING_X11
-  GdkScreen* screen = gtk_window_get_screen(window);
-  if (GDK_IS_X11_SCREEN(screen)) {
-    const gchar* wm_name = gdk_x11_screen_get_window_manager_name(screen);
-    if (g_strcmp0(wm_name, "GNOME Shell") != 0) {
-      use_header_bar = FALSE;
-    }
-  }
-#endif
-  if (use_header_bar) {
-    GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
-    gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_header_bar_set_title(header_bar, "mnemonics");
-    gtk_header_bar_set_show_close_button(header_bar, TRUE);
-    gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
-  } else {
+  // Kiosk mode: when MNEMONICS_KIOSK is set in the environment, the
+  // window has no decorations, fills the screen, and stays on top so
+  // the app can run without any window manager (bare xinit / cage).
+  const char* kiosk = g_getenv("MNEMONICS_KIOSK");
+  gboolean kiosk_mode = (kiosk != nullptr && kiosk[0] != '\0' && kiosk[0] != '0');
+
+  if (kiosk_mode) {
+    gtk_window_set_decorated(window, FALSE);
     gtk_window_set_title(window, "mnemonics");
+    // Reasonable starting size; fullscreen will resize to the actual
+    // monitor immediately after gtk_widget_show(). We deliberately do
+    // not query GdkScreen here because its sizing helpers are deprecated
+    // and -Werror=deprecated-declarations is on in release builds.
+    gtk_window_set_default_size(window, 1280, 720);
+    gtk_window_fullscreen(window);
+    gtk_window_set_keep_above(window, TRUE);
+  } else {
+    // Standard desktop window with a header bar / title bar.
+    gboolean use_header_bar = TRUE;
+#ifdef GDK_WINDOWING_X11
+    GdkScreen* screen = gtk_window_get_screen(window);
+    if (GDK_IS_X11_SCREEN(screen)) {
+      const gchar* wm_name = gdk_x11_screen_get_window_manager_name(screen);
+      if (g_strcmp0(wm_name, "GNOME Shell") != 0) {
+        use_header_bar = FALSE;
+      }
+    }
+#endif
+    if (use_header_bar) {
+      GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
+      gtk_widget_show(GTK_WIDGET(header_bar));
+      gtk_header_bar_set_title(header_bar, "mnemonics");
+      gtk_header_bar_set_show_close_button(header_bar, TRUE);
+      gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
+    } else {
+      gtk_window_set_title(window, "mnemonics");
+    }
+    gtk_window_set_default_size(window, 1280, 720);
   }
 
-  gtk_window_set_default_size(window, 1280, 720);
   gtk_widget_show(GTK_WIDGET(window));
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();

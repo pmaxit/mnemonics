@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'core/platform/desktop_compat.dart';
 import 'features/home/domain/vocabulary_word.dart';
 import 'features/home/presentation/screens/learn_word_list_screen.dart';
 import 'features/home/presentation/screens/learn_word_detail_screen.dart';
@@ -25,6 +26,7 @@ import 'features/profile/presentation/screens/profile_settings_screen.dart';
 import 'features/study_session/presentation/screens/study_calendar_screen.dart';
 import 'features/study_session/presentation/screens/study_plan_wizard_screen.dart';
 import 'features/study_session/presentation/screens/study_day_detail_screen.dart';
+import 'features/study_session/presentation/screens/todays_study_plan_screen.dart';
 import 'features/study_session/domain/study_plan_day.dart';
 import 'features/auth/presentation/screens/onboarding_wizard_screen.dart';
 import 'features/auth/providers/user_profile_provider.dart';
@@ -47,6 +49,13 @@ class GoRouterRefreshStream extends ChangeNotifier {
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
+  // On Linux/Pi, Firebase is not initialised, so we cannot read
+  // FirebaseAuth.instance. Build a router that bypasses auth and
+  // lands directly on the main shell.
+  if (desktopAuthBypass) {
+    return _buildDesktopRouter();
+  }
+
   final authChangeNotifier =
       GoRouterRefreshStream(FirebaseAuth.instance.authStateChanges());
 
@@ -201,6 +210,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/study-plan/today',
+        builder: (context, state) => const TodaysStudyPlanScreen(),
+      ),
+      GoRoute(
         path: '/study-plan/create',
         builder: (context, state) => const StudyPlanWizardScreen(),
       ),
@@ -219,3 +232,77 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// Router used on Linux/Raspberry Pi where Firebase auth is unavailable.
+/// Skips welcome/login/onboarding entirely and starts on the home screen.
+/// All other routes from the mobile router are kept reachable.
+GoRouter _buildDesktopRouter() {
+  return GoRouter(
+    initialLocation: '/main/home',
+    routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/knowledge-tree',
+        builder: (context, state) => const KnowledgeTreeDetailScreen(),
+      ),
+      GoRoute(
+        path: '/word-list/:setId',
+        builder: (context, state) {
+          final setId = state.pathParameters['setId']!;
+          return LearnWordListScreen(setId: setId);
+        },
+      ),
+      GoRoute(
+        path: '/main',
+        builder: (context, state) => const SizedBox.shrink(),
+        routes: [
+          ShellRoute(
+            builder: (context, state, child) => MainScaffold(child: child),
+            routes: [
+              GoRoute(
+                path: 'home',
+                builder: (context, state) => const HomeScreen(),
+              ),
+              GoRoute(
+                path: 'practice',
+                builder: (context, state) => const PracticeScreen(),
+              ),
+              GoRoute(
+                path: 'timer',
+                builder: (context, state) => const LearningSessionScreen(),
+              ),
+              GoRoute(
+                path: 'profile',
+                builder: (context, state) => const EnhancedProfileScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'settings',
+                    builder: (context, state) =>
+                        const ProfileSettingsScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/flashcards',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final words = extra?['words'] as List<VocabularyWord>? ?? [];
+          final initialIndex = extra?['initialIndex'] as int? ?? 0;
+          return LearnWordDetailScreen(
+              words: words, initialIndex: initialIndex);
+        },
+      ),
+      GoRoute(
+        path: '/study-plan/today',
+        builder: (context, state) => const TodaysStudyPlanScreen(),
+      ),
+    ],
+  );
+}
