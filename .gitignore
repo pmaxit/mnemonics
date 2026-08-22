@@ -65,3 +65,12 @@ nohup.out
 
 # Claude Code
 .claude/
+
+# Generated word images — hosted on the Railway API volume, not in git
+generated/
+
+# QEMU scratch (disk images etc.)
+scripts/qemu/.work/
+
+# Cursor
+.cursor/
