@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../common/design/design_system.dart';
+import '../../../../common/layout/tab_screen_layout.dart';
+import '../../../../common/widgets/animated_tab_header_card.dart';
 import '../../domain/learning_session_models.dart';
 
 class SessionSetupWidget extends StatelessWidget {
@@ -8,8 +10,6 @@ class SessionSetupWidget extends StatelessWidget {
   final Function(SessionMode) onModeChanged;
   final Future<void> Function() onStartSession;
   final bool isDarkMode;
-  final Animation<double>? fadeAnimation;
-  final Animation<double>? slideAnimation;
 
   const SessionSetupWidget({
     super.key,
@@ -18,44 +18,26 @@ class SessionSetupWidget extends StatelessWidget {
     required this.onModeChanged,
     required this.onStartSession,
     required this.isDarkMode,
-    this.fadeAnimation,
-    this.slideAnimation,
   });
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.only(
-        left: MnemonicsSpacing.l,
-        right: MnemonicsSpacing.l,
-        top: MnemonicsSpacing.l,
-        bottom: 120, // Space for CustomBottomNavBar
+        left: TabScreenLayout.horizontalPadding,
+        right: TabScreenLayout.horizontalPadding,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          if (slideAnimation != null && fadeAnimation != null)
-            AnimatedBuilder(
-              animation: slideAnimation!,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, slideAnimation!.value),
-                  child: FadeTransition(
-                    opacity: fadeAnimation!,
-                    child: child,
-                  ),
-                );
-              },
-              child: _buildHeader(),
-            )
-          else
-            _buildHeader(),
-
-          const SizedBox(height: MnemonicsSpacing.xl),
+          _buildHeader(),
+          const SizedBox(height: TabScreenLayout.afterHeaderGap),
 
           // Duration Selection
-          _buildDurationSelection(),
+          KeyedSubtree(
+            key: TabScreenLayout.nextCardKey,
+            child: _buildDurationSelection(),
+          ),
 
           const SizedBox(height: MnemonicsSpacing.xl),
 
@@ -72,78 +54,21 @@ class SessionSetupWidget extends StatelessWidget {
   }
 
   Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(MnemonicsSpacing.l),
-      decoration: BoxDecoration(
-        color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-        boxShadow: isDarkMode
-            ? MnemonicsColors.darkCardShadow
-            : MnemonicsColors.cardShadow,
-        border: isDarkMode
-            ? Border.all(
-                color: MnemonicsColors.darkBorder.withOpacity(0.3),
-                width: 1,
-              )
-            : null,
+    return AnimatedTabHeaderCard(
+      isDarkMode: isDarkMode,
+      margin: EdgeInsets.zero,
+      leading: const TabHeaderBadge(
+        child: Icon(
+          Icons.school,
+          color: Colors.white,
+          size: 24,
+        ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  MnemonicsColors.primaryGreen,
-                  MnemonicsColors.primaryGreen.withOpacity(0.8),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: MnemonicsColors.primaryGreen.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.school,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: MnemonicsSpacing.m),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Learning Session',
-                  style: MnemonicsTypography.headingMedium.copyWith(
-                    color: isDarkMode
-                        ? MnemonicsColors.darkTextPrimary
-                        : MnemonicsColors.textPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: MnemonicsSpacing.xs),
-                Text(
-                  'Enhance your vocabulary with smart flashcards',
-                  style: MnemonicsTypography.bodyRegular.copyWith(
-                    color: isDarkMode
-                        ? MnemonicsColors.darkTextSecondary
-                        : MnemonicsColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      title: 'Learning Session',
+      subtitle: 'Enhance your vocabulary with smart flashcards',
+      trailing: const TabHeaderTrailingIcon(
+        icon: Icons.play_arrow,
+        color: MnemonicsColors.primaryGreen,
       ),
     );
   }

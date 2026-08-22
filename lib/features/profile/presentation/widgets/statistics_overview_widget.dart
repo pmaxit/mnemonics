@@ -26,10 +26,7 @@ class StatisticsOverviewWidget extends StatelessWidget {
         : MnemonicsColors.textSecondary;
 
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: MnemonicsSpacing.m,
-        vertical: MnemonicsSpacing.s,
-      ),
+      margin: const EdgeInsets.only(bottom: MnemonicsSpacing.s),
       padding: const EdgeInsets.all(MnemonicsSpacing.m),
       decoration: BoxDecoration(
         color: backgroundColor,
