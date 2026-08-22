@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import '../domain/study_plan.dart';
 import '../domain/study_plan_day.dart';
+import '../domain/daily_study_plan.dart';
 import '../../../core/config/api_config.dart';
 import '../../../core/platform/desktop_compat.dart';
 
@@ -53,6 +54,43 @@ class StudyPlanRepository {
 
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     return StudyPlan.fromJson(json);
+  }
+
+  Future<DailyStudyPlan> getTodaysPlan({int minutes = 20}) async {
+    final uid = _userId;
+    if (uid == null) throw Exception('User not authenticated');
+
+    final response = await http.get(
+      Uri.parse('${ApiConfig.baseUrl}/study-plan/$uid/today?minutes=$minutes'),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(_shortError("Failed to load today's study plan", response));
+    }
+
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return DailyStudyPlan.fromJson(json);
+  }
+
+  Future<void> completeTodaysPlan({
+    required int wordsCompleted,
+    required int points,
+  }) async {
+    final uid = _userId;
+    if (uid == null) throw Exception('User not authenticated');
+
+    final response = await http.post(
+      Uri.parse('${ApiConfig.baseUrl}/study-plan/$uid/today/complete'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'words_completed': wordsCompleted,
+        'points': points,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(_shortError("Failed to complete today's plan", response));
+    }
   }
 
   // -------------------------------------------------------------------------

@@ -14,6 +14,7 @@ import '../../../profile/domain/user_info.dart';
 import '../../../study_session/providers/study_session_providers.dart';
 import '../../../study_session/domain/study_plan.dart';
 import '../../../study_session/domain/study_plan_day.dart';
+import '../../../study_session/presentation/widgets/todays_study_plan_card.dart';
 
 class ProgressOverviewScreen extends ConsumerStatefulWidget {
   const ProgressOverviewScreen({super.key});
@@ -127,6 +128,9 @@ class _ProgressOverviewScreenState extends ConsumerState<ProgressOverviewScreen>
             weeklyProgress: statistics.weeklyProgress,
             animationDelay: 0,
           ),
+          const SizedBox(height: MnemonicsSpacing.xl),
+
+          TodaysStudyPlanCard(isDarkMode: isDarkMode),
           const SizedBox(height: MnemonicsSpacing.xl),
 
           // ── Study Plan card ──────────────────────────────────────────────

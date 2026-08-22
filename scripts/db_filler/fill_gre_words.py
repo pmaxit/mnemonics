@@ -2,11 +2,17 @@ import json
 import logging
 import os
 import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from urllib.parse import quote
 
 import psycopg2
+
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+from comic_style import build_comic_prompt
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -23,7 +29,7 @@ LIMIT = int(os.getenv('GRE_WORD_LIMIT', '500'))
 OFFSET = int(os.getenv('GRE_WORD_OFFSET', '0'))
 MAX_WORKERS = int(os.getenv('GRE_WORKERS', '6'))
 TEXT_MODEL = os.getenv('GRE_TEXT_MODEL', 'google/gemini-3.5-flash')
-IMAGE_MODEL = os.getenv('POLLINATIONS_IMAGE_MODEL', 'flux')
+IMAGE_MODEL = os.getenv('POLLINATIONS_IMAGE_MODEL', 'gptimage')
 IMAGE_MODE = os.getenv('POLLINATIONS_IMAGE_MODE', 'generate')
 SKIP_COMPLETED = os.getenv('GRE_SKIP_COMPLETED', '1') not in ('0', 'false', 'False')
 
@@ -135,21 +141,11 @@ Use 8-10 common_phrases. Keep everything concise and learner-friendly.'''
 
 
 def build_image_prompt(word, meaning, category):
-    return f'''A 4-panel cartoon comic strip for Indian learners explaining the English GRE vocabulary word "{word}" meaning "{meaning}".
-Show one continuous everyday Indian scene across all panels, not four unrelated images.
-Panel 1 introduces the situation, Panel 2 shows the problem, Panel 3 shows the key action or turning point, Panel 4 clearly reveals the meaning of "{word}" through the scene.
-Use English only for any speech bubbles, labels, or captions. Do not use Hindi or any other language.
-Category theme: {category}.
-Style: colorful, clean educational cartoon, expressive Indian characters, memorable visual storytelling.'''
+    return build_comic_prompt(word, meaning, category=category)
 
 
 def generate_image(word, meaning, category):
-    prompt = f'''A 4-panel cartoon comic strip for Indian learners explaining the English GRE vocabulary word "{word}" meaning "{meaning}".
-Show one continuous everyday Indian scene across all panels, not four unrelated images.
-Panel 1 introduces the situation, Panel 2 shows the problem, Panel 3 shows the key action or turning point, Panel 4 clearly reveals the meaning of "{word}" through the scene.
-Use English only for any speech bubbles, labels, or captions. Do not use Hindi or any other language.
-Category theme: {category}.
-Style: colorful, clean educational cartoon, expressive Indian characters, memorable visual storytelling.'''
+    prompt = build_image_prompt(word, meaning, category)
 
     if IMAGE_MODE == 'url':
         return f'https://gen.pollinations.ai/image/{quote(prompt)}?model={IMAGE_MODEL}'

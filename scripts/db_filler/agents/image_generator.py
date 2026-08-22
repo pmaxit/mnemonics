@@ -1,23 +1,30 @@
 import logging
+import sys
+from pathlib import Path
 from urllib.parse import quote
 from services.openrouter_service import OpenRouterService
 
 logger = logging.getLogger(__name__)
+
+SCRIPTS_DIR = Path(__file__).resolve().parents[2]
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+from comic_style import build_comic_prompt
+
 
 class ImageGeneratorAgent:
     def __init__(self, openrouter_service):
         self.openrouter = openrouter_service
 
     def generate_image_prompt(self, word, meaning):
-        return f'''A 4-panel cartoon comic strip for Indian learners explaining the English vocabulary word "{word}" meaning "{meaning}".
-Show one continuous everyday Indian scene across all panels, not four unrelated images.
-Panel 1 introduces the situation, Panel 2 shows the problem, Panel 3 shows the key action or turning point, Panel 4 clearly reveals the meaning of "{word}" through the scene.
-Use English only for any speech bubbles, labels, or captions. Do not use Hindi or any other language.
-Style: colorful, clean educational cartoon, expressive Indian characters, memorable visual storytelling.'''
+        return build_comic_prompt(word, meaning)
 
     def get_pollinations_url(self, prompt):
         encoded_prompt = quote(prompt)
-        return f'https://gen.pollinations.ai/image/{encoded_prompt}?model=gptimage&width=512&height=512&nologo=true'
+        return (
+            f'https://gen.pollinations.ai/image/{encoded_prompt}'
+            f'?model=gptimage&width=1024&height=1536&nologo=true'
+        )
 
     def generate_image_for_word(self, word_data):
         word = word_data['word']

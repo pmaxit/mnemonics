@@ -8,6 +8,9 @@ import re
 from datetime import date, datetime
 from pathlib import Path
 
+from study_plan_agents import generate_daily_plan, mark_daily_plan_complete
+from study_plan_agents.orchestrator import ensure_daily_completion_table
+
 app = Flask(__name__)
 CORS(app)
 
@@ -104,6 +107,7 @@ def ensure_study_plan_tables(cursor) -> None:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    ensure_daily_completion_table(cursor)
 
 
 def serialize_study_plan_day(row) -> dict:
@@ -834,6 +838,69 @@ def create_study_plan():
         serialized = load_serialized_plan(cursor, plan_id)
         cursor.close()
         return jsonify(serialized), 201
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        if conn:
+            conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.route('/study-plan/<user_id>/today', methods=['GET'])
+def get_todays_study_plan(user_id):
+    """Personalized daily multiplan: due reviews, new words, weak rescue, incentives."""
+    user_id = str(user_id or '').strip()
+    if not user_id:
+        return jsonify({"error": "user_id is required"}), 400
+    try:
+        minutes = int(request.args.get('minutes') or 20)
+    except (TypeError, ValueError):
+        minutes = 20
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.RealDictCursor)
+        ensure_study_plan_tables(cursor)
+        plan = generate_daily_plan(cursor, user_id, minutes)
+        conn.commit()
+        cursor.close()
+        return jsonify(plan)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        if conn:
+            conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.route('/study-plan/<user_id>/today/complete', methods=['POST'])
+def complete_todays_study_plan(user_id):
+    user_id = str(user_id or '').strip()
+    if not user_id:
+        return jsonify({"error": "user_id is required"}), 400
+    data = request.get_json(silent=True) or {}
+    try:
+        words_completed = int(data.get('words_completed') or 0)
+        points = int(data.get('points') or 0)
+    except (TypeError, ValueError):
+        return jsonify({"error": "words_completed and points must be integers"}), 400
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.RealDictCursor)
+        ensure_study_plan_tables(cursor)
+        result = mark_daily_plan_complete(cursor, user_id, words_completed, points)
+        conn.commit()
+        cursor.close()
+        return jsonify(result)
     except Exception as e:
         import traceback
         traceback.print_exc()

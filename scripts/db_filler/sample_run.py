@@ -2,10 +2,16 @@ import json
 import os
 import logging
 import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from urllib.parse import quote
 from dotenv import load_dotenv
+
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+from comic_style import build_comic_prompt
 
 load_dotenv('.env')
 load_dotenv('backend_api/.env', override=False)
@@ -185,11 +191,7 @@ Return as JSON: {{"definition": "...", "common_phrases": [...], "example_sentenc
         return '{}'
 
 def generate_image_cli(word, meaning):
-    prompt = f'''A 4-panel cartoon comic strip for Indian learners explaining the English vocabulary word "{word}" meaning "{meaning}".
-Show one continuous everyday Indian scene across all panels, not four unrelated images.
-Panel 1 introduces the situation, Panel 2 shows the problem, Panel 3 shows the key action or turning point, Panel 4 clearly reveals the meaning of "{word}" through the scene.
-Use English only for any speech bubbles, labels, or captions. Do not use Hindi or any other language.
-Style: colorful, clean educational cartoon, expressive Indian characters, memorable visual storytelling.'''
+    prompt = build_comic_prompt(word, meaning)
     image_path = Path('generated') / f'{word.replace(" ", "_")}.png'
 
     try:

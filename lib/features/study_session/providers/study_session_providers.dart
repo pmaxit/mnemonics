@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/study_plan.dart';
 import '../domain/study_plan_day.dart';
+import '../domain/daily_study_plan.dart';
 import '../infrastructure/study_plan_repository.dart';
+import '../../home/providers.dart';
 
 // ---------------------------------------------------------------------------
 // Repository provider
@@ -16,6 +18,13 @@ final studyPlanRepositoryProvider = Provider<StudyPlanRepository>((ref) {
 final activePlansProvider = FutureProvider<List<StudyPlan>>((ref) async {
   final repo = ref.watch(studyPlanRepositoryProvider);
   return repo.getActivePlans();
+});
+
+final todaysStudyPlanProvider = FutureProvider<DailyStudyPlan>((ref) async {
+  final repo = ref.watch(studyPlanRepositoryProvider);
+  final settings = ref.watch(userSettingsProvider);
+  final minutes = (settings?.dailyGoal ?? 20).clamp(8, 60);
+  return repo.getTodaysPlan(minutes: minutes);
 });
 
 // ---------------------------------------------------------------------------
@@ -113,6 +122,18 @@ class DayStatusNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(
         () => _repo.updateDayStatus(dayNumber, DayStatus.done));
+    _ref.invalidate(activePlansProvider);
+  }
+
+  Future<void> completeToday(DailyStudyPlan plan) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => _repo.completeTodaysPlan(
+        wordsCompleted: plan.incentive.dailyGoalWords,
+        points: plan.incentive.pointsIfCompleted,
+      ),
+    );
+    _ref.invalidate(todaysStudyPlanProvider);
     _ref.invalidate(activePlansProvider);
   }
 
