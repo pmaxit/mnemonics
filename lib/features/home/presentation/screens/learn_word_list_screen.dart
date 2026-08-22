@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../../auth/infrastructure/auth_repository.dart';
 import '../../../../core/config/api_config.dart';
+import '../../../../common/widgets/vocabulary_word_image.dart';
 
 enum SortOption {
   alphabeticalAsc,
@@ -630,42 +631,27 @@ class _LearnWordListScreenState extends ConsumerState<LearnWordListScreen>
                 padding: const EdgeInsets.all(MnemonicsSpacing.m),
                 child: Row(
                   children: [
-                    // Animated icon
-                    TweenAnimationBuilder<double>(
-                      duration: const Duration(milliseconds: 800),
-                      tween: Tween<double>(begin: 0.0, end: 1.0),
-                      builder: (context, iconAnimation, child) {
-                        return Transform.rotate(
-                          angle: iconAnimation * 0.05,
-                          child: Container(
-                            padding: const EdgeInsets.all(MnemonicsSpacing.s),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  accent,
-                                  accent.withOpacity(0.7),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(
-                                  MnemonicsSpacing.radiusM),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: accent.withOpacity(0.3),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.psychology,
-                              color: Colors.white,
-                              size: 24,
-                            ),
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        borderRadius:
+                            BorderRadius.circular(MnemonicsSpacing.radiusM),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accent.withOpacity(0.3),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
                           ),
-                        );
-                      },
+                        ],
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: VocabularyWordImage(
+                        word: word,
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                     const SizedBox(width: MnemonicsSpacing.m),
                     // Content

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../core/platform/desktop_compat.dart';
 import 'infrastructure/vocabulary_repository.dart';
 import 'domain/vocabulary_word.dart';
 import 'domain/word_recommendation.dart';
@@ -17,8 +18,15 @@ final homeTabIndexProvider = StateProvider<int>((ref) => 0);
 
 final vocabularyListProvider = FutureProvider<List<VocabularyWord>>((ref) async {
   final repo = ref.watch(vocabularyRepositoryProvider);
-  final user = FirebaseAuth.instance.currentUser;
-  return await repo.loadVocabulary(userId: user?.uid);
+  // On Linux/Pi, Firebase is unavailable; use a local user id instead of
+  // touching FirebaseAuth (which would throw).
+  String? userId;
+  if (desktopAuthBypass) {
+    userId = desktopLocalUserId;
+  } else {
+    userId = FirebaseAuth.instance.currentUser?.uid;
+  }
+  return await repo.loadVocabulary(userId: userId);
 });
 
 final userWordDataProvider = FutureProvider.family<UserWordData?, String>((ref, word) async {

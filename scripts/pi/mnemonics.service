@@ -1,0 +1,16 @@
+[Unit]
+Description=Mnemonics Flutter desktop app
+# Wait for the graphical session to be ready before launching.
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/opt/mnemonics/mnemonics
+Restart=on-failure
+RestartSec=3
+# Inherit display from the user session (DISPLAY / WAYLAND_DISPLAY).
+Environment=GTK_THEME=Adwaita
+
+[Install]
+WantedBy=graphical-session.target

@@ -106,3 +106,12 @@ CREATE INDEX IF NOT EXISTS idx_user_progress_user_id ON user_word_progress(user_
 CREATE INDEX IF NOT EXISTS idx_learned_words_user ON user_learned_words(user_id);
 CREATE INDEX IF NOT EXISTS idx_study_plans_user ON study_plans(user_id);
 CREATE INDEX IF NOT EXISTS idx_study_plan_days_plan ON study_plan_days(plan_id);
+
+CREATE TABLE IF NOT EXISTS study_plan_daily_completions (
+    user_id VARCHAR(128) NOT NULL,
+    completed_on DATE NOT NULL,
+    words_completed INTEGER DEFAULT 0,
+    points INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, completed_on)
+);

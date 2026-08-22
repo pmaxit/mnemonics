@@ -35,15 +35,6 @@ class MysqlDatabaseService {
 
       for (var row in jsonList) {
         try {
-          List<String> parseList(String? value) {
-            if (value == null || value.isEmpty) return [];
-            return value
-                .split(',')
-                .map((e) => e.trim())
-                .where((e) => e.isNotEmpty)
-                .toList();
-          }
-
           final word = row['word']?.toString().trim() ?? '';
           final meaning = row['meaning']?.toString().trim() ?? '';
 
@@ -55,12 +46,11 @@ class MysqlDatabaseService {
           final videoUrl =
               (row['videoUrl'] ?? row['video_url'])?.toString().trim() ?? '';
           final example = row['example']?.toString().trim() ?? '';
-          final synonyms = parseList(row['synonyms']?.toString());
-          final antonyms = parseList(row['antonyms']?.toString());
+          final synonyms = parseStringList(row['synonyms']);
+          final antonyms = parseStringList(row['antonyms']);
           final difficulty = row['difficulty']?.toString().trim() ?? '';
           final category = row['category']?.toString().trim() ?? '';
-          final setIds =
-              parseList((row['setIds'] ?? row['set_ids'])?.toString());
+          final setIds = parseStringList(row['setIds'] ?? row['set_ids']);
           final aiMnemonic =
               (row['aiMnemonic'] ?? row['ai_mnemonic'])?.toString().trim() ??
                   '';
@@ -69,51 +59,12 @@ class MysqlDatabaseService {
                   '';
           final definition = row['definition']?.toString().trim();
 
-          List<String> parsedPhrases = [];
-          try {
-            if (row['phrases'] != null &&
-                row['phrases'].toString().isNotEmpty) {
-              final rawPhrases = row['phrases'].toString();
-              if (rawPhrases.startsWith('[') && rawPhrases.endsWith(']')) {
-                parsedPhrases = List<String>.from(json.decode(rawPhrases));
-              } else {
-                // Not JSON, treat as a single phrase or comma-separated list
-                parsedPhrases = rawPhrases
-                    .split(',')
-                    .map((e) => e.trim())
-                    .where((e) => e.isNotEmpty)
-                    .toList();
-              }
-            }
-          } catch (e) {
-            print('Error parsing phrases: $e');
-          }
-
-          List<List<String>> parsedExampleSentences = [];
-          try {
-            if (row['example_sentences'] != null &&
-                row['example_sentences'].toString().isNotEmpty) {
-              final rawExamples = row['example_sentences'].toString();
-              if (rawExamples.startsWith('[') && rawExamples.endsWith(']')) {
-                final decodedList = json.decode(rawExamples) as List;
-                parsedExampleSentences = decodedList.map((inner) {
-                  if (inner is List) {
-                    return List<String>.from(inner);
-                  } else {
-                    // Fallback for single-level list
-                    return [inner.toString()];
-                  }
-                }).toList();
-              } else {
-                // Not JSON, treat as single example sentence
-                parsedExampleSentences = [
-                  [rawExamples]
-                ];
-              }
-            }
-          } catch (e) {
-            print('Error parsing example_sentences: $e');
-          }
+          final parsedPhrases =
+              const PhrasesConverter().fromJson(row['phrases']);
+          final parsedExampleSentences =
+              const ExampleSentencesConverter().fromJson(
+            row['exampleSentences'] ?? row['example_sentences'],
+          );
 
           final vocabWord = VocabularyWord(
             word: word,

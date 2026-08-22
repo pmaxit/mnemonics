@@ -6,8 +6,18 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import '../../../core/platform/desktop_compat.dart';
 
 final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
+  if (desktopAuthBypass) {
+    // FirebaseAuth.instance throws on Linux because Firebase is never
+    // initialised. Surface a clear error if a desktop code path ever
+    // tries to read this provider.
+    throw UnsupportedError(
+      'firebaseAuthProvider is not available on Linux/desktop builds. '
+      'Use desktopAuthBypass guards before reading it.',
+    );
+  }
   return FirebaseAuth.instance;
 });
 
@@ -56,7 +66,17 @@ class AuthRepository {
     }
 
     // Obtain the auth details from the request
-    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
+
+    if (googleAuth.idToken == null) {
+      throw Exception(
+        'Google Sign-In failed: missing idToken. '
+        'Register this app\'s SHA-1 in Firebase Console '
+        '(Project settings → Your apps → Android) and re-download '
+        'google-services.json.',
+      );
+    }
 
     // Create a new credential
     final credential = GoogleAuthProvider.credential(

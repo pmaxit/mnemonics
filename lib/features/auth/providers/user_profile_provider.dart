@@ -1,25 +1,47 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../core/platform/desktop_compat.dart';
 import '../domain/user_profile.dart';
 import '../infrastructure/user_profile_repository.dart';
 import '../infrastructure/auth_repository.dart';
 
 final userProfileProvider = StateNotifierProvider<UserProfileNotifier, AsyncValue<UserProfile?>>((ref) {
   final repository = ref.watch(userProfileRepositoryProvider);
+  if (desktopAuthBypass) {
+    // No Firebase on Linux; expose a local profile that has already
+    // completed onboarding so the router lands on /main/home.
+    return UserProfileNotifier.desktop(repository);
+  }
   final authState = ref.watch(firebaseAuthProvider);
   return UserProfileNotifier(repository, authState);
 });
 
 class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile?>> {
   final UserProfileRepository _repository;
-  final FirebaseAuth _auth;
+  final FirebaseAuth? _auth;
 
-  UserProfileNotifier(this._repository, this._auth) : super(const AsyncValue.loading()) {
+  UserProfileNotifier(this._repository, FirebaseAuth auth)
+      : _auth = auth,
+        super(const AsyncValue.loading()) {
     _init();
   }
 
+  /// Desktop/Linux variant: no Firebase. Immediately publishes a local
+  /// profile so the rest of the app behaves as if onboarding were done.
+  UserProfileNotifier.desktop(this._repository)
+      : _auth = null,
+        super(AsyncValue.data(UserProfile(
+          userId: desktopLocalUserId,
+          vocabularyLevel: '1',
+          learningGoal: 'general',
+          hasCompletedOnboarding: true,
+          enabledWordSets: '',
+        )));
+
   void _init() {
-    _auth.authStateChanges().listen((user) async {
+    final auth = _auth;
+    if (auth == null) return;
+    auth.authStateChanges().listen((user) async {
       if (user != null) {
         await fetchProfile(user.uid);
       } else {

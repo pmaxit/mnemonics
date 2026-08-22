@@ -1,0 +1,18 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Mnemonics
+GenericName=Vocabulary trainer
+Comment=Mnemonics language learning app
+# `env` lets the entry stay launchable under software-GL environments
+# (e.g. QEMU virtio-gpu without virgl, or headless kiosk boots) without
+# hurting real Pi hardware where HW GL is preferred automatically when
+# LIBGL_ALWAYS_SOFTWARE is unset.
+Exec=env LIBGL_ALWAYS_SOFTWARE=${MNEMONICS_FORCE_SOFT_GL:-0} /opt/mnemonics/mnemonics
+Icon=/opt/mnemonics/data/flutter_assets/assets/images/logo.jpg
+Terminal=false
+Categories=Education;
+StartupNotify=true
+X-GNOME-Autostart-enabled=true
+# Run on LXDE (Pi OS Desktop) and labwc (Pi OS Bookworm Wayland)
+OnlyShowIn=LXDE;LXQt;X-LXDE-pi;GNOME;XFCE;MATE;Wayfire;labwc;

@@ -1,0 +1,36 @@
+[Unit]
+Description=Mnemonics kiosk (Flutter on bare Xorg, no window manager)
+# Wait for the network / dbus / cgroups but not for any DM.
+After=systemd-user-sessions.service plymouth-quit-wait.service
+Conflicts=getty@tty1.service
+ConditionPathExists=/opt/mnemonics/mnemonics
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+PAMName=login
+WorkingDirectory=/home/pi
+Environment=HOME=/home/pi
+Environment=USER=pi
+# Force fullscreen, no-decoration window in our GTK shell.
+Environment=MNEMONICS_KIOSK=1
+# Software GL fallback for QEMU / hosts without virgl; unset on real Pi if
+# you want HW GL via /etc/systemd/system/mnemonics-kiosk.service.d/.
+Environment=LIBGL_ALWAYS_SOFTWARE=%E{MNEMONICS_FORCE_SOFT_GL:-0}
+# Take ownership of tty1 so getty/lightdm don't fight us.
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+# xinit starts Xorg on :0 with /opt/mnemonics/mnemonics as the only X client.
+# `-nolisten tcp` is the modern default; vt1 binds to the console we own.
+ExecStart=/usr/bin/xinit /opt/mnemonics/mnemonics -- :0 vt1 -keeptty -nolisten tcp -novtswitch
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=graphical.target
