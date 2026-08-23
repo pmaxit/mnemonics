@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../common/design/design_system.dart';
 import '../../../../common/design/theme_provider.dart';
 import '../../../auth/providers/user_profile_provider.dart';
+import '../../../profile/domain/user_statistics.dart';
 import '../../domain/word_recommendation.dart';
 import '../../providers.dart';
 
@@ -333,7 +334,7 @@ class MyWordsListScreen extends ConsumerWidget {
     );
   }
 
-  Color _difficultyColor(dynamic difficulty) {
+  Color _difficultyColor(WordDifficulty difficulty) {
     switch (difficulty.name) {
       case 'basic':
         return MnemonicsColors.primaryGreen;
