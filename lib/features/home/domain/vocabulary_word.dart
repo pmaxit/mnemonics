@@ -81,6 +81,84 @@ class ExampleSentencesConverter implements JsonConverter<List<List<String>>, dyn
   dynamic toJson(List<List<String>> object) => object;
 }
 
+/// Returns real usage sentences for a word, excluding phrase fragments and filler.
+extension VocabularyWordContextX on VocabularyWord {
+  List<String> get contextSentences {
+    final seen = <String>{};
+    final results = <String>[];
+
+    void addCandidate(String? raw) {
+      if (raw == null) return;
+      final sentence = raw.trim();
+      if (sentence.isEmpty || sentence == 'No example available') return;
+      if (!_looksLikeUsageSentence(sentence, word)) return;
+      final key = sentence.toLowerCase();
+      if (seen.add(key)) results.add(sentence);
+    }
+
+    for (final group in exampleSentences) {
+      for (final sentence in group) {
+        addCandidate(sentence);
+      }
+    }
+
+    addCandidate(example);
+
+    for (final sentence in _parseAiInsightsSentences(aiInsights)) {
+      addCandidate(sentence);
+    }
+
+    return results;
+  }
+}
+
+bool _looksLikeUsageSentence(String sentence, String word) {
+  if (sentence.length < 20) return false;
+  if (!_containsWordForm(sentence, word)) return false;
+  if (sentence.split(RegExp(r'\s+')).length < 5) return false;
+
+  final lower = sentence.toLowerCase();
+  const blocked = [
+    'comes up often',
+    'make your own sentence',
+    'explain the meaning',
+    'used correctly in',
+    'practising',
+    'first saw',
+    'will make it stick',
+  ];
+  for (final phrase in blocked) {
+    if (lower.contains(phrase)) return false;
+  }
+  return true;
+}
+
+bool _containsWordForm(String sentence, String word) {
+  final lower = sentence.toLowerCase();
+  final w = word.toLowerCase();
+  if (lower.contains(w)) return true;
+  if (w.length > 4) {
+    final stem = w.substring(0, w.length - 1);
+    if (stem.length >= 4 && lower.contains(stem)) return true;
+  }
+  return false;
+}
+
+List<String> _parseAiInsightsSentences(String? aiInsights) {
+  if (aiInsights == null || aiInsights.isEmpty) return [];
+  try {
+    var cleaned = aiInsights.trim();
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replaceFirst(RegExp(r'^```json?\s*'), '');
+      cleaned = cleaned.replaceFirst(RegExp(r'\s*```$'), '');
+    }
+    final data = jsonDecode(cleaned) as Map<String, dynamic>;
+    final raw = data['example_sentences'] ?? data['exampleSentences'];
+    if (raw is List) return raw.map((e) => e.toString()).toList();
+  } catch (_) {}
+  return [];
+}
+
 @freezed
 class VocabularyWord with _$VocabularyWord {
   const factory VocabularyWord({

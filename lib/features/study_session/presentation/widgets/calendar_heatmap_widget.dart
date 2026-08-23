@@ -3,16 +3,18 @@ import '../../domain/study_plan.dart';
 import '../../domain/study_plan_day.dart';
 import '../../../../common/design/design_system.dart';
 
-/// A LeetCode-style calendar heatmap for a study plan.
+/// A calendar heatmap for a study plan.
 /// Each day cell shows the day number, status colour, XP value, and
 /// a special indicator for review days.
 class CalendarHeatmapWidget extends StatelessWidget {
   final StudyPlan plan;
+  final bool isDarkMode;
   final void Function(StudyPlanDay day) onDayTap;
 
   const CalendarHeatmapWidget({
     super.key,
     required this.plan,
+    required this.isDarkMode,
     required this.onDayTap,
   });
 
@@ -20,27 +22,29 @@ class CalendarHeatmapWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final startDate = DateTime.tryParse(plan.startDate) ?? DateTime.now();
     final today = DateTime.now();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildLegend(context, isDark),
+        _buildLegend(),
         const SizedBox(height: 12),
-        _buildGrid(context, startDate, today, isDark),
+        _buildGrid(startDate, today),
       ],
     );
   }
 
-  Widget _buildLegend(BuildContext context, bool isDark) {
+  Widget _buildLegend() {
     return Wrap(
       spacing: 12,
       runSpacing: 4,
       children: [
-        _legendItem(_cellColor(DayStatus.notAttempted, isDark), 'Not started'),
-        _legendItem(_cellColor(DayStatus.inProgress, isDark), 'In progress'),
-        _legendItem(_cellColor(DayStatus.done, isDark), 'Done'),
-        _legendItem(const Color(0xFF6366F1), 'Review day'),
+        _legendItem(
+            _cellColor(DayStatus.notAttempted, isReviewDay: false), 'Not started'),
+        _legendItem(_cellColor(DayStatus.inProgress, isReviewDay: false),
+            'In progress'),
+        _legendItem(_cellColor(DayStatus.done, isReviewDay: false), 'Done'),
+        _legendItem(
+            _cellColor(DayStatus.notAttempted, isReviewDay: true), 'Review day'),
       ],
     );
   }
@@ -58,16 +62,16 @@ class CalendarHeatmapWidget extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 11, color: MnemonicsColors.textSecondary),
+          style: MnemonicsTypography.bodyRegular.copyWith(
+            fontSize: 11,
+            color: StudyPlanColors.mutedText(isDarkMode),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildGrid(
-      BuildContext context, DateTime startDate, DateTime today, bool isDark) {
-    const cellSize = 42.0;
-    const cellSpacing = 6.0;
+  Widget _buildGrid(DateTime startDate, DateTime today) {
     const cellsPerRow = 7;
 
     final totalDays = plan.numDays;
@@ -77,56 +81,75 @@ class CalendarHeatmapWidget extends StatelessWidget {
       for (final d in plan.days) d.dayNumber: d,
     };
 
-    return Column(
-      children: List.generate(rows, (row) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: cellSpacing),
-          child: Row(
-            children: List.generate(cellsPerRow, (col) {
-              final dayNumber = row * cellsPerRow + col + 1;
-              if (dayNumber > totalDays) {
-                return const SizedBox(width: cellSize + cellSpacing);
-              }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const cellSpacing = 6.0;
+        final availableWidth = constraints.maxWidth;
+        // Distribute 7 cells evenly within available width, no overflow.
+        final cellSize =
+            (availableWidth - cellSpacing * (cellsPerRow - 1)) / cellsPerRow;
 
-              final planDay = dayMap[dayNumber];
-              final thisDate =
-                  startDate.add(Duration(days: dayNumber - 1));
-              final isToday = _isSameDay(thisDate, today);
-              final status = planDay?.status ?? DayStatus.notAttempted;
-              final isPast = thisDate.isBefore(today) && !isToday;
+        return Column(
+          children: List.generate(rows, (row) {
+            final isLastRow = row == rows - 1;
+            return Padding(
+              padding: EdgeInsets.only(bottom: isLastRow ? 0 : cellSpacing),
+              child: Row(
+                children: List.generate(cellsPerRow, (col) {
+                  final dayNumber = row * cellsPerRow + col + 1;
+                  final isLastCol = col == cellsPerRow - 1;
+                  if (dayNumber > totalDays) {
+                    return Expanded(child: SizedBox(height: cellSize));
+                  }
 
-              return Padding(
-                padding: const EdgeInsets.only(right: cellSpacing),
-                child: _DayCell(
-                  dayNumber: dayNumber,
-                  status: status,
-                  isToday: isToday,
-                  isPast: isPast,
-                  cellSize: cellSize,
-                  isDark: isDark,
-                  xpValue: planDay?.xpValue ?? 10,
-                  isReviewDay: planDay?.isReviewDay ?? false,
-                  onTap: planDay != null ? () => onDayTap(planDay) : null,
-                ),
-              );
-            }),
-          ),
+                  final planDay = dayMap[dayNumber];
+                  final thisDate =
+                      startDate.add(Duration(days: dayNumber - 1));
+                  final isToday = _isSameDay(thisDate, today);
+                  final status = planDay?.status ?? DayStatus.notAttempted;
+                  final isPast = thisDate.isBefore(today) && !isToday;
+
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                          right: isLastCol ? 0 : cellSpacing),
+                      child: _DayCell(
+                        dayNumber: dayNumber,
+                        status: status,
+                        isToday: isToday,
+                        isPast: isPast,
+                        cellSize: cellSize,
+                        isDarkMode: isDarkMode,
+                        xpValue: planDay?.xpValue ?? 10,
+                        isReviewDay: planDay?.isReviewDay ?? false,
+                        onTap:
+                            planDay != null ? () => onDayTap(planDay) : null,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            );
+          }),
         );
-      }),
+      },
     );
   }
 
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  Color _cellColor(DayStatus status, bool isDark) {
+  Color _cellColor(DayStatus status, {required bool isReviewDay}) {
+    if (isReviewDay && status == DayStatus.notAttempted) {
+      return StudyPlanColors.review;
+    }
     switch (status) {
       case DayStatus.done:
-        return const Color(0xFF22C55E);
+        return StudyPlanColors.done;
       case DayStatus.inProgress:
-        return const Color(0xFFEAB308);
+        return StudyPlanColors.inProgress;
       case DayStatus.notAttempted:
-        return isDark ? const Color(0xFF374151) : const Color(0xFFE5E7EB);
+        return StudyPlanColors.notStarted(isDarkMode);
     }
   }
 }
@@ -137,7 +160,7 @@ class _DayCell extends StatefulWidget {
   final bool isToday;
   final bool isPast;
   final double cellSize;
-  final bool isDark;
+  final bool isDarkMode;
   final int xpValue;
   final bool isReviewDay;
   final VoidCallback? onTap;
@@ -148,7 +171,7 @@ class _DayCell extends StatefulWidget {
     required this.isToday,
     required this.isPast,
     required this.cellSize,
-    required this.isDark,
+    required this.isDarkMode,
     required this.xpValue,
     required this.isReviewDay,
     required this.onTap,
@@ -179,25 +202,33 @@ class _DayCellState extends State<_DayCell>
   }
 
   Color get _bgColor {
-    if (widget.status == DayStatus.done) return const Color(0xFF22C55E);
-    if (widget.status == DayStatus.inProgress) return const Color(0xFFEAB308);
-    if (widget.isReviewDay) return const Color(0xFF6366F1);
-    if (widget.isToday) return const Color(0xFF6366F1);
-    return widget.isDark ? const Color(0xFF374151) : const Color(0xFFE5E7EB);
+    if (widget.status == DayStatus.done) return StudyPlanColors.done;
+    if (widget.status == DayStatus.inProgress) {
+      return StudyPlanColors.inProgress;
+    }
+    if (widget.isReviewDay) return StudyPlanColors.review;
+    return StudyPlanColors.notStarted(widget.isDarkMode);
+  }
+
+  bool get _usesLightText {
+    return widget.status == DayStatus.done ||
+        widget.status == DayStatus.inProgress;
   }
 
   Color get _textColor {
-    if (widget.status == DayStatus.done ||
-        widget.status == DayStatus.inProgress ||
-        widget.isReviewDay ||
-        widget.isToday) {
-      return Colors.white;
+    if (_usesLightText) return Colors.white;
+    if (widget.isReviewDay) {
+      return MnemonicsColors.textPrimary;
     }
-    return widget.isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280);
+    return StudyPlanColors.mutedText(widget.isDarkMode);
   }
 
   @override
   Widget build(BuildContext context) {
+    final showTodayRing = widget.isToday &&
+        widget.status == DayStatus.notAttempted &&
+        !widget.isReviewDay;
+
     return GestureDetector(
       onTapDown: widget.onTap != null ? (_) => _ctrl.forward() : null,
       onTapUp: widget.onTap != null
@@ -209,19 +240,22 @@ class _DayCellState extends State<_DayCell>
       onTapCancel: widget.onTap != null ? () => _ctrl.reverse() : null,
       child: ScaleTransition(
         scale: _scale,
-        child: Container(
-          width: widget.cellSize,
-          height: widget.cellSize,
-          decoration: BoxDecoration(
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: Container(
+            decoration: BoxDecoration(
             color: _bgColor,
             borderRadius: BorderRadius.circular(10),
-            border: widget.isToday && widget.status == DayStatus.notAttempted
-                ? Border.all(color: const Color(0xFF6366F1), width: 2)
+            border: showTodayRing
+                ? Border.all(
+                    color: MnemonicsColors.primaryGreen, width: 2)
                 : null,
-            boxShadow: widget.status != DayStatus.notAttempted || widget.isToday
+            boxShadow: widget.status != DayStatus.notAttempted ||
+                    widget.isToday ||
+                    widget.isReviewDay
                 ? [
                     BoxShadow(
-                      color: _bgColor.withOpacity(0.35),
+                      color: _bgColor.withOpacity(0.25),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     )
@@ -230,7 +264,6 @@ class _DayCellState extends State<_DayCell>
           ),
           child: Stack(
             children: [
-              // Day number
               Center(
                 child: Text(
                   '${widget.dayNumber}',
@@ -238,13 +271,13 @@ class _DayCellState extends State<_DayCell>
                     color: _textColor,
                     fontSize: 13,
                     fontWeight: widget.isToday ||
-                            widget.status != DayStatus.notAttempted
+                            widget.status != DayStatus.notAttempted ||
+                            widget.isReviewDay
                         ? FontWeight.w800
                         : FontWeight.w600,
                   ),
                 ),
               ),
-              // XP badge (top-right)
               if (widget.status == DayStatus.done)
                 Positioned(
                   top: 3,
@@ -266,22 +299,23 @@ class _DayCellState extends State<_DayCell>
                     ),
                   ),
                 ),
-              // Review day indicator (bottom-right)
-              if (widget.isReviewDay && widget.status == DayStatus.notAttempted)
+              if (widget.isReviewDay &&
+                  widget.status == DayStatus.notAttempted)
                 Positioned(
                   bottom: 3,
                   right: 3,
                   child: Container(
                     width: 6,
                     height: 6,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white70,
+                      color: MnemonicsColors.textPrimary.withOpacity(0.35),
                     ),
                   ),
                 ),
             ],
           ),
+        ),
         ),
       ),
     );

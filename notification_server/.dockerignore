@@ -1,0 +1,8 @@
+.dart_tool
+.dart_tool/
+data/
+.git
+.idea
+build
+packages
+pubspec.lock

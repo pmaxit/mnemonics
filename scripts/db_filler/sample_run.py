@@ -173,7 +173,7 @@ def generate_insights(word, meaning):
     prompt = f'''For the word "{word}" (meaning: "{meaning}"), provide:
 1. A short definition
 2. 10 short phrases where the word is naturally used (2-4 words each)
-3. 3 example sentences
+3. 5 concise example sentences using the word in different real-world contexts (health, politics, daily life, etc.). Each must be a real sentence showing the word in action — never meta commentary about learning the word.
 4. 3 synonyms
 5. A memory tip
 

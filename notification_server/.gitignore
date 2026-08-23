@@ -1,0 +1,8 @@
+.dart_tool/
+.dart_tool/
+packages
+pubspec.lock
+data/
+.env
+bin/notification_server
+bin/server.dill

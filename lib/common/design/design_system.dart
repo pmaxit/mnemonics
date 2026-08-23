@@ -175,6 +175,28 @@ class MnemonicsColors {
   ];
 }
 
+/// Semantic colors for study-plan status UI (calendar, chips, badges).
+class StudyPlanColors {
+  static const Color done = MnemonicsColors.primaryGreen;
+  static const Color inProgress = MnemonicsColors.secondaryOrange;
+  static const Color review = MnemonicsColors.progressPink;
+  static const Color advanced = Colors.redAccent;
+
+  static Color notStarted(bool isDark) =>
+      isDark ? MnemonicsColors.darkBorder : MnemonicsColors.surface;
+
+  static Color mutedText(bool isDark) => isDark
+      ? MnemonicsColors.darkTextSecondary
+      : MnemonicsColors.textSecondary;
+
+  /// Accent palette for wizard option cards — cycles app brand colors only.
+  static const List<Color> wizardAccents = [
+    MnemonicsColors.primaryGreen,
+    MnemonicsColors.secondaryOrange,
+    MnemonicsColors.progressPink,
+  ];
+}
+
 /// Extension methods for Color to support opacity modifications
 extension ColorExtension on Color {
   Color withOpacity(double opacity) {

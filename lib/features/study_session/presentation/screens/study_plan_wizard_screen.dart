@@ -41,7 +41,7 @@ final _goalPresets = [
     subtitle: '100 words in 14 days',
     words: 100,
     days: 14,
-    color: 0xFF6366F1,
+    color: 0xFFF4A261,
   ),
   const _GoalPreset(
     emoji: '🎓',
@@ -49,7 +49,7 @@ final _goalPresets = [
     subtitle: '200 words in 30 days',
     words: 200,
     days: 30,
-    color: 0xFF8B5CF6,
+    color: 0xFF4CAF8F,
   ),
   const _GoalPreset(
     emoji: '⚡',
@@ -65,7 +65,7 @@ final _goalPresets = [
     subtitle: '75 words in 10 days',
     words: 75,
     days: 10,
-    color: 0xFF22C55E,
+    color: 0xFFF8BBD0,
   ),
   const _GoalPreset(
     emoji: '🏆',
@@ -73,7 +73,7 @@ final _goalPresets = [
     subtitle: '300 words in 45 days',
     words: 300,
     days: 45,
-    color: 0xFFEAB308,
+    color: 0xFF4CAF8F,
   ),
 ];
 
@@ -99,21 +99,21 @@ final _difficultyOptions = [
     title: 'Gentle Start',
     subtitle: 'Easy words first, ramp up gradually',
     value: 'easy_start',
-    color: 0xFF22C55E,
+    color: 0xFF4CAF8F,
   ),
   const _DifficultyOption(
     emoji: '⚖️',
     title: 'Balanced',
     subtitle: 'Steady mix of all levels each day',
     value: 'balanced',
-    color: 0xFF6366F1,
+    color: 0xFFF4A261,
   ),
   const _DifficultyOption(
     emoji: '🔥',
     title: 'Challenging',
     subtitle: 'Hard words early, push your limits',
     value: 'challenging',
-    color: 0xFFEF4444,
+    color: 0xFFF8BBD0,
   ),
 ];
 
@@ -139,21 +139,21 @@ final _commitmentOptions = [
     title: 'Light',
     subtitle: '~5 words/day — casual pace',
     value: 'light',
-    color: 0xFF22C55E,
+    color: 0xFF4CAF8F,
   ),
   const _CommitmentOption(
     emoji: '📖',
     title: 'Standard',
     subtitle: '~10 words/day — steady pace',
     value: 'standard',
-    color: 0xFF6366F1,
+    color: 0xFFF4A261,
   ),
   const _CommitmentOption(
     emoji: '💪',
     title: 'Intensive',
     subtitle: '~20 words/day — deep dive',
     value: 'intensive',
-    color: 0xFFEF4444,
+    color: 0xFFF8BBD0,
   ),
 ];
 
@@ -277,6 +277,7 @@ class _StudyPlanWizardScreenState
     return Scaffold(
       backgroundColor:
           isDarkMode ? MnemonicsColors.darkBackground : MnemonicsColors.surface,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor:
             isDarkMode ? MnemonicsColors.darkBackground : Colors.white,
@@ -303,27 +304,75 @@ class _StudyPlanWizardScreenState
           ),
         ),
       ),
-      body: creationState.isLoading
-          ? _buildLoadingState(isDarkMode)
-          : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: MnemonicsSpacing.l),
-              child: Column(
+      body: SafeArea(
+        bottom: false,
+        child: creationState.isLoading
+            ? _buildLoadingState(isDarkMode)
+            : Column(
                 children: [
-                  const SizedBox(height: MnemonicsSpacing.m),
-                  _buildStepIndicator(),
-                  const SizedBox(height: MnemonicsSpacing.xl),
+                  // Fixed step indicator
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      MnemonicsSpacing.l,
+                      MnemonicsSpacing.m,
+                      MnemonicsSpacing.l,
+                      MnemonicsSpacing.xl,
+                    ),
+                    child: _buildStepIndicator(),
+                  ),
+                  // Scrollable content — takes all remaining space
                   Expanded(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: _buildStepContent(isDarkMode),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          padding: EdgeInsets.fromLTRB(
+                            MnemonicsSpacing.l,
+                            0,
+                            MnemonicsSpacing.l,
+                            MnemonicsSpacing.l +
+                                MediaQuery.of(context).viewInsets.bottom,
+                          ),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight -
+                                  MnemonicsSpacing.l -
+                                  MediaQuery.of(context).viewInsets.bottom,
+                            ),
+                            child: _buildStepContent(isDarkMode),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  const SizedBox(height: MnemonicsSpacing.m),
-                  _buildBottomButtons(isDarkMode),
-                  const SizedBox(height: MnemonicsSpacing.xl),
+                  // Fixed bottom bar — always visible, never overflows
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDarkMode
+                          ? MnemonicsColors.darkBackground
+                          : Colors.white,
+                      border: Border(
+                        top: BorderSide(
+                          color: isDarkMode
+                              ? MnemonicsColors.darkBorder.withOpacity(0.2)
+                              : MnemonicsColors.textSecondary.withOpacity(0.1),
+                        ),
+                      ),
+                    ),
+                    padding: EdgeInsets.fromLTRB(
+                      MnemonicsSpacing.l,
+                      MnemonicsSpacing.m,
+                      MnemonicsSpacing.l,
+                      MnemonicsSpacing.m +
+                          MediaQuery.of(context).viewPadding.bottom,
+                    ),
+                    child: _buildBottomButtons(isDarkMode),
+                  ),
                 ],
               ),
-            ),
+      ),
     );
   }
 

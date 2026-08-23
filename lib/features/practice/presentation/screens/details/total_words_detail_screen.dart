@@ -112,33 +112,54 @@ class _TotalWordsDetailScreenState extends ConsumerState<TotalWordsDetailScreen>
                         opacity: _pageAnimation.value,
                         child: Column(
                           children: [
-                            // Summary header
+                            // Summary header — pinned / static
                             AnimatedProgressUtils.buildStaggeredAnimation(
                               animation: _pageAnimation,
                               index: 0,
                               child: _buildSummaryHeader(learnedWords, statistics, isDarkMode),
                             ),
-                            
-                            // Search and filters
-                            AnimatedProgressUtils.buildStaggeredAnimation(
-                              animation: _pageAnimation,
-                              index: 1,
-                              child: _buildSearchAndFilters(learnedWords, isDarkMode),
-                            ),
-                            
-                            // Results count
-                            AnimatedProgressUtils.buildStaggeredAnimation(
-                              animation: _pageAnimation,
-                              index: 2,
-                              child: _buildResultsHeader(filteredWords.length, isDarkMode),
-                            ),
-                            
-                            // Words list
+
+                            // Scrollable area: search, filters, results header + word list
                             Expanded(
-                              child: AnimatedProgressUtils.buildStaggeredAnimation(
-                                animation: _pageAnimation,
-                                index: 3,
-                                child: _buildWordsList(filteredWords, isDarkMode),
+                              child: CustomScrollView(
+                                physics: const BouncingScrollPhysics(),
+                                slivers: [
+                                  SliverToBoxAdapter(
+                                    child: AnimatedProgressUtils.buildStaggeredAnimation(
+                                      animation: _pageAnimation,
+                                      index: 1,
+                                      child: _buildSearchAndFilters(learnedWords, isDarkMode),
+                                    ),
+                                  ),
+                                  SliverToBoxAdapter(
+                                    child: AnimatedProgressUtils.buildStaggeredAnimation(
+                                      animation: _pageAnimation,
+                                      index: 2,
+                                      child: _buildResultsHeader(filteredWords.length, isDarkMode),
+                                    ),
+                                  ),
+                                  if (filteredWords.isEmpty)
+                                    SliverFillRemaining(
+                                      hasScrollBody: false,
+                                      child: _buildEmptyState(isDarkMode),
+                                    )
+                                  else
+                                    SliverPadding(
+                                      padding: const EdgeInsets.all(MnemonicsSpacing.l),
+                                      sliver: SliverList.builder(
+                                        itemCount: filteredWords.length,
+                                        itemBuilder: (context, index) {
+                                          final item = filteredWords[index];
+                                          return AnimatedProgressUtils.buildStaggeredAnimation(
+                                            animation: _pageAnimation,
+                                            index: index + 4,
+                                            child: _buildWordCard(
+                                                item.word, item.userData, isDarkMode, index),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                           ],
@@ -605,58 +626,53 @@ class _TotalWordsDetailScreenState extends ConsumerState<TotalWordsDetailScreen>
     );
   }
 
-  Widget _buildWordsList(
-    List<({VocabularyWord word, UserWordData userData})> words,
-    bool isDarkMode,
-  ) {
-    if (words.isEmpty) {
-      return Center(
+  Widget _buildEmptyState(bool isDarkMode) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(MnemonicsSpacing.l),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.search_off,
               size: 64,
-              color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+              color: isDarkMode
+                  ? MnemonicsColors.darkTextSecondary
+                  : MnemonicsColors.textSecondary,
             ),
             const SizedBox(height: MnemonicsSpacing.l),
             Text(
-              _searchQuery.isNotEmpty || _selectedCategory != 'All' || 
-              _selectedDifficulty != 'All' || _selectedStage != 'All'
+              _searchQuery.isNotEmpty ||
+                      _selectedCategory != 'All' ||
+                      _selectedDifficulty != 'All' ||
+                      _selectedStage != 'All'
                   ? 'No words match your filters'
                   : 'No words learned yet!',
               style: MnemonicsTypography.bodyLarge.copyWith(
-                color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                color: isDarkMode
+                    ? MnemonicsColors.darkTextSecondary
+                    : MnemonicsColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: MnemonicsSpacing.m),
             Text(
-              _searchQuery.isNotEmpty || _selectedCategory != 'All' || 
-              _selectedDifficulty != 'All' || _selectedStage != 'All'
+              _searchQuery.isNotEmpty ||
+                      _selectedCategory != 'All' ||
+                      _selectedDifficulty != 'All' ||
+                      _selectedStage != 'All'
                   ? 'Try adjusting your search or filters'
                   : 'Start learning to see your progress here!',
               style: MnemonicsTypography.bodyRegular.copyWith(
-                color: isDarkMode ? MnemonicsColors.darkTextSecondary : MnemonicsColors.textSecondary,
+                color: isDarkMode
+                    ? MnemonicsColors.darkTextSecondary
+                    : MnemonicsColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
           ],
         ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(MnemonicsSpacing.l),
-      itemCount: words.length,
-      itemBuilder: (context, index) {
-        final item = words[index];
-        return AnimatedProgressUtils.buildStaggeredAnimation(
-          animation: _pageAnimation,
-          index: index + 4,
-          child: _buildWordCard(item.word, item.userData, isDarkMode, index),
-        );
-      },
+      ),
     );
   }
 

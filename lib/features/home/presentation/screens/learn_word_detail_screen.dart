@@ -824,77 +824,50 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     );
   }
 
-  // ── Phrases in Context — always shows a minimum of 5 examples ───────────
+  // ── Phrases in Context — real usage sentences only ───────────────────────
   Widget _buildPhrasesSection(VocabularyWord word) {
-    final phrases = word.phrases;
-    final examples = word.exampleSentences;
-
-    // Collect every available usage example, then top up with generic usage
-    // frames so the section never shows fewer than 5 examples.
-    final items = <String>[];
-    for (var i = 0; i < phrases.length; i++) {
-      final linked = examples.length > i ? examples[i] : <String>[];
-      if (linked.isNotEmpty) {
-        items.addAll(linked);
-      } else {
-        items.add(phrases[i]);
-      }
-    }
-    for (final group in examples.skip(phrases.length)) {
-      items.addAll(group);
-    }
-    if (word.example.isNotEmpty &&
-        word.example != 'No example available' &&
-        !items.contains(word.example)) {
-      items.add(word.example);
-    }
-
-    final fallbacks = <String>[
-      '"${word.word}" comes up often in everyday English.',
-      'She used "${word.word}" correctly in her essay.',
-      'Can you make your own sentence with "${word.word}"?',
-      'The teacher asked us to explain the meaning of "${word.word}".',
-      'He first saw "${word.word}" while reading the news.',
-      'Practising "${word.word}" daily will make it stick.',
-    ];
-    for (final f in fallbacks) {
-      if (items.length >= 5) break;
-      items.add(f);
-    }
-
-    final shown = items.take(5).toList();
+    final shown = word.contextSentences.take(5).toList();
 
     return Padding(
       padding: const EdgeInsets.only(top: MnemonicsSpacing.m),
       child: _buildCollapsibleCard(
         icon: Icons.chat,
         title: 'Phrases in Context',
-        contentWidget: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: shown
-              .map((s) => Padding(
-                    padding:
-                        const EdgeInsets.only(bottom: MnemonicsSpacing.s),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.format_quote,
-                            size: 16, color: Colors.blue.shade600),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            s,
-                            style: MnemonicsTypography.bodyRegular.copyWith(
-                              fontStyle: FontStyle.italic,
-                              height: 1.4,
-                            ),
+        contentWidget: shown.isEmpty
+            ? Text(
+                'Example sentences are not available for this word yet.',
+                style: MnemonicsTypography.bodyRegular.copyWith(
+                  color: Colors.grey.shade600,
+                  fontStyle: FontStyle.italic,
+                ),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: shown
+                    .map((s) => Padding(
+                          padding:
+                              const EdgeInsets.only(bottom: MnemonicsSpacing.s),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.format_quote,
+                                  size: 16, color: Colors.blue.shade600),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  s,
+                                  style: MnemonicsTypography.bodyRegular
+                                      .copyWith(
+                                    fontStyle: FontStyle.italic,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ))
-              .toList(),
-        ),
+                        ))
+                    .toList(),
+              ),
         color: Colors.blue.shade600,
       ),
     );

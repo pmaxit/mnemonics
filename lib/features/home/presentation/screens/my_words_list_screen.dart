@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../common/design/design_system.dart';
 import '../../../../common/design/theme_provider.dart';
+import '../../../../common/layout/detail_screen_layout.dart';
 import '../../../auth/providers/user_profile_provider.dart';
 import '../../../profile/domain/user_statistics.dart';
 import '../../domain/word_recommendation.dart';
@@ -37,31 +38,10 @@ class MyWordsListScreen extends ConsumerWidget {
       backgroundColor: isDarkMode
           ? MnemonicsColors.darkBackground
           : MnemonicsColors.surface,
-      appBar: AppBar(
-        backgroundColor:
-            isDarkMode ? MnemonicsColors.darkBackground : Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            size: 20,
-            color: isDarkMode
-                ? MnemonicsColors.darkTextPrimary
-                : MnemonicsColors.textPrimary,
-          ),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          'My Words',
-          style: MnemonicsTypography.headingMedium.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
-            color: isDarkMode
-                ? MnemonicsColors.darkTextPrimary
-                : MnemonicsColors.textPrimary,
-          ),
-        ),
+      appBar: DetailScreenAppBar(
+        title: 'My Words',
+        isDarkMode: isDarkMode,
+        onBack: () => context.pop(),
       ),
       body: recommendedAsync.when(
         loading: () => const Center(
@@ -99,8 +79,7 @@ class MyWordsListScreen extends ConsumerWidget {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(
-                    MnemonicsSpacing.l, MnemonicsSpacing.s, MnemonicsSpacing.l, 0),
+                padding: DetailScreenLayout.summaryCardOuterPadding,
                 child: _buildHeaderRow(
                     context, isDarkMode, words.length, levelLabel, () {
                   HapticFeedback.lightImpact();
@@ -112,8 +91,7 @@ class MyWordsListScreen extends ConsumerWidget {
               ),
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(MnemonicsSpacing.l,
-                      MnemonicsSpacing.m, MnemonicsSpacing.l, 40),
+                  padding: DetailScreenLayout.scrollBodyPadding,
                   physics: const BouncingScrollPhysics(),
                   itemCount: words.length,
                   itemBuilder: (context, index) {
@@ -181,70 +159,14 @@ class MyWordsListScreen extends ConsumerWidget {
 
   Widget _buildHeaderRow(BuildContext context, bool isDarkMode, int count,
       String levelLabel, VoidCallback onPracticeAll) {
-    return Container(
-      padding: const EdgeInsets.all(MnemonicsSpacing.m),
-      decoration: BoxDecoration(
-        color: isDarkMode ? MnemonicsColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusXL),
-        boxShadow: isDarkMode
-            ? MnemonicsColors.darkCardShadow
-            : MnemonicsColors.cardShadow,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$count words • $levelLabel',
-                  style: MnemonicsTypography.bodyLarge.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: isDarkMode
-                        ? MnemonicsColors.darkTextPrimary
-                        : MnemonicsColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Tap a word to study it',
-                  style: MnemonicsTypography.bodyRegular.copyWith(
-                    color: isDarkMode
-                        ? MnemonicsColors.darkTextSecondary
-                        : MnemonicsColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: onPracticeAll,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: MnemonicsSpacing.m, vertical: 10),
-              decoration: BoxDecoration(
-                color: MnemonicsColors.primaryGreen,
-                borderRadius: BorderRadius.circular(MnemonicsSpacing.radiusL),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.play_arrow_rounded, color: Colors.white, size: 18),
-                  SizedBox(width: 4),
-                  Text(
-                    'Practice all',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+    return DetailSummaryCard(
+      isDarkMode: isDarkMode,
+      child: DetailSummaryRow(
+        isDarkMode: isDarkMode,
+        title: '$count words • $levelLabel',
+        subtitle: 'Tap a word to study it',
+        actionLabel: 'Practice all',
+        onAction: onPracticeAll,
       ),
     );
   }

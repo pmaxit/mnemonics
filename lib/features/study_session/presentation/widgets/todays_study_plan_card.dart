@@ -118,9 +118,9 @@ class TodaysStudyPlanCard extends ConsumerWidget {
               if (plan.split.weak > 0)
                 _chip('${plan.split.weak} weak', MnemonicsColors.secondaryOrange),
               if (plan.split.newWords > 0)
-                _chip('${plan.split.newWords} new', Colors.blue),
+                _chip('${plan.split.newWords} new', MnemonicsColors.primaryGreen),
               if (plan.split.bonus > 0)
-                _chip('${plan.split.bonus} bonus', Colors.purple),
+                _chip('${plan.split.bonus} bonus', MnemonicsColors.progressPink),
             ],
           ),
           const SizedBox(height: MnemonicsSpacing.m),

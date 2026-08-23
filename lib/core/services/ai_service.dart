@@ -109,7 +109,7 @@ For the word: "$word"
 2. Generate 12-15 short phrases where the word is naturally used.
    Do NOT write full sentences here — only short phrases (2-4 words).
    The phrases should cover different contexts such as behavior, science, society, emotions, academic writing, etc.
-3. Write 3 example sentences using the word naturally in different contexts.
+3. Write 5 concise example sentences that use the word naturally in different real-world contexts (e.g. health, politics, daily life). Each sentence must show the word in action — never mention the word itself as a vocabulary item.
 4. Give 3 synonyms commonly tested on GRE.
 5. Give 1 quick memory tip or association to remember the word.
 
@@ -117,7 +117,7 @@ Return EXACTLY a valid JSON object with NO OTHER markdown or formatting (DO NOT 
 {
   "definition": "definition here",
   "common_phrases": ["phrase 1", "phrase 2", "phrase 3"],
-  "example_sentences": ["sentence 1", "sentence 2", "sentence 3"],
+  "example_sentences": ["sentence 1", "sentence 2", "sentence 3", "sentence 4", "sentence 5"],
   "synonyms": ["synonym 1", "synonym 2", "synonym 3"],
   "memory_tip": "memory tip here"
 }
