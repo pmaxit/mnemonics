@@ -33,7 +33,9 @@ Future<void> main() async {
   logService.seedDemoData();
   notificationService.seedDemoData({});
 
-  final deviceRegistry = DeviceRegistry(persistencePath: dataDir);
+  final deviceRegistry = await DeviceRegistry.create(
+    persistencePath: dataDir,
+  );
   final fcmService = FCMService();
   await fcmService.initialize();
 
@@ -53,9 +55,10 @@ Future<void> main() async {
   final server = await shelf_io.serve(handler, host, port);
   print('Server running on http://${server.address.host}:${server.port}');
 
-  ProcessSignal.sigint.watch().listen((_) {
+  ProcessSignal.sigint.watch().listen((_) async {
     print('Shutting down...');
     agentService.dispose();
-    server.close(force: true);
+    await deviceRegistry.close();
+    await server.close(force: true);
   });
 }

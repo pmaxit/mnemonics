@@ -84,6 +84,7 @@ Environment variables:
 - `PORT` - Server port (default: 8080)
 - `HOST` - Server host (default: 0.0.0.0)
 - `DATA_DIR` - Data storage directory (default: data)
+- `DATABASE_URL` - Postgres URL (mnemonics Railway DB). Device tokens persist here across deploys.
 - `OPENROUTER_API_KEY` - API key for AI suggestions (optional)
 - `FIREBASE_SERVICE_ACCOUNT` or `FIREBASE_SERVICE_ACCOUNT_BASE64` - FCM send credentials
 

@@ -167,7 +167,7 @@ class ApiRouter {
       if (token == null || token.isEmpty) {
         return _badRequest('Device token is required');
       }
-      _deviceRegistry.register(
+      await _deviceRegistry.register(
         token: token,
         userId: body?['userId'] as String?,
         platform: body?['platform'] as String?,
@@ -288,6 +288,7 @@ class ApiRouter {
         'fcmConfigured': _fcmService.isConfigured,
         'fcmError': _fcmService.initError,
         'registeredDevices': _deviceRegistry.count,
+        'deviceStore': _deviceRegistry.storeName,
       });
     });
 

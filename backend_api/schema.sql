@@ -115,3 +115,13 @@ CREATE TABLE IF NOT EXISTS study_plan_daily_completions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, completed_on)
 );
+
+-- FCM device tokens for lock-screen push (notification server)
+CREATE TABLE IF NOT EXISTS notification_devices (
+    token TEXT PRIMARY KEY,
+    user_id VARCHAR(128),
+    platform VARCHAR(32),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_notification_devices_user
+    ON notification_devices (user_id);
