@@ -64,4 +64,57 @@ void main() {
       expect(word.contextSentences, hasLength(2));
     });
   });
+
+  group('VocabularyWord.phraseUsages', () {
+    test('pairs matched collocation with example sentence', () {
+      const word = VocabularyWord(
+        word: 'obfuscate',
+        meaning: 'to confuse or make unclear',
+        mnemonic: 'test',
+        example: 'No example available',
+        synonyms: [],
+        antonyms: [],
+        difficulty: WordDifficulty.advanced,
+        category: 'academic',
+        phrases: [
+          'obfuscate the truth',
+          'obfuscate the code',
+        ],
+        exampleSentences: [
+          ['The politician used complex jargon to obfuscate the truth during the debate.'],
+          ['Software developers often obfuscate their code to protect it from being copied.'],
+        ],
+      );
+
+      final usages = word.phraseUsages;
+
+      expect(usages, hasLength(2));
+      expect(usages[0].useCase, equals('Obfuscate the truth'));
+      expect(
+        usages[0].sentence,
+        equals(
+            'The politician used complex jargon to obfuscate the truth during the debate.'),
+      );
+      expect(usages[1].useCase, equals('Obfuscate the code'));
+    });
+
+    test('extracts clause use case when explicit phrase is not listed', () {
+      const word = VocabularyWord(
+        word: 'abstain',
+        meaning: 'choose not to consume',
+        mnemonic: 'test',
+        example: 'He abstained from alcohol for a full year.',
+        synonyms: [],
+        antonyms: [],
+        difficulty: WordDifficulty.intermediate,
+        category: 'common',
+      );
+
+      final usages = word.phraseUsages;
+
+      expect(usages, hasLength(1));
+      expect(usages[0].useCase.isNotEmpty, isTrue);
+      expect(usages[0].sentence, equals('He abstained from alcohol for a full year.'));
+    });
+  });
 }

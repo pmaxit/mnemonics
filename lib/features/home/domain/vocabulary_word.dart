@@ -81,6 +81,31 @@ class ExampleSentencesConverter implements JsonConverter<List<List<String>>, dyn
   dynamic toJson(List<List<String>> object) => object;
 }
 
+/// Represents an example sentence paired with a specific use-case / collocation.
+class PhraseUsage {
+  final String useCase;
+  final String sentence;
+
+  const PhraseUsage({
+    required this.useCase,
+    required this.sentence,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PhraseUsage &&
+          runtimeType == other.runtimeType &&
+          useCase == other.useCase &&
+          sentence == other.sentence;
+
+  @override
+  int get hashCode => useCase.hashCode ^ sentence.hashCode;
+
+  @override
+  String toString() => '$useCase: $sentence';
+}
+
 /// Returns real usage sentences for a word, excluding phrase fragments and filler.
 extension VocabularyWordContextX on VocabularyWord {
   List<String> get contextSentences {
@@ -114,6 +139,47 @@ extension VocabularyWordContextX on VocabularyWord {
     return results;
   }
 
+  /// Pairs each context sentence with a bold use-case / collocation header.
+  List<PhraseUsage> get phraseUsages {
+    final sentences = contextSentences;
+    final phrasesList = effectivePhrases;
+    final results = <PhraseUsage>[];
+    final usedUseCases = <String>{};
+
+    for (var i = 0; i < sentences.length; i++) {
+      final sentence = sentences[i];
+      String? matchedUseCase;
+
+      // 1. Check if an existing collocation/phrase matches this sentence
+      for (final p in phrasesList) {
+        final pTrim = p.trim();
+        if (pTrim.isNotEmpty && _phraseMatchesSentence(pTrim, sentence)) {
+          matchedUseCase = _capitalize(pTrim);
+          break;
+        }
+      }
+
+      // 2. Extract surrounding predicate/phrase around the word if available
+      matchedUseCase ??= _extractUseCaseClause(sentence, word);
+
+      // 3. Fallback to a clear usage label
+      matchedUseCase ??= 'Use Case ${i + 1}';
+
+      // Ensure use case labels are distinguishable
+      var uniqueUseCase = matchedUseCase;
+      var counter = 2;
+      while (usedUseCases.contains(uniqueUseCase.toLowerCase())) {
+        uniqueUseCase = '$matchedUseCase ($counter)';
+        counter++;
+      }
+      usedUseCases.add(uniqueUseCase.toLowerCase());
+
+      results.add(PhraseUsage(useCase: uniqueUseCase, sentence: sentence));
+    }
+
+    return results;
+  }
+
   /// Short 2-4 word collocations for this word. Prefers the dedicated
   /// `phrases` column, falling back to `common_phrases` parsed out of the
   /// AI-insights blob so already-generated content isn't wasted.
@@ -131,6 +197,85 @@ extension VocabularyWordContextX on VocabularyWord {
     if (synonyms.isNotEmpty) return synonyms;
     return _parseAiInsightsListField(aiInsights, const ['synonyms']);
   }
+}
+
+bool _phraseMatchesSentence(String phrase, String sentence) {
+  final sLower = sentence.toLowerCase();
+  final pLower = phrase.toLowerCase().trim();
+  if (sLower.contains(pLower)) return true;
+
+  const ignored = {
+    'the',
+    'a',
+    'an',
+    'their',
+    'his',
+    'her',
+    'its',
+    'our',
+    'my',
+    'your',
+    'this',
+    'that',
+    'these',
+    'those',
+    'to',
+    'of',
+    'for',
+    'in',
+    'on',
+    'with'
+  };
+
+  final phraseTokens = pLower
+      .split(RegExp(r'\s+'))
+      .where((t) => t.isNotEmpty && !ignored.contains(t))
+      .toList();
+
+  if (phraseTokens.length < 2) return false;
+
+  final tokenPattern =
+      phraseTokens.map(RegExp.escape).join(r'(?:\s+\w+){0,3}\s+');
+  return RegExp('\\b$tokenPattern\\b', caseSensitive: false).hasMatch(sLower);
+}
+
+String? _extractUseCaseClause(String sentence, String word) {
+  final cleanWord = RegExp.escape(word);
+  final forwardPattern = RegExp(
+    '\\b$cleanWord\\w*(?:\\s+[A-Za-z]+){1,3}',
+    caseSensitive: false,
+  );
+  final fMatch = forwardPattern.firstMatch(sentence);
+  if (fMatch != null) {
+    final raw = fMatch.group(0)?.trim();
+    if (raw != null && raw.isNotEmpty) {
+      final cleaned = raw.replaceAll(RegExp(r'^[^\w]+|[^\w]+$'), '');
+      if (cleaned.split(RegExp(r'\s+')).length >= 2) {
+        return _capitalize(cleaned);
+      }
+    }
+  }
+
+  final pattern = RegExp(
+    '(?:\\b[A-Za-z]+\\s+)?\\b$cleanWord\\w*(?:\\s+[A-Za-z]+){1,2}',
+    caseSensitive: false,
+  );
+  final match = pattern.firstMatch(sentence);
+  if (match != null) {
+    final raw = match.group(0)?.trim();
+    if (raw != null && raw.isNotEmpty) {
+      final cleaned = raw.replaceAll(RegExp(r'^[^\w]+|[^\w]+$'), '');
+      if (cleaned.split(RegExp(r'\s+')).length >= 2) {
+        return _capitalize(cleaned);
+      }
+    }
+  }
+  return null;
+}
+
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text[0].toUpperCase() + text.substring(1);
 }
 
 bool _looksLikeUsageSentence(String sentence, String word) {

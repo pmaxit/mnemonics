@@ -229,108 +229,110 @@ class NotificationService {
 
   /// Seed with demo data.
   void seedDemoData(Map<String, String> userMap) {
-    if (_notifications.isNotEmpty) return;
     final now = DateTime.now();
-    final demoNotifications = [
-      (
-        '🔥 Great streak! Keep going!',
-        'You\'ve maintained a 7-day streak! Let\'s make it 10.',
-        NotificationSchemeType.personalized,
-        NotificationPriority.high,
-        'user_1',
-      ),
-      (
-        '📚 Words due for review',
-        'You have 15 words waiting for review. A quick 5-minute session will clear them!',
-        NotificationSchemeType.personalized,
-        NotificationPriority.medium,
-        'user_2',
-      ),
-      (
-        '🎯 Study plan progress',
-        'You\'re 40% through your 30-day plan. Consistency is key!',
-        NotificationSchemeType.personalized,
-        NotificationPriority.medium,
-        'user_3',
-      ),
-      (
-        '✨ New feature: Spaced Repetition 2.0',
-        'We\'ve improved our spaced repetition algorithm for better retention. Check it out!',
-        NotificationSchemeType.general,
-        NotificationPriority.low,
-        null,
-      ),
-      (
-        '🏆 Weekly vocabulary challenge',
-        'Learn 50 new words this week and earn a special badge!',
-        NotificationSchemeType.general,
-        NotificationPriority.medium,
-        null,
-      ),
-      (
-        '⏰ Time to study!',
-        'You haven\'t studied today. A 10-minute session keeps your streak alive!',
-        NotificationSchemeType.personalized,
-        NotificationPriority.medium,
-        'user_1',
-      ),
-    ];
-    for (final n in demoNotifications) {
-      _notifications.add(AppNotification(
-        id: _uuid.v4(),
-        title: n.$1,
-        body: n.$2,
-        schemeType: n.$3,
-        priority: n.$4,
-        status: n.$5 != null
-            ? NotificationDeliveryStatus.sent
-            : NotificationDeliveryStatus.pending,
-        targetUserId: n.$5,
-        createdAt: now.subtract(const Duration(hours: 2)),
-        sentAt: n.$5 != null
-            ? now.subtract(const Duration(hours: 2))
-            : null,
-      ));
+    if (_notifications.isEmpty) {
+      final demoNotifications = [
+        (
+          '🔥 Great streak! Keep going!',
+          'You\'ve maintained a 7-day streak! Let\'s make it 10.',
+          NotificationSchemeType.personalized,
+          NotificationPriority.high,
+          'user_1',
+        ),
+        (
+          '📚 Words due for review',
+          'You have 15 words waiting for review. A quick 5-minute session will clear them!',
+          NotificationSchemeType.personalized,
+          NotificationPriority.medium,
+          'user_2',
+        ),
+        (
+          '🎯 Study plan progress',
+          'You\'re 40% through your 30-day plan. Consistency is key!',
+          NotificationSchemeType.personalized,
+          NotificationPriority.medium,
+          'user_3',
+        ),
+        (
+          '✨ New feature: Spaced Repetition 2.0',
+          'We\'ve improved our spaced repetition algorithm for better retention. Check it out!',
+          NotificationSchemeType.general,
+          NotificationPriority.low,
+          null,
+        ),
+        (
+          '🏆 Weekly vocabulary challenge',
+          'Learn 50 new words this week and earn a special badge!',
+          NotificationSchemeType.general,
+          NotificationPriority.medium,
+          null,
+        ),
+        (
+          '⏰ Time to study!',
+          'You haven\'t studied today. A 10-minute session keeps your streak alive!',
+          NotificationSchemeType.personalized,
+          NotificationPriority.medium,
+          'user_1',
+        ),
+      ];
+      for (final n in demoNotifications) {
+        _notifications.add(AppNotification(
+          id: _uuid.v4(),
+          title: n.$1,
+          body: n.$2,
+          schemeType: n.$3,
+          priority: n.$4,
+          status: n.$5 != null
+              ? NotificationDeliveryStatus.sent
+              : NotificationDeliveryStatus.pending,
+          targetUserId: n.$5,
+          createdAt: now.subtract(const Duration(hours: 2)),
+          sentAt: n.$5 != null
+              ? now.subtract(const Duration(hours: 2))
+              : null,
+        ));
+      }
+      _persistNotifications();
     }
 
     // Seed some agent suggestions
-    final demoSuggestions = [
-      (
-        '🎯 Personalized: User 3 needs encouragement',
-        'User 3 completed 5 days of their study plan but missed yesterday. Send an encouraging notification to help them get back on track.',
-        NotificationSchemeType.personalized,
-        'user_3',
-        0.92,
-      ),
-      (
-        '📊 Study plan reminder for all users',
-        'Multiple users have words due for review. A general reminder about spaced repetition could boost engagement.',
-        NotificationSchemeType.general,
-        null,
-        0.78,
-      ),
-      (
-        '🔥 Streak saver alert',
-        'User 1 has a 7-day streak at risk (missed yesterday\'s session). Send a personalized streak-saving notification.',
-        NotificationSchemeType.personalized,
-        'user_1',
-        0.95,
-      ),
-    ];
-    for (final s in demoSuggestions) {
-      _suggestions.add(AgentSuggestion(
-        id: _uuid.v4(),
-        title: s.$1,
-        body: s.$2,
-        suggestedScheme: s.$3,
-        priority: NotificationPriority.medium,
-        reasoning: 'Based on activity log analysis: ${s.$2}',
-        confidence: s.$5,
-        targetUserId: s.$4,
-      ));
+    if (_suggestions.isEmpty) {
+      final demoSuggestions = [
+        (
+          '🎯 Personalized: User 3 needs encouragement',
+          'User 3 completed 5 days of their study plan but missed yesterday. Send an encouraging notification to help them get back on track.',
+          NotificationSchemeType.personalized,
+          'user_3',
+          0.92,
+        ),
+        (
+          '📊 Study plan reminder for all users',
+          'Multiple users have words due for review. A general reminder about spaced repetition could boost engagement.',
+          NotificationSchemeType.general,
+          null,
+          0.78,
+        ),
+        (
+          '🔥 Streak saver alert',
+          'User 1 has a 7-day streak at risk (missed yesterday\'s session). Send a personalized streak-saving notification.',
+          NotificationSchemeType.personalized,
+          'user_1',
+          0.95,
+        ),
+      ];
+      for (final s in demoSuggestions) {
+        _suggestions.add(AgentSuggestion(
+          id: _uuid.v4(),
+          title: s.$1,
+          body: s.$2,
+          suggestedScheme: s.$3,
+          priority: NotificationPriority.medium,
+          reasoning: 'Based on activity log analysis: ${s.$2}',
+          confidence: s.$5,
+          targetUserId: s.$4,
+        ));
+      }
+      _persistSuggestions();
     }
-
-    _persistNotifications();
-    _persistSuggestions();
   }
 }

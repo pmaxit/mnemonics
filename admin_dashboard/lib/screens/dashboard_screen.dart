@@ -32,7 +32,7 @@ class DashboardScreen extends ConsumerWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           stats.when(
             loading: () => const LinearProgressIndicator(),
-            error: (e, _) => Card(child: Padding(padding: EdgeInsets.all(16), child: Text('Stats error: $e'))),
+            error: (e, _) => Card(child: Padding(padding: const EdgeInsets.all(16), child: Text('Stats error: $e'))),
             data: (s) => LayoutBuilder(builder: (context, c) {
               final w = c.maxWidth;
               final cols = w > 900 ? 4 : w > 600 ? 2 : 1;

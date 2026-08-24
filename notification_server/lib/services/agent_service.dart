@@ -200,7 +200,7 @@ Return ONLY a valid JSON array with NO markdown formatting:
         if (existingForUser.isEmpty &&
             !lastSession.timestamp.isBefore(todayStart)) {
           suggestions.add(AgentSuggestion(
-            id: 'rule-session-${userId}',
+            id: 'rule-session-$userId',
             title: '🌟 Great session! Ready for more?',
             body: 'You completed a study session today. Try reviewing 5 more words to boost retention!',
             suggestedScheme: NotificationSchemeType.personalized,
@@ -218,7 +218,7 @@ Return ONLY a valid JSON array with NO markdown formatting:
       if (activityTypes.contains('session_missed') ||
           activityTypes.contains('streak_ended')) {
         suggestions.add(AgentSuggestion(
-          id: 'rule-missed-${userId}',
+          id: 'rule-missed-$userId',
           title: '⏰ Don\'t lose your progress!',
           body: 'You missed yesterday\'s session. Start with just 5 minutes to get back on track.',
           suggestedScheme: NotificationSchemeType.personalized,
@@ -235,12 +235,13 @@ Return ONLY a valid JSON array with NO markdown formatting:
       for (final log in userLogs) {
         if (log.activityType == 'streak_milestone') {
           final streakDays =
-              log.context['streak']?.toString() ?? 'a streak';
+              log.context['streak']?.toString() ?? '7';
+          final streakCount = int.tryParse(streakDays) ?? 7;
           suggestions.add(AgentSuggestion(
             id: 'rule-streak-${log.id}',
             title: '🔥 Amazing streak! Keep it burning!',
             body:
-                'You reached $streakDays days! Can you make it to ${int.parse(streakDays.toString()) + 7} next?',
+                'You reached $streakDays days! Can you make it to ${streakCount + 7} next?',
             suggestedScheme: NotificationSchemeType.personalized,
             priority: NotificationPriority.high,
             reasoning:
@@ -256,7 +257,7 @@ Return ONLY a valid JSON array with NO markdown formatting:
       // 4. Words due for review
       if (activityTypes.contains('words_due')) {
         suggestions.add(AgentSuggestion(
-          id: 'rule-due-${userId}',
+          id: 'rule-due-$userId',
           title: '📚 Words waiting for review!',
           body: 'Spaced repetition words are due. A quick session will strengthen your memory.',
           suggestedScheme: NotificationSchemeType.personalized,

@@ -13,8 +13,6 @@ import '../../../profile/domain/user_statistics.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
 import '../../../practice/domain/user_progress_service.dart';
 import '../../../home/providers.dart';
-import '../../../practice/providers/ai_mnemonic_provider.dart';
-import '../../../practice/providers/ai_word_insights_provider.dart';
 
 import 'package:translator/translator.dart';
 import 'package:http/http.dart' as http;
@@ -481,46 +479,6 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                               ],
                             ),
                           ),
-                          const SizedBox(height: MnemonicsSpacing.m),
-
-                          // ── Example quote ──────────────────────────────
-                          if (word.example.isNotEmpty &&
-                              word.example != 'No example available')
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(
-                                  MnemonicsSpacing.l),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.05),
-                                borderRadius: BorderRadius.circular(
-                                    MnemonicsSpacing.radiusXL),
-                                border: Border.all(
-                                  color: Colors.blue.withOpacity(0.15),
-                                ),
-                              ),
-                              child: Row(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                children: [
-                                  Icon(Icons.format_quote,
-                                      size: 18,
-                                      color: Colors.blue.shade600),
-                                  const SizedBox(
-                                      width: MnemonicsSpacing.s),
-                                  Expanded(
-                                    child: Text(
-                                      word.example,
-                                      style: MnemonicsTypography
-                                          .bodyRegular
-                                          .copyWith(
-                                        fontStyle: FontStyle.italic,
-                                        height: 1.5,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                           const SizedBox(height: MnemonicsSpacing.l),
 
                           VocabularyWordImage(
@@ -596,14 +554,17 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                   ? word.definition!
                                   : word.meaning;
 
-                              final phrasesList = word.phrases;
-                              final examplesLists = word.exampleSentences;
-
                               final String memoryTipText =
                                   (word.aiMnemonic != null &&
                                           word.aiMnemonic!.isNotEmpty)
                                       ? word.aiMnemonic!
                                       : word.mnemonic;
+
+                              final bool hasDistinctDefinition =
+                                  word.definition != null &&
+                                      word.definition!.trim().isNotEmpty &&
+                                      word.definition!.trim().toLowerCase() !=
+                                          word.meaning.trim().toLowerCase();
 
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,23 +587,25 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                   const SizedBox(height: MnemonicsSpacing.m),
                                   Column(
                                     children: [
-                                      _buildCollapsibleCard(
-                                        icon: Icons.menu_book,
-                                        title: 'Definition',
-                                        contentWidget: Text(definitionText,
-                                            style: MnemonicsTypography
-                                                .bodyRegular),
-                                        color: Colors.amber.shade700,
-                                      ),
-                                      _buildPhrasesSection(word),
-                                      _buildCommonPhrasesSection(word),
+                                      if (hasDistinctDefinition) ...[
+                                        _buildCollapsibleCard(
+                                          icon: Icons.menu_book,
+                                          title: 'Nuance & Extended Meaning',
+                                          contentWidget: Text(word.definition!,
+                                              style: MnemonicsTypography
+                                                  .bodyRegular),
+                                          color: Colors.amber.shade700,
+                                        ),
+                                      ],
+                                      _buildPhrasesSection(word, isDarkMode),
                                       _buildFillInBlankSection(word, definitionText),
+                                      _buildCommonPhrasesSection(word),
                                       if (memoryTipText.isNotEmpty) ...[
                                         const SizedBox(
                                             height: MnemonicsSpacing.m),
                                         _buildCollapsibleCard(
                                           icon: Icons.psychology,
-                                          title: 'Memory Tip',
+                                          title: 'Memory Hook',
                                           contentWidget: Text(memoryTipText,
                                               style: MnemonicsTypography
                                                   .bodyRegular),
@@ -827,42 +790,72 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     );
   }
 
-  // ── Phrases in Context — real usage sentences only ───────────────────────
-  Widget _buildPhrasesSection(VocabularyWord word) {
-    final shown = word.contextSentences.take(5).toList();
+  // ── Phrase Context & Usage — bold usecase + example sentence ───────────
+  Widget _buildPhrasesSection(VocabularyWord word, bool isDarkMode) {
+    final usages = word.phraseUsages.take(5).toList();
 
     return Padding(
       padding: const EdgeInsets.only(top: MnemonicsSpacing.m),
       child: _buildCollapsibleCard(
-        icon: Icons.chat,
-        title: 'Phrases in Context',
-        contentWidget: shown.isEmpty
+        icon: Icons.chat_bubble_outline,
+        title: 'Phrase Context & Usage',
+        contentWidget: usages.isEmpty
             ? Text(
                 'Example sentences are not available for this word yet.',
                 style: MnemonicsTypography.bodyRegular.copyWith(
-                  color: Colors.grey.shade600,
+                  color:
+                      isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
                   fontStyle: FontStyle.italic,
                 ),
               )
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: shown
-                    .map((s) => Padding(
+                children: usages
+                    .map((usage) => Padding(
                           padding:
-                              const EdgeInsets.only(bottom: MnemonicsSpacing.s),
+                              const EdgeInsets.only(bottom: MnemonicsSpacing.m),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.format_quote,
-                                  size: 16, color: Colors.blue.shade600),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Icon(
+                                  Icons.label_important_outline,
+                                  size: 16,
+                                  color: Colors.blue.shade600,
+                                ),
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
-                                child: Text(
-                                  s,
-                                  style: MnemonicsTypography.bodyRegular
-                                      .copyWith(
-                                    fontStyle: FontStyle.italic,
-                                    height: 1.4,
+                                child: RichText(
+                                  text: TextSpan(
+                                    style: MnemonicsTypography.bodyRegular
+                                        .copyWith(
+                                      color: isDarkMode
+                                          ? MnemonicsColors.darkTextPrimary
+                                          : MnemonicsColors.textPrimary,
+                                      height: 1.5,
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: '${usage.useCase} — ',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: isDarkMode
+                                              ? Colors.white
+                                              : MnemonicsColors.textPrimary,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: usage.sentence,
+                                        style: TextStyle(
+                                          fontStyle: FontStyle.italic,
+                                          color: isDarkMode
+                                              ? MnemonicsColors.darkTextSecondary
+                                              : MnemonicsColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
@@ -876,7 +869,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     );
   }
 
-  // ── Common Phrases — short collocations, tap-friendly chips ─────────────
+  // ── Key Collocations — short collocations, tap-friendly chips ────────────
   Widget _buildCommonPhrasesSection(VocabularyWord word) {
     final phrases = word.effectivePhrases;
     if (phrases.isEmpty) return const SizedBox.shrink();
@@ -885,7 +878,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
       padding: const EdgeInsets.only(top: MnemonicsSpacing.m),
       child: _buildCollapsibleCard(
         icon: Icons.style,
-        title: 'Common Phrases',
+        title: 'Key Collocations',
         contentWidget: Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -911,7 +904,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
       padding: const EdgeInsets.only(top: MnemonicsSpacing.m),
       child: _buildCollapsibleCard(
         icon: Icons.quiz,
-        title: 'Fill in the Blank',
+        title: 'Fill in the Blank (Active Recall)',
         contentWidget: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: sentences

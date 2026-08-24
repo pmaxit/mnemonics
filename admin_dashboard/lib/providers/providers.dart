@@ -5,19 +5,19 @@ import '../services/api_service.dart';
 final apiServiceProvider = Provider<ApiService>((ref) => ApiService());
 
 final statsProvider = FutureProvider<DashboardStats>((ref) async {
-  return ref.read(apiServiceProvider).fetchStats();
+  return ref.watch(apiServiceProvider).fetchStats();
 });
 
 final activityLogsProvider = FutureProvider<List<ActivityLogEntry>>((ref) async {
-  return ref.read(apiServiceProvider).fetchLogs(limit: 50);
+  return ref.watch(apiServiceProvider).fetchLogs(limit: 50);
 });
 
 final notificationsProvider = FutureProvider<List<AppNotification>>((ref) async {
-  return ref.read(apiServiceProvider).fetchNotifications(limit: 50);
+  return ref.watch(apiServiceProvider).fetchNotifications(limit: 50);
 });
 
 final suggestionsProvider = FutureProvider<List<AgentSuggestion>>((ref) async {
-  return ref.read(apiServiceProvider).fetchSuggestions();
+  return ref.watch(apiServiceProvider).fetchSuggestions();
 });
 
-final apiBaseUrlProvider = Provider<String>((ref) => ref.read(apiServiceProvider).baseUrl);
+final apiBaseUrlProvider = Provider<String>((ref) => ref.watch(apiServiceProvider).baseUrl);
