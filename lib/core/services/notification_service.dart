@@ -2,14 +2,25 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:mnemonics/core/config/notification_api_config.dart';
 import 'package:mnemonics/core/platform/desktop_compat.dart';
+import 'package:mnemonics/core/services/local_notifications.dart';
 import 'package:mnemonics/core/services/notification_manager.dart';
 import 'package:mnemonics/core/services/notification_poller.dart';
+import 'package:mnemonics/firebase_options.dart';
+
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  developer.log(
+    'Background message received: ${message.notification?.title}',
+  );
+}
 
 /// Handles foreground and background notifications
 class NotificationService {
@@ -24,6 +35,9 @@ class NotificationService {
     try {
       developer.log('Requesting notification permission...');
       debugPrint('Requesting notification permission...');
+      await LocalNotifications.prime();
+      await LocalNotifications.requestPermission();
+
       if (defaultTargetPlatform == TargetPlatform.iOS) {
         final settings = await FirebaseMessaging.instance.requestPermission(
           alert: true,
@@ -31,7 +45,6 @@ class NotificationService {
           sound: true,
         );
         debugPrint('Notification permission: ${settings.authorizationStatus}');
-        await _waitForApnsToken();
       }
 
       await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
@@ -40,36 +53,26 @@ class NotificationService {
         sound: true,
       );
 
-      String? token;
-      try {
-        token = await FirebaseMessaging.instance
-            .getToken()
-            .timeout(const Duration(seconds: 15));
-      } catch (e) {
-        debugPrint('getToken failed: $e');
-      }
+      final token = await _obtainFcmToken();
       developer.log('FCM Registration Token: $token');
       debugPrint('FCM Registration Token: $token');
 
       if (token != null && token.isNotEmpty) {
-        try {
-          await FirebaseMessaging.instance.subscribeToTopic(_allUsersTopic);
-          debugPrint('Subscribed to $_allUsersTopic');
-        } catch (e) {
-          debugPrint('Topic subscribe failed: $e');
-        }
-        await _registerDevice(token);
+        await _subscribeAndRegister(token);
+      } else {
+        debugPrint(
+          'No FCM token yet. Lock-screen push will not work until APNs registers.',
+        );
       }
 
       FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
         debugPrint('FCM token refresh: $newToken');
-        await FirebaseMessaging.instance.subscribeToTopic(_allUsersTopic);
-        await _registerDevice(newToken);
+        await _subscribeAndRegister(newToken);
       });
 
       if (!desktopAuthBypass) {
         FirebaseAuth.instance.authStateChanges().listen((user) async {
-          final current = await FirebaseMessaging.instance.getToken();
+          final current = await _obtainFcmToken();
           if (current != null) await _registerDevice(current, userId: user?.uid);
         });
       }
@@ -83,7 +86,6 @@ class NotificationService {
       }
 
       FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
       final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
       if (initialMessage != null) {
@@ -98,16 +100,50 @@ class NotificationService {
     }
   }
 
-  Future<void> _waitForApnsToken() async {
-    for (var i = 0; i < 10; i++) {
+  Future<void> _subscribeAndRegister(String token) async {
+    try {
+      await FirebaseMessaging.instance.subscribeToTopic(_allUsersTopic);
+      debugPrint('Subscribed to $_allUsersTopic');
+    } catch (e) {
+      debugPrint('Topic subscribe failed: $e');
+    }
+    await _registerDevice(token);
+  }
+
+  Future<String?> _obtainFcmToken() async {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final apns = await _waitForApnsToken();
+      if (apns == null) return null;
+    }
+    for (var i = 0; i < 5; i++) {
+      try {
+        final token = await FirebaseMessaging.instance
+            .getToken()
+            .timeout(const Duration(seconds: 15));
+        if (token != null && token.isNotEmpty) return token;
+      } catch (e) {
+        debugPrint('getToken attempt ${i + 1} failed: $e');
+        await LocalNotifications.prime();
+        await _waitForApnsToken();
+      }
+    }
+    return null;
+  }
+
+  Future<String?> _waitForApnsToken() async {
+    for (var i = 0; i < 40; i++) {
       final apns = await FirebaseMessaging.instance.getAPNSToken();
       if (apns != null) {
         debugPrint('APNs token ready');
-        return;
+        return apns;
+      }
+      if (i == 0 || i % 4 == 0) {
+        await LocalNotifications.prime();
       }
       await Future<void>.delayed(const Duration(milliseconds: 500));
     }
-    debugPrint('APNs token not ready; topic subscribe may fail until it is');
+    debugPrint('APNs token not ready; lock-screen FCM cannot be delivered');
+    return null;
   }
 
   Future<void> _registerDevice(String token, {String? userId}) async {
@@ -160,16 +196,8 @@ class NotificationService {
         sourceKey: id,
         showToast: false,
       );
+      LocalNotifications.show(title: title, body: body, id: id);
     }
-  }
-
-  @pragma('vm:entry-point')
-  static Future<void> _firebaseMessagingBackgroundHandler(
-    RemoteMessage message,
-  ) async {
-    developer.log(
-      'Background message received: ${message.notification?.title}',
-    );
   }
 
   void _handleMessage(RemoteMessage message) {

@@ -14,8 +14,8 @@ import 'package:path_provider/path_provider.dart';
 
 /// Pulls notifications the admin marked as sent and shows them in-app.
 ///
-/// The admin UI does not send FCM. It creates a row then POSTs
-/// `/api/notifications/:id/send`. This poller is how the phone sees those.
+/// Lock-screen push is delivered by FCM/APNs. This poller is the in-app
+/// fallback while the app is open.
 class NotificationPoller with WidgetsBindingObserver {
   NotificationPoller._();
   static final NotificationPoller instance = NotificationPoller._();
@@ -33,6 +33,7 @@ class NotificationPoller with WidgetsBindingObserver {
     if (_started) return;
     _started = true;
     WidgetsBinding.instance.addObserver(this);
+    await LocalNotifications.requestPermission();
     await _loadSeen();
     await poll();
     _timer = Timer.periodic(_pollInterval, (_) => poll());

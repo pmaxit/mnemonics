@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart';
 import 'common/design/theme_provider.dart';
 import 'core/platform/desktop_compat.dart';
@@ -13,6 +14,7 @@ import 'features/home/domain/user_word_data.dart';
 import 'features/home/domain/user_settings.dart';
 import 'features/home/domain/review_activity.dart';
 import 'features/profile/domain/user_statistics.dart';
+import 'core/services/local_notifications.dart';
 import 'core/services/notification_service.dart';
 import 'common/widgets/notification_display.dart';
 import 'common/widgets/notification_listener.dart';
@@ -46,6 +48,8 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    await LocalNotifications.prime();
   }
   // The .env asset is optional on desktop demo builds; missing file
   // should not crash the app.
@@ -71,7 +75,9 @@ void main() async {
   );
   // Do not block first frame on APNs/FCM — iOS permission and token
   // fetch can stall until the OS dialog is dismissed.
-  unawaited(NotificationService().initialize());
+  if (!desktopAuthBypass) {
+    unawaited(NotificationService().initialize());
+  }
 }
 
 class MnemonicsApp extends ConsumerWidget {

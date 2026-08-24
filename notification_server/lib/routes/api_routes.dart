@@ -172,6 +172,9 @@ class ApiRouter {
         userId: body?['userId'] as String?,
         platform: body?['platform'] as String?,
       );
+      developer.log(
+        'Registered device platform=${body?['platform']} user=${body?['userId']} total=${_deviceRegistry.count}',
+      );
       return _jsonResponse({
         'ok': true,
         'devices': _deviceRegistry.count,

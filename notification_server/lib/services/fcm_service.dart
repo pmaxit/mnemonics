@@ -123,6 +123,14 @@ class FCMService {
       } catch (e) {
         errors.add('topic/$_topic: $e');
       }
+      for (final device in devices?.all() ?? const []) {
+        tokens.add(device.token);
+      }
+      if (tokens.isEmpty) {
+        errors.add(
+          'No devices have registered an FCM token. Open the iPhone app, allow notifications, then send again.',
+        );
+      }
     }
 
     for (final token in tokens) {
@@ -240,11 +248,25 @@ class FCMService {
             'body': body,
           },
           'data': stringData,
-          'android': {'priority': 'HIGH'},
+          'android': {
+            'priority': 'HIGH',
+            'notification': {
+              'title': title,
+              'body': body,
+              'sound': 'default',
+            },
+          },
           'apns': {
-            'headers': {'apns-priority': '10'},
+            'headers': {
+              'apns-priority': '10',
+              'apns-push-type': 'alert',
+            },
             'payload': {
               'aps': {
+                'alert': {
+                  'title': title,
+                  'body': body,
+                },
                 'sound': 'default',
                 'badge': 1,
               },
