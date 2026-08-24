@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../common/widgets/bottom_nav.dart';
+import '../../../../common/widgets/notification_bell_button.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
 import '../../../../common/design/design_system.dart';
@@ -123,10 +124,7 @@ class MainScaffold extends StatelessWidget {
                     ),
               actions: [
                 if (!isSettingsScreen) ...[
-                  IconButton(
-                    icon: const Icon(Icons.notifications_none),
-                    onPressed: () {},
-                  ),
+                  const NotificationBellButton(),
                   IconButton(
                     icon: const Icon(Icons.settings_outlined),
                     onPressed: () => context.push('/main/profile/settings'),

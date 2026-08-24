@@ -73,9 +73,10 @@ class ApiService {
     return AppNotification.fromJson(jsonDecode(r.body) as Map<String, dynamic>);
   }
 
-  Future<void> sendNotification(String id) async {
+  Future<Map<String, dynamic>> sendNotification(String id) async {
     final r = await _client.post(Uri.parse('$baseUrl/api/notifications/$id/send'));
     _check(r);
+    return jsonDecode(r.body) as Map<String, dynamic>;
   }
 
   Future<List<AgentSuggestion>> fetchSuggestions({bool pendingOnly = false}) async {

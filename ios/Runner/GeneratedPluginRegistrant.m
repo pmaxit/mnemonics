@@ -24,6 +24,12 @@
 @import firebase_core;
 #endif
 
+#if __has_include(<firebase_messaging/FLTFirebaseMessagingPlugin.h>)
+#import <firebase_messaging/FLTFirebaseMessagingPlugin.h>
+#else
+@import firebase_messaging;
+#endif
+
 #if __has_include(<google_sign_in_ios/FLTGoogleSignInPlugin.h>)
 #import <google_sign_in_ios/FLTGoogleSignInPlugin.h>
 #else
@@ -66,6 +72,7 @@
   [FilePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FilePickerPlugin"]];
   [FLTFirebaseAuthPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseAuthPlugin"]];
   [FLTFirebaseCorePlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseCorePlugin"]];
+  [FLTFirebaseMessagingPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseMessagingPlugin"]];
   [FLTGoogleSignInPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTGoogleSignInPlugin"]];
   [FPPPackageInfoPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"FPPPackageInfoPlusPlugin"]];
   [PathProviderPlugin registerWithRegistrar:[registry registrarForPlugin:@"PathProviderPlugin"]];

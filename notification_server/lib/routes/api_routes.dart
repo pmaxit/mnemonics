@@ -11,16 +11,19 @@ class ApiRouter {
   final NotificationService _notificationService;
   final NotificationAgentService _agentService;
   final FCMService _fcmService;
+  final DeviceRegistry _deviceRegistry;
 
   ApiRouter({
     required ActivityLogService logService,
     required NotificationService notificationService,
     required NotificationAgentService agentService,
     required FCMService fcmService,
+    required DeviceRegistry deviceRegistry,
   })  : _logService = logService,
         _notificationService = notificationService,
         _agentService = agentService,
-        _fcmService = fcmService;
+        _fcmService = fcmService,
+        _deviceRegistry = deviceRegistry;
 
   Router get router {
     final r = Router();
@@ -138,16 +141,44 @@ class ApiRouter {
       }
     });
 
-    r.post('/api/notifications/<id>/send', (Request request, String id) {
+    r.post('/api/notifications/<id>/send', (Request request, String id) async {
       try {
+        final existing = _notificationService.getById(id);
+        if (existing == null) {
+          return _notFound('Notification not found');
+        }
+        final fcm = await _fcmService.deliver(
+          existing,
+          devices: _deviceRegistry,
+        );
         final notification = _notificationService.sendNotification(id);
-        return _jsonResponse(notification.toJson());
+        return _jsonResponse({
+          ...notification.toJson(),
+          'fcm': fcm.toJson(),
+        });
       } catch (e) {
         return _notFound('Notification not found: $e');
       }
     });
-    
-    // Send notification via FCM
+
+    r.post('/api/devices/register', (Request request) async {
+      final body = await _parseBody(request);
+      final token = body?['token'] as String?;
+      if (token == null || token.isEmpty) {
+        return _badRequest('Device token is required');
+      }
+      _deviceRegistry.register(
+        token: token,
+        userId: body?['userId'] as String?,
+        platform: body?['platform'] as String?,
+      );
+      return _jsonResponse({
+        'ok': true,
+        'devices': _deviceRegistry.count,
+      });
+    });
+
+    // Send notification via FCM to an explicit device token
     r.post('/api/notifications/<id>/send-fcm', (Request request, String id) async {
       final body = await _parseBody(request);
       final token = body?['token'] as String?;
@@ -155,21 +186,23 @@ class ApiRouter {
       if (token == null || token.isEmpty) {
         return _badRequest('Device token is required');
       }
-      
+
       try {
-        // Get the notification
-        final notifications = _notificationService.getNotifications();
-        final notification = notifications.firstWhere(
-          (n) => n.id == id,
-          orElse: () => throw Exception('Notification not found'),
+        final notification = _notificationService.getById(id);
+        if (notification == null) {
+          return _notFound('Notification not found');
+        }
+
+        final fcm = await _fcmService.deliver(
+          notification,
+          devices: _deviceRegistry,
+          explicitToken: token,
         );
-        
-        // Send via FCM
-        await _fcmService.sendAppNotification(notification, token);
-        
-        // Mark as sent
         final updatedNotification = _notificationService.sendNotification(id);
-        return _jsonResponse(updatedNotification.toJson());
+        return _jsonResponse({
+          ...updatedNotification.toJson(),
+          'fcm': fcm.toJson(),
+        });
       } catch (e) {
         return _serverError('Failed to send notification via FCM: $e');
       }
@@ -246,9 +279,12 @@ class ApiRouter {
     r.get('/api/health', (Request request) {
       return _jsonResponse({
         'status': 'healthy',
-        'timestamp': DateTime.now().toIso8601String(),
+        'timestamp': DateTime.now().toUtc().toIso8601String(),
         'stats': _notificationService.getStats(0).toJson(),
         'activityLogs': _logService.totalLogs,
+        'fcmConfigured': _fcmService.isConfigured,
+        'fcmError': _fcmService.initError,
+        'registeredDevices': _deviceRegistry.count,
       });
     });
 

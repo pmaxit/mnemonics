@@ -102,13 +102,20 @@ class NotificationService {
     return notification;
   }
 
+  AppNotification? getById(String id) {
+    for (final notification in _notifications) {
+      if (notification.id == id) return notification;
+    }
+    return null;
+  }
+
   /// Mark notification as sent and optionally set the sent time.
   AppNotification sendNotification(String notificationId) {
     final idx = _notifications.indexWhere((n) => n.id == notificationId);
     if (idx == -1) throw Exception('Notification not found');
     _notifications[idx] = _notifications[idx].copyWith(
       status: NotificationDeliveryStatus.sent,
-      sentAt: DateTime.now(),
+      sentAt: DateTime.now().toUtc(),
     );
     _persistNotifications();
     return _notifications[idx];

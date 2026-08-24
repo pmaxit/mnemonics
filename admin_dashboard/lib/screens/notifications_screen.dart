@@ -55,7 +55,7 @@ class NotificationsScreen extends ConsumerWidget {
                             await ref.read(apiServiceProvider).sendNotification(n.id);
                             ref.invalidate(notificationsProvider);
                             ref.invalidate(statsProvider);
-                            if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sent ✓ — app clients will see it on next poll'), backgroundColor: Color(0xFF10B981)));
+                            if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sent ✓ — FCM push + in-app poll'), backgroundColor: Color(0xFF10B981)));
                           } catch (e) {
                             if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red));
                           }

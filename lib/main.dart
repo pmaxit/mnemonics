@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Directory, Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,8 +14,8 @@ import 'features/home/domain/user_settings.dart';
 import 'features/home/domain/review_activity.dart';
 import 'features/profile/domain/user_statistics.dart';
 import 'core/services/notification_service.dart';
-import 'core/services/notification_manager.dart';
 import 'common/widgets/notification_display.dart';
+import 'common/widgets/notification_listener.dart';
 import 'app.dart';
 
 /// Resolve a writable directory for Hive data. On Linux/Pi the standard
@@ -63,14 +64,14 @@ void main() async {
   Hive.registerAdapter(LearningStageAdapter());
   Hive.registerAdapter(ReviewDifficultyRatingAdapter());
   
-  // Initialize notification service
-  NotificationService().initialize();
-  
   runApp(
     const ProviderScope(
       child: MnemonicsApp(),
     ),
   );
+  // Do not block first frame on APNs/FCM — iOS permission and token
+  // fetch can stall until the OS dialog is dismissed.
+  unawaited(NotificationService().initialize());
 }
 
 class MnemonicsApp extends ConsumerWidget {
@@ -91,11 +92,9 @@ class MnemonicsApp extends ConsumerWidget {
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        return NotificationListener(
-          child: NotificationDisplay(
-            child: child!,
-          ),
-        );
+        final content = NotificationDisplay(child: child!);
+        if (desktopAuthBypass) return content;
+        return FcmNotificationListener(child: content);
       },
     );
   }

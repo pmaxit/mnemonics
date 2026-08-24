@@ -37,6 +37,7 @@ web/build/
 # Environment
 .env
 assets/credentials.json
+*firebase-adminsdk*.json
 
 # Python
 __pycache__/

@@ -43,12 +43,18 @@ class _ComposeScreenState extends ConsumerState<ComposeScreen> {
         targetUserId: _scheme == NotificationSchemeType.personalized ? _targetUserId.text.trim() : null,
         targetUserSegment: _targetSegment.text.trim().isEmpty ? null : _targetSegment.text.trim(),
       );
-      if (andSend) await api.sendNotification(n.id);
+      String result;
+      if (andSend) {
+        final sent = await api.sendNotification(n.id);
+        result = _formatSendResult(sent);
+      } else {
+        result = 'Created as pending (id ${n.id}) — send when you are ready.';
+      }
       if (!mounted) return;
-      setState(() => _result = andSend ? 'Sent to ${n.schemeType.name} (id ${n.id}) ✓' : 'Created as pending (id ${n.id}) — app clients will fetch on next poll.');
+      setState(() => _result = result);
       ref.invalidate(notificationsProvider);
       ref.invalidate(statsProvider);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_result!), backgroundColor: const Color(0xFF10B981)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result), backgroundColor: const Color(0xFF10B981)));
     } catch (e) {
       setState(() => _result = 'Error: $e');
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red));
@@ -57,11 +63,32 @@ class _ComposeScreenState extends ConsumerState<ComposeScreen> {
     }
   }
 
+  String _formatSendResult(Map<String, dynamic> sent) {
+    final id = sent['id'] ?? '';
+    final fcm = sent['fcm'];
+    if (fcm is! Map) {
+      return 'Marked sent (id $id). Phone will pick it up on the next in-app poll.';
+    }
+    final configured = fcm['configured'] == true;
+    final success = fcm['successCount'] as int? ?? 0;
+    final errors = (fcm['errors'] as List?)?.map((e) => '$e').toList() ?? [];
+    if (!configured) {
+      return 'Marked sent (id $id), but FCM is not configured on the server. Open phones will still get it via polling. Add FIREBASE_SERVICE_ACCOUNT on Railway to enable lock-screen push.';
+    }
+    if (success > 0) {
+      return 'Pushed via FCM ($success ${success == 1 ? 'delivery' : 'deliveries'}) and marked sent (id $id).';
+    }
+    if (errors.isNotEmpty) {
+      return 'Marked sent (id $id) but FCM failed: ${errors.first}';
+    }
+    return 'Marked sent (id $id). No devices have registered yet — open the app once so it can subscribe.';
+  }
+
   @override
   Widget build(BuildContext context) {
     final showUserId = _scheme == NotificationSchemeType.personalized;
     final hint = _scheme == NotificationSchemeType.general
-        ? 'All users will receive this (leave User ID empty). Uses GET /api/notifications?status=sent polling.'
+        ? 'All users. After you tap Send, the server pushes FCM to topic all_users and the app also polls for sent items.'
         : _scheme == NotificationSchemeType.custom
             ? 'Custom message — leave User ID empty for broadcast.'
             : 'Personalized — enter a userId (e.g. user_1) to target one learner.';
@@ -136,7 +163,7 @@ class _ComposeScreenState extends ConsumerState<ComposeScreen> {
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       const Text('How delivery works', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
                       const SizedBox(height: 8),
-                      const Text('1. This creates a notification at POST /api/notifications (status: pending).\n2. Send marks it sent (POST /api/notifications/:id/send).\n3. Your Flutter app polls GET /api/notifications?status=sent to show an in-app banner. For real push (FCM), wire FCM next.', style: TextStyle(fontSize: 11, color: AppTheme.muted, height: 1.5)),
+                      const Text('1. Compose creates POST /api/notifications (pending).\n2. Send calls POST /api/notifications/:id/send, which pushes FCM (topic all_users) and marks the row sent.\n3. The Flutter app registers its FCM token, subscribes to all_users, and also polls GET /api/notifications?status=sent while open.\n4. Lock-screen push needs a Firebase Admin service account on the notification server (FIREBASE_SERVICE_ACCOUNT).', style: TextStyle(fontSize: 11, color: AppTheme.muted, height: 1.5)),
                       const SizedBox(height: 10),
                       SelectableText('API: ${ref.read(apiServiceProvider).baseUrl}', style: const TextStyle(fontSize: 11, color: AppTheme.muted)),
                     ]),

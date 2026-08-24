@@ -1,42 +1,34 @@
 import 'dart:developer' as developer;
-import 'package:firebase_messaging/firebase_messaging.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mnemonics/core/services/notification_manager.dart';
 
-/// A widget that listens for Firebase messages and shows them as banners
-class NotificationListener extends ConsumerStatefulWidget {
+/// Hosts the optional local test banner. FCM handling lives in NotificationService.
+class FcmNotificationListener extends ConsumerStatefulWidget {
   final Widget child;
 
-  const NotificationListener({super.key, required this.child});
+  const FcmNotificationListener({super.key, required this.child});
 
   @override
-  ConsumerState<NotificationListener> createState() => _NotificationListenerState();
+  ConsumerState<FcmNotificationListener> createState() =>
+      _FcmNotificationListenerState();
 }
 
-class _NotificationListenerState extends ConsumerState<NotificationListener> {
+class _FcmNotificationListenerState
+    extends ConsumerState<FcmNotificationListener> {
   @override
   void initState() {
     super.initState();
-    
-    // Set up foreground message handler
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-  }
-
-  void _handleForegroundMessage(RemoteMessage message) {
-    if (message.notification != null) {
-      // Schedule the state update for the next frame to avoid issues with context
+    if (const bool.fromEnvironment('SHOW_TEST_NOTIFICATION')) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          // Add to notification manager
-          final notificationManager = ref.read(notificationManagerProvider);
-          notificationManager.showNotification(
-            title: message.notification!.title ?? 'Notification',
-            message: message.notification!.body ?? '',
-          );
-          
-          developer.log('Notification received: ${message.notification!.title}');
-        }
+        if (!mounted) return;
+        ref.read(notificationManagerProvider).showNotification(
+          title: 'Phone test',
+          message: 'In-app notifications are working on this device',
+          sourceKey: 'phone-test',
+        );
+        developer.log('Local test notification shown');
       });
     }
   }
