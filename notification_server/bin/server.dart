@@ -32,11 +32,16 @@ Future<void> main() async {
 
   logService.seedDemoData();
   notificationService.seedDemoData({});
+  
+  // Initialize FCM service
+  final fcmService = FCMService();
+  fcmService.initialize();
 
   final apiRouter = ApiRouter(
     logService: logService,
     notificationService: notificationService,
     agentService: agentService,
+    fcmService: fcmService,
   );
 
   final handler = const Pipeline()

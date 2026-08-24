@@ -31,6 +31,8 @@ import 'features/study_session/domain/study_plan_day.dart';
 import 'features/auth/presentation/screens/onboarding_wizard_screen.dart';
 import 'features/home/presentation/screens/my_words_list_screen.dart';
 import 'features/auth/providers/user_profile_provider.dart';
+import 'common/widgets/notification_listener.dart';
+import 'features/home/presentation/screens/test_notification_screen.dart';
 import 'package:flutter/material.dart';
 
 /// Converts a [Stream] into a [Listenable] for GoRouter's refreshListenable.
@@ -311,6 +313,10 @@ GoRouter _buildDesktopRouter() {
       GoRoute(
         path: '/study-plan/today',
         builder: (context, state) => const TodaysStudyPlanScreen(),
+      ),
+      GoRoute(
+        path: '/test-notifications',
+        builder: (context, state) => const TestNotificationScreen(),
       ),
     ],
   );

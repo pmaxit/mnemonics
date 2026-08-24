@@ -10,14 +10,17 @@ class ApiRouter {
   final ActivityLogService _logService;
   final NotificationService _notificationService;
   final NotificationAgentService _agentService;
+  final FCMService _fcmService;
 
   ApiRouter({
     required ActivityLogService logService,
     required NotificationService notificationService,
     required NotificationAgentService agentService,
+    required FCMService fcmService,
   })  : _logService = logService,
         _notificationService = notificationService,
-        _agentService = agentService;
+        _agentService = agentService,
+        _fcmService = fcmService;
 
   Router get router {
     final r = Router();
@@ -141,6 +144,34 @@ class ApiRouter {
         return _jsonResponse(notification.toJson());
       } catch (e) {
         return _notFound('Notification not found: $e');
+      }
+    });
+    
+    // Send notification via FCM
+    r.post('/api/notifications/<id>/send-fcm', (Request request, String id) async {
+      final body = await _parseBody(request);
+      final token = body?['token'] as String?;
+      
+      if (token == null || token.isEmpty) {
+        return _badRequest('Device token is required');
+      }
+      
+      try {
+        // Get the notification
+        final notifications = _notificationService.getNotifications();
+        final notification = notifications.firstWhere(
+          (n) => n.id == id,
+          orElse: () => throw Exception('Notification not found'),
+        );
+        
+        // Send via FCM
+        await _fcmService.sendAppNotification(notification, token);
+        
+        // Mark as sent
+        final updatedNotification = _notificationService.sendNotification(id);
+        return _jsonResponse(updatedNotification.toJson());
+      } catch (e) {
+        return _serverError('Failed to send notification via FCM: $e');
       }
     });
 

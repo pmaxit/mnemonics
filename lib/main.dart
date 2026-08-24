@@ -12,6 +12,9 @@ import 'features/home/domain/user_word_data.dart';
 import 'features/home/domain/user_settings.dart';
 import 'features/home/domain/review_activity.dart';
 import 'features/profile/domain/user_statistics.dart';
+import 'core/services/notification_service.dart';
+import 'core/services/notification_manager.dart';
+import 'common/widgets/notification_display.dart';
 import 'app.dart';
 
 /// Resolve a writable directory for Hive data. On Linux/Pi the standard
@@ -59,6 +62,10 @@ void main() async {
   Hive.registerAdapter(ReviewActivityAdapter());
   Hive.registerAdapter(LearningStageAdapter());
   Hive.registerAdapter(ReviewDifficultyRatingAdapter());
+  
+  // Initialize notification service
+  NotificationService().initialize();
+  
   runApp(
     const ProviderScope(
       child: MnemonicsApp(),
@@ -83,6 +90,13 @@ class MnemonicsApp extends ConsumerWidget {
       darkTheme: darkTheme,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        return NotificationListener(
+          child: NotificationDisplay(
+            child: child!,
+          ),
+        );
+      },
     );
   }
 }
