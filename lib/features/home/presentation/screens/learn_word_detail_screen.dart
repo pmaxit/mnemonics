@@ -22,6 +22,7 @@ import 'dart:convert';
 import '../../../auth/infrastructure/auth_repository.dart';
 import '../../../../core/config/api_config.dart';
 import '../../../../common/widgets/vocabulary_word_image.dart';
+import '../widgets/fill_in_blank_card.dart';
 
 class LearnWordDetailScreen extends ConsumerStatefulWidget {
   final List<VocabularyWord> words;
@@ -564,12 +565,12 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                           if (word.video != null && word.video!.isNotEmpty)
                             const SizedBox(height: MnemonicsSpacing.m),
                           */
-                          if (word.synonyms.isNotEmpty) ...[
+                          if (word.effectiveSynonyms.isNotEmpty) ...[
                             const Text('Synonyms:',
                                 style: MnemonicsTypography.bodyLarge),
                             Wrap(
                               spacing: 8,
-                              children: word.synonyms
+                              children: word.effectiveSynonyms
                                   .map((s) => Chip(label: Text(s)))
                                   .toList(),
                             ),
@@ -634,6 +635,8 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                         color: Colors.amber.shade700,
                                       ),
                                       _buildPhrasesSection(word),
+                                      _buildCommonPhrasesSection(word),
+                                      _buildFillInBlankSection(word, definitionText),
                                       if (memoryTipText.isNotEmpty) ...[
                                         const SizedBox(
                                             height: MnemonicsSpacing.m),
@@ -869,6 +872,57 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                     .toList(),
               ),
         color: Colors.blue.shade600,
+      ),
+    );
+  }
+
+  // ── Common Phrases — short collocations, tap-friendly chips ─────────────
+  Widget _buildCommonPhrasesSection(VocabularyWord word) {
+    final phrases = word.effectivePhrases;
+    if (phrases.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: MnemonicsSpacing.m),
+      child: _buildCollapsibleCard(
+        icon: Icons.style,
+        title: 'Common Phrases',
+        contentWidget: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: phrases
+              .map((p) => Chip(
+                    label: Text(p),
+                    backgroundColor: Colors.purple.shade50,
+                    side: BorderSide(color: Colors.purple.shade100),
+                  ))
+              .toList(),
+        ),
+        color: Colors.purple.shade600,
+      ),
+    );
+  }
+
+  // ── Fill in the Blank — recall the word from real usage context ─────────
+  Widget _buildFillInBlankSection(VocabularyWord word, String definitionText) {
+    final sentences = word.contextSentences.take(3).toList();
+    if (sentences.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: MnemonicsSpacing.m),
+      child: _buildCollapsibleCard(
+        icon: Icons.quiz,
+        title: 'Fill in the Blank',
+        contentWidget: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: sentences
+              .map((s) => FillInBlankCard(
+                    sentence: s,
+                    answer: word.word,
+                    hint: definitionText,
+                  ))
+              .toList(),
+        ),
+        color: Colors.teal.shade600,
       ),
     );
   }

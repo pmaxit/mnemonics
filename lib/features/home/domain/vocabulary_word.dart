@@ -104,11 +104,32 @@ extension VocabularyWordContextX on VocabularyWord {
 
     addCandidate(example);
 
-    for (final sentence in _parseAiInsightsSentences(aiInsights)) {
+    for (final sentence in _parseAiInsightsListField(aiInsights, const [
+      'example_sentences',
+      'exampleSentences',
+    ])) {
       addCandidate(sentence);
     }
 
     return results;
+  }
+
+  /// Short 2-4 word collocations for this word. Prefers the dedicated
+  /// `phrases` column, falling back to `common_phrases` parsed out of the
+  /// AI-insights blob so already-generated content isn't wasted.
+  List<String> get effectivePhrases {
+    if (phrases.isNotEmpty) return phrases;
+    return _parseAiInsightsListField(aiInsights, const [
+      'common_phrases',
+      'commonPhrases',
+    ]);
+  }
+
+  /// Synonyms, falling back to the AI-insights blob when the dedicated
+  /// `synonyms` column is empty (true for most legacy rows).
+  List<String> get effectiveSynonyms {
+    if (synonyms.isNotEmpty) return synonyms;
+    return _parseAiInsightsListField(aiInsights, const ['synonyms']);
   }
 }
 
@@ -144,7 +165,7 @@ bool _containsWordForm(String sentence, String word) {
   return false;
 }
 
-List<String> _parseAiInsightsSentences(String? aiInsights) {
+List<String> _parseAiInsightsListField(String? aiInsights, List<String> keys) {
   if (aiInsights == null || aiInsights.isEmpty) return [];
   try {
     var cleaned = aiInsights.trim();
@@ -153,8 +174,10 @@ List<String> _parseAiInsightsSentences(String? aiInsights) {
       cleaned = cleaned.replaceFirst(RegExp(r'\s*```$'), '');
     }
     final data = jsonDecode(cleaned) as Map<String, dynamic>;
-    final raw = data['example_sentences'] ?? data['exampleSentences'];
-    if (raw is List) return raw.map((e) => e.toString()).toList();
+    for (final key in keys) {
+      final raw = data[key];
+      if (raw is List) return raw.map((e) => e.toString()).toList();
+    }
   } catch (_) {}
   return [];
 }
