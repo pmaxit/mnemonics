@@ -10,6 +10,7 @@ class SessionSetupWidget extends StatelessWidget {
   final Function(SessionMode) onModeChanged;
   final Future<void> Function() onStartSession;
   final bool isDarkMode;
+  final Widget? aboveContent;
 
   const SessionSetupWidget({
     super.key,
@@ -18,18 +19,20 @@ class SessionSetupWidget extends StatelessWidget {
     required this.onModeChanged,
     required this.onStartSession,
     required this.isDarkMode,
+    this.aboveContent,
   });
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(
-        left: TabScreenLayout.horizontalPadding,
-        right: TabScreenLayout.horizontalPadding,
-      ),
+      padding: TabScreenLayout.paddedScrollPadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (aboveContent != null) ...[
+            aboveContent!,
+            const SizedBox(height: TabScreenLayout.afterHeaderGap),
+          ],
           _buildHeader(),
           const SizedBox(height: TabScreenLayout.afterHeaderGap),
 

@@ -52,46 +52,35 @@ class _EnhancedProfileScreenState extends ConsumerState<EnhancedProfileScreen>
         (themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
 
-    return Padding(
-      padding: TabScreenLayout.paddedScrollPadding(context),
-      child: profileStatsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Text('Error loading stats: $error'),
-        ),
-        data: (profileStats) => FadeTransition(
-          opacity: _fadeAnimation,
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    ProfileHeaderWidget(
-                      profileStats: profileStats,
-                      isDarkMode: isDarkMode,
-                    ),
-                    const SizedBox(height: TabScreenLayout.afterHeaderGap),
-                  ],
-                ),
+    return profileStatsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Text('Error loading stats: $error'),
+      ),
+      data: (profileStats) => FadeTransition(
+        opacity: _fadeAnimation,
+        child: SingleChildScrollView(
+          padding: TabScreenLayout.paddedScrollPadding(context),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ProfileHeaderWidget(
+                profileStats: profileStats,
+                isDarkMode: isDarkMode,
               ),
-              SliverToBoxAdapter(
-                child: KeyedSubtree(
-                  key: TabScreenLayout.nextCardKey,
-                  child: StatisticsOverviewWidget(
-                    profileStats: profileStats,
-                    isDarkMode: isDarkMode,
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: DifficultyStatsWidget(
-                  difficultyStats: profileStats.difficultyStats,
+              const SizedBox(height: TabScreenLayout.afterHeaderGap),
+              KeyedSubtree(
+                key: TabScreenLayout.nextCardKey,
+                child: StatisticsOverviewWidget(
+                  profileStats: profileStats,
                   isDarkMode: isDarkMode,
                 ),
               ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: MnemonicsSpacing.xxl),
+              DifficultyStatsWidget(
+                difficultyStats: profileStats.difficultyStats,
+                isDarkMode: isDarkMode,
               ),
+              const SizedBox(height: MnemonicsSpacing.xxl),
             ],
           ),
         ),

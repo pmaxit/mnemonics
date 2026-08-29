@@ -9,6 +9,7 @@ import '../widgets/session_setup_widget.dart';
 import '../widgets/session_countdown_widget.dart';
 import '../widgets/learning_flashcard_widget.dart';
 import '../widgets/session_completion_widget.dart';
+import '../../../study_session/presentation/widgets/todays_study_plan_card.dart';
 
 class LearningSessionScreen extends ConsumerStatefulWidget {
   const LearningSessionScreen({super.key});
@@ -29,11 +30,17 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen> {
         (themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
 
+    // The setup phase owns its own scroll padding (like Home/Progress) so
+    // content can scroll behind the translucent app bar; the other phases
+    // are fixed layouts that need the app-bar clearance from a wrapper.
+    final isSetupPhase = sessionState.phase == LearningSessionPhase.setup;
     return Padding(
-      padding: EdgeInsets.only(
-        top: TabScreenLayout.contentTop(context),
-        bottom: TabScreenLayout.bottomNavClearance,
-      ),
+      padding: isSetupPhase
+          ? EdgeInsets.zero
+          : EdgeInsets.only(
+              top: TabScreenLayout.contentTop(context),
+              bottom: TabScreenLayout.bottomNavClearance,
+            ),
       child: _buildBody(sessionState, sessionNotifier, isDarkMode),
     );
   }
@@ -53,6 +60,7 @@ class _LearningSessionScreenState extends ConsumerState<LearningSessionScreen> {
           onModeChanged: sessionNotifier.updateMode,
           onStartSession: sessionNotifier.startSession,
           isDarkMode: isDarkMode,
+          aboveContent: TodaysStudyPlanCard(isDarkMode: isDarkMode),
         );
       case LearningSessionPhase.countdown:
         return SessionCountdownWidget(
