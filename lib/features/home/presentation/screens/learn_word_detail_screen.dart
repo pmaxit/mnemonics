@@ -12,6 +12,7 @@ import '../../../home/domain/spaced_repetition.dart';
 import '../../../profile/domain/user_statistics.dart';
 import '../../../../common/widgets/animated_wave_background.dart';
 import '../../../practice/domain/user_progress_service.dart';
+import '../../../gamification/providers/gamification_provider.dart';
 import '../../../home/providers.dart';
 
 import 'package:translator/translator.dart';
@@ -64,6 +65,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
 
   VideoPlayerController? _videoController;
   ChewieController? _chewieController;
+  bool _videoFailed = false;
 
   @override
   void initState() {
@@ -180,7 +182,8 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
     final userId =
         ref.read(authRepositoryProvider).currentUser?.uid ?? 'default';
     try {
-      final response = await http.get(Uri.parse(ApiConfig.learnedStatus(userId, word)));
+      final response =
+          await http.get(Uri.parse(ApiConfig.learnedStatus(userId, word)));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (mounted) {
@@ -268,6 +271,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
 
   Future<void> _initializeVideo() async {
     _disposeVideoControllers();
+    _videoFailed = false;
 
     final currentWord = widget.words[_currentIndex];
     if (currentWord.video != null && currentWord.video!.isNotEmpty) {
@@ -285,14 +289,14 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
           showControls: true,
           aspectRatio: _videoController!.value.aspectRatio,
         );
-
-        if (mounted) {
-          setState(() {});
-        }
       } catch (e) {
         print('Error initializing video: $e');
         _disposeVideoControllers();
+        _videoFailed = true;
       }
+    }
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -321,6 +325,8 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
       _wordViewed = false;
       _viewStartTime = DateTime.now();
     });
+
+    await _initializeVideo();
 
     _loadHindiMeaning(widget.words[index].meaning);
 
@@ -398,7 +404,8 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                         left: MnemonicsSpacing.l,
                         right: MnemonicsSpacing.l,
                         bottom: MnemonicsSpacing.l,
-                        top: MediaQuery.of(context).padding.top + kToolbarHeight,
+                        top:
+                            MediaQuery.of(context).padding.top + kToolbarHeight,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,8 +438,7 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                           // ── Meaning card ───────────────────────────────
                           Container(
                             width: double.infinity,
-                            padding:
-                                const EdgeInsets.all(MnemonicsSpacing.l),
+                            padding: const EdgeInsets.all(MnemonicsSpacing.l),
                             decoration: BoxDecoration(
                               color: MnemonicsColors.primaryGreen
                                   .withOpacity(0.07),
@@ -448,14 +454,12 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                               children: [
                                 Text(
                                   word.meaning,
-                                  style: MnemonicsTypography.bodyLarge
-                                      .copyWith(
+                                  style: MnemonicsTypography.bodyLarge.copyWith(
                                     height: 1.5,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                const SizedBox(
-                                    height: MnemonicsSpacing.s),
+                                const SizedBox(height: MnemonicsSpacing.s),
                                 _loadingHindi
                                     ? const SizedBox(
                                         height: 16,
@@ -470,8 +474,8 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                             style: MnemonicsTypography
                                                 .bodyRegular
                                                 .copyWith(
-                                              color: MnemonicsColors
-                                                  .textSecondary,
+                                              color:
+                                                  MnemonicsColors.textSecondary,
                                               fontSize: 14,
                                             ),
                                           )
@@ -485,29 +489,12 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                             word: word,
                             width: double.infinity,
                             fit: BoxFit.fitWidth,
-                            borderRadius: BorderRadius.circular(
-                                MnemonicsSpacing.radiusL),
+                            borderRadius:
+                                BorderRadius.circular(MnemonicsSpacing.radiusL),
                           ),
                           const SizedBox(height: MnemonicsSpacing.m),
                           // Video Player
-                          /*
-                          if (word.video != null &&
-                              word.video!.isNotEmpty &&
-                              _chewieController != null)
-                            Container(
-                              height: 200,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(
-                                    MnemonicsSpacing.radiusL),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(
-                                    MnemonicsSpacing.radiusL),
-                                child: Chewie(controller: _chewieController!),
-                              ),
-                            )
-                          else if (word.video != null && word.video!.isNotEmpty)
+                          if (word.video != null && word.video!.isNotEmpty) ...[
                             Container(
                               height: 200,
                               width: double.infinity,
@@ -516,13 +503,25 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                 borderRadius: BorderRadius.circular(
                                     MnemonicsSpacing.radiusL),
                               ),
-                              child: const Center(
-                                child: CircularProgressIndicator(),
-                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: _chewieController != null
+                                  ? Chewie(controller: _chewieController!)
+                                  : _videoFailed
+                                      ? Center(
+                                          child: TextButton.icon(
+                                            onPressed: _initializeVideo,
+                                            icon: const Icon(
+                                                Icons.refresh, size: 18),
+                                            label: const Text(
+                                                'Video unavailable — retry'),
+                                          ),
+                                        )
+                                      : const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
                             ),
-                          if (word.video != null && word.video!.isNotEmpty)
                             const SizedBox(height: MnemonicsSpacing.m),
-                          */
+                          ],
                           if (word.effectiveSynonyms.isNotEmpty) ...[
                             const Text('Synonyms:',
                                 style: MnemonicsTypography.bodyLarge),
@@ -598,7 +597,8 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                         ),
                                       ],
                                       _buildPhrasesSection(word, isDarkMode),
-                                      _buildFillInBlankSection(word, definitionText),
+                                      _buildFillInBlankSection(
+                                          word, definitionText),
                                       _buildCommonPhrasesSection(word),
                                       if (memoryTipText.isNotEmpty) ...[
                                         const SizedBox(
@@ -673,8 +673,8 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
   Widget _buildPracticeBar(bool isDarkMode) {
     if (_loading) return const SizedBox.shrink();
 
-    final bg = (isDarkMode ? const Color(0xFF1A1A1A) : Colors.white)
-        .withOpacity(0.92);
+    final bg =
+        (isDarkMode ? const Color(0xFF1A1A1A) : Colors.white).withOpacity(0.92);
 
     if (_isLearned) {
       return Container(
@@ -851,7 +851,8 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
                                         style: TextStyle(
                                           fontStyle: FontStyle.italic,
                                           color: isDarkMode
-                                              ? MnemonicsColors.darkTextSecondary
+                                              ? MnemonicsColors
+                                                  .darkTextSecondary
                                               : MnemonicsColors.textSecondary,
                                         ),
                                       ),
@@ -1040,6 +1041,9 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
   }
 
   void _handleReview(ReviewRating rating) async {
+    // Words with no saved data yet are brand-new: this rating will create
+    // their first UserWordData record.
+    final isNewWord = _userWordData == null;
     final now = DateTime.now();
     final result = SpacedRepetitionManager.calculateNextReview(
       now,
@@ -1066,6 +1070,15 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
       orElse: () => ReviewDifficultyRating.medium,
     );
     await progressService.recordReviewActivity(word, ratingEnum);
+
+    // Award XP + daily-quest progress. Gamification must never break the
+    // learning flow, so failures are swallowed.
+    try {
+      await ref.read(gamificationProvider.notifier).recordReview(
+            difficulty: rating.name,
+            isNewWord: isNewWord,
+          );
+    } catch (_) {}
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1187,43 +1200,49 @@ class _LearnWordDetailScreenState extends ConsumerState<LearnWordDetailScreen>
           ),
         ],
       ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(
-              horizontal: MnemonicsSpacing.m, vertical: 0),
-          childrenPadding: const EdgeInsets.only(
-              left: MnemonicsSpacing.m,
-              right: MnemonicsSpacing.m,
-              bottom: MnemonicsSpacing.m),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
+      child: Material(
+        // ListTile/ExpansionTile paint their ink on the nearest Material
+        // ancestor; without this the decorated Container would hide the
+        // splash (framework assertion "ink splashes may be invisible").
+        type: MaterialType.transparency,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(
+                horizontal: MnemonicsSpacing.m, vertical: 0),
+            childrenPadding: const EdgeInsets.only(
+                left: MnemonicsSpacing.m,
+                right: MnemonicsSpacing.m,
+                bottom: MnemonicsSpacing.m),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 18, color: color),
                 ),
-                child: Icon(icon, size: 18, color: color),
-              ),
-              const SizedBox(width: MnemonicsSpacing.s),
-              Expanded(
-                child: Text(
-                  title,
-                  style: MnemonicsTypography.bodyLarge.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: color.withAlpha(220),
+                const SizedBox(width: MnemonicsSpacing.s),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: MnemonicsTypography.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: color.withAlpha(220),
+                    ),
                   ),
                 ),
+              ],
+            ),
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: contentWidget,
               ),
             ],
           ),
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: contentWidget,
-            ),
-          ],
         ),
       ),
     );

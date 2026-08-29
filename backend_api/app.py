@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_from_directory, make_response
+from flask import Flask, jsonify, request, send_file, send_from_directory, make_response
 from flask_cors import CORS
 import psycopg2
 from psycopg2 import extras
@@ -10,9 +10,14 @@ from pathlib import Path
 
 from study_plan_agents import generate_daily_plan, mark_daily_plan_complete
 from study_plan_agents.orchestrator import ensure_daily_completion_table
+from admin_api.admin_routes import admin_bp
+from admin_api.db_setup import create_admin_tables
 
 app = Flask(__name__)
 CORS(app)
+
+# Register admin blueprint
+app.register_blueprint(admin_bp)
 
 # Persistent volume mount (Railway): /app/word_images
 IMAGE_DIR = Path(os.environ.get('WORD_IMAGES_DIR', './word_images')).resolve()
@@ -36,6 +41,36 @@ def ensure_image_dir() -> None:
 
 def public_word_image_url(slug: str) -> str:
     return f'{PUBLIC_BASE_URL}/word_images/{slug}.jpg'
+
+
+# Mnemonic videos live on the same Railway volume: <word_images>/videos
+VIDEO_DIR = Path(os.environ.get('WORD_VIDEOS_DIR', str(IMAGE_DIR / 'videos'))).resolve()
+PLACEHOLDER_VIDEO_SLUG = os.environ.get('VIDEO_PLACEHOLDER', 'obfuscate')
+
+
+def ensure_video_dir() -> None:
+    VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def public_video_url(slug: str) -> str:
+    return f'{PUBLIC_BASE_URL}/videos/{slug}.mp4'
+
+
+def resolve_video_url(row: dict) -> str | None:
+    """Prefer a hosted clip for the word; otherwise serve the placeholder."""
+    ensure_video_dir()
+    word = (row.get('word') or '').strip()
+    if word:
+        own = VIDEO_DIR / f'{word_slug(word)}.mp4'
+        if own.is_file() and own.stat().st_size > 0:
+            return public_video_url(word_slug(word))
+
+    stored = (row.get('video_url') or '').strip()
+    if stored and '/videos/' in stored:
+        return stored
+    if (VIDEO_DIR / f'{PLACEHOLDER_VIDEO_SLUG}.mp4').is_file():
+        return public_video_url(PLACEHOLDER_VIDEO_SLUG)
+    return stored or None
 
 
 def resolve_image_url(row: dict) -> str | None:
@@ -108,6 +143,7 @@ def ensure_study_plan_tables(cursor) -> None:
         )
     """)
     ensure_daily_completion_table(cursor)
+    create_admin_tables(cursor)
 
 
 def serialize_study_plan_day(row) -> dict:
@@ -241,7 +277,7 @@ def get_vocabulary():
                 except:
                     r['exampleSentences'] = []
             r['imageUrl'] = resolve_image_url(r)
-            r['videoUrl'] = r.get('video_url')
+            r['videoUrl'] = resolve_video_url(r)
             r['setIds'] = [r.get('category')] if r.get('category') else []
             r['aiMnemonic'] = r.get('ai_mnemonic')
             r['aiInsights'] = r.get('ai_insights')
@@ -1242,7 +1278,45 @@ def get_word_image(filename):
     return resp
 
 
-@app.route('/admin/word_images/<slug>', methods=['PUT'])
+@app.route('/videos/<path:filename>', methods=['GET'])
+def get_word_video(filename):
+    """Stream mnemonic videos from the volume with Range support."""
+    ensure_video_dir()
+    safe = Path(filename).name
+    if not re.fullmatch(r'[a-z0-9_]+\.mp4', safe, flags=re.I):
+        return jsonify({"error": "invalid filename"}), 400
+    path = VIDEO_DIR / safe
+    if not path.is_file():
+        return jsonify({"error": "not found"}), 404
+    resp = send_file(path, mimetype='video/mp4', conditional=True)
+    resp.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    return resp
+
+
+@app.route('/admin/videos/<slug>', methods=['PUT'])
+def upload_word_video(slug):
+    """Upload an MP4 mnemonic video for a vocabulary word slug."""
+    ok, err = require_upload_auth()
+    if not ok:
+        return err
+
+    safe_slug = word_slug(slug)
+    if not re.fullmatch(r'[a-z0-9_]+', safe_slug):
+        return jsonify({"error": "invalid slug"}), 400
+
+    data = request.get_data()
+    if not data or len(data) < 1000:
+        return jsonify({"error": "empty or too-small body"}), 400
+    if data[4:8] != b'ftyp':
+        return jsonify({"error": "body must be MP4 bytes"}), 400
+
+    ensure_video_dir()
+    dest = VIDEO_DIR / f'{safe_slug}.mp4'
+    dest.write_bytes(data)
+    return jsonify({"ok": True, "url": public_video_url(safe_slug), "bytes": len(data)})
+
+
+
 def upload_word_image(slug):
     """Upload a JPEG comic image for a vocabulary word slug."""
     ok, err = require_upload_auth()
