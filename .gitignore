@@ -1,40 +1,13 @@
-# Flutter
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-build/
+# Xcode / Swift
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+DerivedData/
+.build/
+.swiftpm/
+*.xcuserstate
 
-# Android
-android/.gradle/
-android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
-android/local.properties
-android/app/build/
-android/build/
-
-# iOS / macOS
-ios/Flutter/Generated.xcconfig
-ios/Flutter/flutter_export_environment.sh
-ios/Flutter/ephemeral/
-ios/Pods/
-ios/Runner/GeneratedPluginRegistrant.m
-ios/Runner/GeneratedPluginRegistrant.h
-macos/Flutter/ephemeral/
-macos/Pods/
-macos/Flutter/GeneratedPluginRegistrant.swift
-
-# Linux
-linux/flutter/ephemeral/
-linux/.dart_tool/
-
-# Windows
-windows/flutter/ephemeral/
-windows/.dart_tool/
-
-# Web
-web/build/
-
-# Environment
+# Secrets / environment
 .env
 assets/credentials.json
 *firebase-adminsdk*.json
@@ -47,9 +20,11 @@ __pycache__/
 venv/
 .venv/
 
+# Node
+node_modules/
+
 # Logs
 *.log
-flutter_*.log
 proxy.log
 nohup.out
 

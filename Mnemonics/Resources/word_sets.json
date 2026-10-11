@@ -1,0 +1,10 @@
+{
+  "sets": [
+    { "id": "character", "name": "Character", "description": "Words about personality & traits" },
+    { "id": "speech", "name": "Speech", "description": "Words about communication & language" },
+    { "id": "intellect", "name": "Intellect", "description": "Words about thinking & knowledge" },
+    { "id": "conflict", "name": "Conflict", "description": "Words about opposition & struggle" },
+    { "id": "morality", "name": "Morality", "description": "Words about ethics & right vs wrong" },
+    { "id": "change", "name": "Change", "description": "Words about transformation & transition" }
+  ]
+}
