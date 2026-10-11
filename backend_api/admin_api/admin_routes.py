@@ -2,11 +2,16 @@
 
 from flask import Blueprint, jsonify, request
 from datetime import datetime, timedelta
-from ..app import get_db_connection
 import psycopg2.extras
 import json
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/api')
+
+
+def get_db_connection():
+    # Resolved lazily: app.py imports this module, so a top-level import is circular.
+    from app import get_db_connection as _get_db_connection
+    return _get_db_connection()
 
 
 def _iso(value):

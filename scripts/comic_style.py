@@ -1,4 +1,4 @@
-"""Shared educational-comic prompt that matches the LUCID 6-panel template."""
+"""Shared educational-comic prompt: a 2x2 realistic-cartoon storyboard per word."""
 
 from __future__ import annotations
 
@@ -11,49 +11,45 @@ def build_comic_prompt(
     situation: str = '',
     panels: list[str] | None = None,
 ) -> str:
-    """Build a style-locked image prompt for a vocabulary comic page.
+    """Build a style-locked image prompt for a 4-panel vocabulary comic.
 
-    Matches the LUCID template: yellow definition banner, 2x3 grid, two
-    recurring Indian characters, cel-shaded educational webcomic, bright
-    street setting, confusion-to-clarity story.
+    Layout: 2x2 grid, a short story sequence that makes the word's meaning
+    obvious without needing the definition. Rendered in a polished,
+    realistic-proportion cartoon style (semi-realistic digital illustration).
     """
     word = (word or '').strip()
     meaning = (meaning or 'vocabulary word').strip()
     situation = (situation or (
-        f'an everyday Indian street moment that makes the meaning of "{word}" obvious'
+        f'an everyday scene that makes the meaning of "{word}" obvious'
     )).strip()
     category_line = f' Theme category: {category}.' if category else ''
 
-    beats = panels if panels and len(panels) >= 6 else [
-        f'The student looks confused about a situation involving "{word}"; question marks float around his head.',
-        'A tangled grey scribble-cloud labeled CONFUSION hangs between student and mentor.',
-        f'The mentor explains the key action that demonstrates "{word}" using a simple visual on a whiteboard.',
-        'The turning point: the scene makes the meaning unmistakable.',
-        f'The student gets it — thumbs up, bright expression, saying the word "{word}".',
-        f'Resolution: both look at a now-clear visual; a speech bubble restates "{meaning}".',
+    beats = panels if panels and len(panels) >= 4 else [
+        f'Setup: a character is in a situation that will demonstrate "{word}".',
+        f'Development: the situation escalates and the key behaviour of "{word}" appears.',
+        f'Climax: the moment that makes "{word}" unmistakable.',
+        f'Outcome: the result clearly shows the meaning "{meaning}".',
     ]
-    beat_lines = '\n'.join(f'Panel {i}: {beats[i - 1]}' for i in range(1, 7))
+    beat_lines = '\n'.join(f'Panel {i}: {beats[i - 1]}' for i in range(1, 5))
 
-    return f'''ONE complete educational comic PAGE teaching the English GRE word "{word}" meaning "{meaning}".{category_line}
+    return f'''ONE square educational comic PAGE teaching the English word "{word}" meaning "{meaning}".{category_line}
 
-COPY THIS LAYOUT EXACTLY:
-- Portrait page, bright and sunny, never dark.
-- The top 10% of the page is a SOLID empty bright-yellow rectangle with NO letters, NO title, and NO logo. Leave that banner blank.
-- Directly under that empty yellow banner: a 2-column by 3-row grid of SIX equal rectangular panels (left-to-right, then next row).
-- Thin black panel borders, small white gutters between panels.
-- Each panel has a small white caption box along its bottom edge with short readable English.
+LAYOUT (strict):
+- A 2-column by 2-row grid of FOUR equal panels, read left-to-right then next row (1 2 / 3 4).
+- Thin black panel borders with small white gutters. Nothing outside the grid except a thin white margin.
+- A small numbered circle (1-4) in the top-left corner of each panel.
+- Each panel has one short caption box along its bottom edge (max 8 words) narrating that beat.
 
-CAST — same two people in EVERY panel, same clothes, same faces:
-- Student: young Indian boy, short black hair, bright orange t-shirt, dark backpack.
-- Mentor: Indian man with glasses, light-blue button-down shirt tucked into dark trousers.
-- Brown skin, clean cartoon faces, expressive eyes. Do not swap outfits or redesign them between panels.
+ART STYLE: realistic cartoon. Semi-realistic digital illustration with natural human proportions, believable faces, detailed lighting, rich textures and cinematic composition, like a modern graphic-novel storyboard. Clean ink outlines, painterly shading, warm natural colour. Not chibi, not flat clip-art, not anime, not 3D CGI, not photographs.
 
-SETTING: contemporary Indian city street in daylight. Recurring extras: yellow-green auto-rickshaw, pedestrians in sarees, colorful shopfronts, clear blue sky. Warm palette of orange, sky-blue, yellow, teal. Soft cel shading, even line weights, gentle highlights. Modern educational webcomic / clean digital storyboard. Not photorealistic, not anime, not 3D CGI, not watercolor, not stick figures, not collage.
+CONTINUITY: the same one or two characters (same faces, hair, clothes) appear in all four panels, in a consistent setting. Expressions and body language must clearly show the emotion/action of the word.
 
 STORY SITUATION: {situation}
 
 {beat_lines}
 
-TEXT RULES: English only. Short speech bubbles (max 8 words). No Hindi. No gibberish, no misspellings, no random letters. No watermarks, no logos, no extra panels, no missing header.
+The four panels together must let a viewer infer the meaning of "{word}" from the pictures alone. Show, don't lecture: no classroom whiteboard scenes unless the word is about teaching.
 
-NEGATIVE: dark lighting, muddy colors, horror, gore, photorealism, inconsistent characters, 4-panel layout, 3-panel layout, single illustration instead of a 6-panel grid, extra title text above the panels, duplicate headers.'''
+TEXT RULES: English only, correctly spelled. Captions and speech bubbles must be short and legible. Include the word "{word}" in at most one caption. No gibberish, no watermarks, no logos, no extra panels, no title banner.
+
+AVOID: dark or muddy lighting, gore, horror, inconsistent characters, 6-panel or 3-panel layouts, a single full-page illustration, misspelled text.'''

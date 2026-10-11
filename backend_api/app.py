@@ -1316,7 +1316,7 @@ def upload_word_video(slug):
     return jsonify({"ok": True, "url": public_video_url(safe_slug), "bytes": len(data)})
 
 
-
+@app.route('/admin/word_images/<slug>', methods=['PUT'])
 def upload_word_image(slug):
     """Upload a JPEG comic image for a vocabulary word slug."""
     ok, err = require_upload_auth()
